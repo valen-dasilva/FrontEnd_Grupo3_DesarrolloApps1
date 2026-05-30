@@ -7,6 +7,7 @@ import { ItineraryCard } from '../../components/favorites_components/favorite_pr
 import { EmptyState } from '../../components/favorites_components/favorite_principal/EmptyState/EmptyState';
 import { colors } from '../../constants/colors';
 import { styles } from './favoritos.styles';
+import { useTheme } from '@/hooks/use-color-scheme';
 
 // Mock data to demonstrate the populated state
 const MOCK_ITINERARIES = [
@@ -36,6 +37,9 @@ export default function FavoritosScreen() {
   const [itineraries, setItineraries] = useState(MOCK_ITINERARIES);
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { colorScheme, toggleColorScheme } = useTheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
 
   const handleToggleFavorite = (id: string) => {
     setItineraries(prev =>
@@ -62,25 +66,25 @@ export default function FavoritosScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={theme.background} />
 
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
         <Header
           title="Favoritos"
-          onThemeTogglePress={() => console.log('Toggle theme')}
+          onThemeTogglePress={toggleColorScheme}
           onAvatarPress={() => console.log('Navigate to profile settings')}
         />
 
         <ScrollView
-          style={styles.scrollView}
+          style={[styles.scrollView, { backgroundColor: theme.background }]}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.pageHeader}>
-            <Text style={styles.pageTitle}>Mis Favoritos</Text>
-            <Text style={styles.pageSubtitle}>
+            <Text style={[styles.pageTitle, { color: theme.text }]}>Mis Favoritos</Text>
+            <Text style={[styles.pageSubtitle, { color: theme.textSecondary }]}>
               Tus itinerarios guardados para futuras aventuras.
             </Text>
           </View>

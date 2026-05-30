@@ -1,15 +1,20 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS } from '../styles/colors';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { colors } from '@/constants/colors';
 import { HeaderLogo } from '../../components/HeaderLogo';
 
 // La navegación inicial (a /login o /(tabs)) la decide el guard del layout
-// según haya o no sesión guardada. Esta pantalla solo muestra el branding.
+// según haya o no sesión guardada. Esta pantalla solo muestra el branding con el tema adecuado.
 export const SplashScreen: React.FC = () => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
+
   return (
     <LinearGradient
-      colors={[COLORS.gradientStart, COLORS.gradientEnd]}
+      colors={[theme.gradientStart, theme.gradientEnd]}
       style={styles.container}
     >
       <HeaderLogo largeLogo />

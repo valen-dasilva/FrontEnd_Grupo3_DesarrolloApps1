@@ -65,12 +65,6 @@ export default function TabLayout() {
           title: 'Perfil',
         }}
       />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          href: null,
-        }}
-      />
     </Tabs>
   );
 }

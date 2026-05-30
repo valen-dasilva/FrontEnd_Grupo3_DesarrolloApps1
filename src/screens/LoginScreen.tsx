@@ -11,6 +11,8 @@ import { BottomSheet } from '../../components/BottomSheet';
 import { HeaderLogo } from '../../components/HeaderLogo';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../services/api';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { colors } from '@/constants/colors';
 
 export const LoginScreen: React.FC = () => {
   const router = useRouter();
@@ -18,6 +20,9 @@ export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -50,7 +55,7 @@ export const LoginScreen: React.FC = () => {
   };
 
   return (
-    <LinearGradient colors={[COLORS.gradientStart, COLORS.gradientEnd]} style={styles.container}>
+    <LinearGradient colors={[theme.gradientStart, theme.gradientEnd]} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -65,8 +70,8 @@ export const LoginScreen: React.FC = () => {
 
           <BottomSheet>
             <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>Comienza tu viaje</Text>
-              <Text style={styles.sheetSubtitle}>Ingresá para sincronizar tus itinerarios y descubrir lugares únicos.</Text>
+              <Text style={[styles.sheetTitle, { color: theme.text }]}>Comienza tu viaje</Text>
+              <Text style={[styles.sheetSubtitle, { color: theme.textSecondary }]}>Ingresá para sincronizar tus itinerarios y descubrir lugares únicos.</Text>
             </View>
             
             <CustomInput
@@ -95,9 +100,9 @@ export const LoginScreen: React.FC = () => {
             />
 
             <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>¿No tenés cuenta? </Text>
+              <Text style={[styles.registerText, { color: theme.textSecondary }]}>¿No tenés cuenta? </Text>
               <TouchableOpacity onPress={() => router.push('/register1')}>
-                <Text style={styles.registerLink}>Crear cuenta</Text>
+                <Text style={[styles.registerLink, { color: theme.primary }]}>Crear cuenta</Text>
               </TouchableOpacity>
             </View>
           </BottomSheet>
@@ -129,12 +134,10 @@ const styles = StyleSheet.create({
   sheetTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: COLORS.textDark,
     marginBottom: 8,
   },
   sheetSubtitle: {
     fontSize: 14,
-    color: COLORS.textLight,
     textAlign: 'center',
     paddingHorizontal: 10,
   },
@@ -148,11 +151,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   registerText: {
-    color: COLORS.textLight,
     fontSize: 14,
   },
   registerLink: {
-    color: COLORS.linkText,
     fontSize: 14,
     fontWeight: '600',
   },

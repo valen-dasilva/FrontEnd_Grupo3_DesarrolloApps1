@@ -9,12 +9,17 @@ import { CustomInput } from '../../components/CustomInput';
 import { CustomButton } from '../../components/CustomButton';
 import { BottomSheet } from '../../components/BottomSheet';
 import { HeaderLogo } from '../../components/HeaderLogo';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { colors } from '@/constants/colors';
 
 export const RegisterStep1Screen: React.FC = () => {
   const router = useRouter();
   const [name, setName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
 
   const handleContinue = () => {
     if (!name || !lastName || !email) {
@@ -40,7 +45,7 @@ export const RegisterStep1Screen: React.FC = () => {
   };
 
   return (
-    <LinearGradient colors={[COLORS.gradientStart, COLORS.gradientEnd]} style={styles.container}>
+    <LinearGradient colors={[theme.gradientStart, theme.gradientEnd]} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -55,8 +60,8 @@ export const RegisterStep1Screen: React.FC = () => {
 
           <BottomSheet>
             <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>Comienza tu viaje</Text>
-              <Text style={styles.sheetSubtitle}>Ingresá para sincronizar tus itinerarios y descubrir lugares únicos.</Text>
+              <Text style={[styles.sheetTitle, { color: theme.text }]}>Comienza tu viaje</Text>
+              <Text style={[styles.sheetSubtitle, { color: theme.textSecondary }]}>Ingresá para sincronizar tus itinerarios y descubrir lugares únicos.</Text>
             </View>
             
             <CustomInput
@@ -85,9 +90,9 @@ export const RegisterStep1Screen: React.FC = () => {
             <CustomButton title="Continuar" showArrow onPress={handleContinue} style={styles.buttonSpacing} />
 
             <View style={styles.loginContainer}>
-              <Text style={styles.loginText}>¿Ya tenés cuenta? </Text>
+              <Text style={[styles.loginText, { color: theme.textSecondary }]}>¿Ya tenés cuenta? </Text>
               <TouchableOpacity onPress={() => router.push('/login')}>
-                <Text style={styles.loginLink}>Iniciar sesión</Text>
+                <Text style={[styles.loginLink, { color: theme.primary }]}>Iniciar sesión</Text>
               </TouchableOpacity>
             </View>
           </BottomSheet>
@@ -119,12 +124,10 @@ const styles = StyleSheet.create({
   sheetTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: COLORS.textDark,
     marginBottom: 8,
   },
   sheetSubtitle: {
     fontSize: 14,
-    color: COLORS.textLight,
     textAlign: 'center',
     paddingHorizontal: 10,
   },
@@ -138,11 +141,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   loginText: {
-    color: COLORS.textLight,
     fontSize: 14,
   },
   loginLink: {
-    color: COLORS.linkText,
     fontSize: 14,
     fontWeight: '600',
   },

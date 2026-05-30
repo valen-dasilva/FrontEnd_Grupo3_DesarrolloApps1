@@ -1,11 +1,10 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
 import Toast from 'react-native-toast-message';
-import 'react-native-reanimated';
 import {
   useFonts,
   Inter_400Regular,
@@ -18,7 +17,7 @@ import {
 } from '@expo-google-fonts/plus-jakarta-sans';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { ThemeProvider as CustomThemeProvider, useColorScheme } from '@/hooks/use-color-scheme';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -68,7 +67,7 @@ function RootNavigator() {
   );
 }
 
-export default function RootLayout() {
+function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   const [loaded] = useFonts({
@@ -90,13 +89,22 @@ export default function RootLayout() {
   if (!loaded) {
     return null;
   }
+
   return (
-    <AuthProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <RootNavigator />
-        <StatusBar style="auto" />
-        <Toast />
-      </ThemeProvider>
-    </AuthProvider>
+    <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <RootNavigator />
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      <Toast />
+    </NavigationThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <CustomThemeProvider>
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
+    </CustomThemeProvider>
   );
 }

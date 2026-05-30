@@ -6,15 +6,20 @@ import { CategoriesCarousel } from '@/components/Explorar/Filtro-Categorias-Carr
 import { FiltrosDeBusqueda } from '@/components/Filtros-de-busqueda';
 import { Header } from '@/components/common/Header/Header';
 import TeatroColonIcon from '../../assets/images/Imagen-Teatro-Colon.svg';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { colors } from '@/constants/colors';
 import { styles } from './explorar.styles';
 
 export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+    <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: theme.background }]}>
       <Header title="Explorar" />
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={[styles.container, { backgroundColor: theme.background }]} showsVerticalScrollIndicator={false}>
         <FiltrosDeBusqueda />
         <CategoriesCarousel />
 
