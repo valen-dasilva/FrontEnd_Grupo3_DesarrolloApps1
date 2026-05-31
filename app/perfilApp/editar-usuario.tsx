@@ -1,5 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { colors } from '@/constants/colors';
 import {
   SafeAreaView,
   ScrollView,
@@ -27,47 +29,66 @@ export default function EditarUsuarioScreen() {
   const [apellido, setApellido] = useState('');
   const [correo, setCorreo] = useState('');
 
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
+
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.avatarCircle}>
-          <Text style={styles.avatarInitials}>MR</Text>
+        <View style={[styles.avatarCircle, isDark && { backgroundColor: '#2A303D' }]}>
+          <Text style={[styles.avatarInitials, { color: theme.primary }]}>MR</Text>
         </View>
-        <Text style={styles.changePhoto}>Cambiar foto de perfil</Text>
+        <Text style={[styles.changePhoto, { color: theme.primary }]}>Cambiar foto de perfil</Text>
 
-        <Text style={styles.label}>Nombre</Text>
+        <Text style={[styles.label, { color: theme.text }]}>Nombre</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { 
+            backgroundColor: theme.surface, 
+            borderColor: theme.border, 
+            color: theme.text 
+          }]}
           placeholder="Mateo"
+          placeholderTextColor={theme.textSecondary}
           value={nombre}
           onChangeText={setNombre}
         />
 
-        <Text style={styles.label}>Apellido</Text>
+        <Text style={[styles.label, { color: theme.text }]}>Apellido</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { 
+            backgroundColor: theme.surface, 
+            borderColor: theme.border, 
+            color: theme.text 
+          }]}
           placeholder="Rossi"
+          placeholderTextColor={theme.textSecondary}
           value={apellido}
           onChangeText={setApellido}
         />
 
-        <Text style={styles.label}>Correo Electrónico</Text>
+        <Text style={[styles.label, { color: theme.text }]}>Correo Electrónico</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { 
+            backgroundColor: theme.surface, 
+            borderColor: theme.border, 
+            color: theme.text 
+          }]}
           placeholder="tu@correo.com"
+          placeholderTextColor={theme.textSecondary}
           keyboardType="email-address"
           autoCapitalize="none"
           value={correo}
           onChangeText={setCorreo}
         />
 
-        <TouchableOpacity style={styles.primaryBtn}>
+        <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: theme.primary }]}>
           <Text style={styles.primaryBtnText}>✓  Guardar Cambios</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.dangerBtn}
+          style={[styles.dangerBtn, { backgroundColor: theme.danger }]}
           onPress={() => router.back()}
         >
           <Text style={styles.dangerBtnText}>Cancelar</Text>

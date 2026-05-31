@@ -7,13 +7,18 @@ import { Header } from '../../components/common/Header/Header';
 import { ItineraryInfoCard } from '../../components/Explorar/Card-Itinerario-Info';
 import { ActivityCard } from '../../components/common/ActivityCard/ActivityCard';
 import { styles } from './itinerarioInfo.styles';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { colors } from '@/constants/colors';
 
 export default function ItineraryInfoScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.surfaceNeutral }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Header */}
@@ -25,8 +30,8 @@ export default function ItineraryInfoScreen() {
         <ItineraryInfoCard onBackPress={() => router.back()} />
 
         {/* Card del Día 1 */}
-        <View style={styles.dayCard}>
-          <Text style={styles.dayTitle}>Dia 1</Text>
+        <View style={[styles.dayCard, { backgroundColor: theme.surface }]}>
+          <Text style={[styles.dayTitle, { color: theme.text }]}>Dia 1</Text>
 
           <ActivityCard
             time="00:00"
@@ -50,8 +55,8 @@ export default function ItineraryInfoScreen() {
         </View>
 
         {/* Day 2 card */}
-        <View style={[styles.dayCard, { marginBottom: paddings.spacing.huge }]}>
-          <Text style={styles.dayTitle}>Dia 2</Text>
+        <View style={[styles.dayCard, { backgroundColor: theme.surface, marginBottom: paddings.spacing.huge }]}>
+          <Text style={[styles.dayTitle, { color: theme.text }]}>Dia 2</Text>
 
           <ActivityCard
             time="00:00"
@@ -78,4 +83,3 @@ export default function ItineraryInfoScreen() {
     </View>
   );
 }
-

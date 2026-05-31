@@ -6,30 +6,35 @@ import { Header } from '../../components/common/Header/Header';
 import { CardItinerarioInfoFav } from '../../components/favorites_components/Card-Itinerario-Info-Fav';
 import { ActivityCard } from '../../components/common/ActivityCard/ActivityCard';
 import { styles } from './itinerarioInfoFav.styles';
+import { useTheme } from '@/hooks/use-color-scheme';
+import { colors } from '../../constants/colors';
 
 export default function FavoriteItineraryInfoScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const { colorScheme, toggleColorScheme } = useTheme();
+    const isDark = colorScheme === 'dark';
+    const theme = isDark ? colors.dark : colors.light;
 
     return (
-        <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.surfaceNeutral }]}>
             <Stack.Screen options={{ headerShown: false }} />
 
             <Header
                 title="Favoritos"
-                onThemeTogglePress={() => {}}
-                onAvatarPress={() => {}}
+                onThemeTogglePress={toggleColorScheme}
+                onAvatarPress={() => router.push('/(tabs)/perfil')}
             />
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            <ScrollView showsVerticalScrollIndicator={false} style={{ backgroundColor: theme.surfaceNeutral }} contentContainerStyle={styles.scrollContent}>
 
                 <CardItinerarioInfoFav 
                     onBackPress={() => router.back()} 
                     onEditPress={() => router.push('/edicionItinerario')} 
                 />
 
-                <View style={styles.dayCard}>
-                    <Text style={styles.dayTitle}>Día 1</Text>
+                <View style={[styles.dayCard, { backgroundColor: theme.surface }]}>
+                    <Text style={[styles.dayTitle, { color: theme.text }]}>Día 1</Text>
 
                     <ActivityCard
                         time="00:00"
@@ -52,8 +57,8 @@ export default function FavoriteItineraryInfoScreen() {
                     />
                 </View>
 
-                <View style={[styles.dayCard, styles.lastDayCard]}>
-                    <Text style={styles.dayTitle}>Día 2</Text>
+                <View style={[styles.dayCard, styles.lastDayCard, { backgroundColor: theme.surface }]}>
+                    <Text style={[styles.dayTitle, { color: theme.text }]}>Día 2</Text>
 
                     <ActivityCard
                         time="00:00"

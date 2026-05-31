@@ -17,6 +17,8 @@ import {
   Provincia,
   PROVINCIA_LABEL,
 } from '../../src/types/itinerario';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { colors } from '@/constants/colors';
 
 function formatFechaCorta(iso: string) {
   if (!iso) return '';
@@ -27,9 +29,13 @@ function formatFechaCorta(iso: string) {
 
 function CardResultado({ item }: Readonly<{ item: ItinerarioSistemaResumenDTO }>) {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
+
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}
       activeOpacity={0.85}
       onPress={() => router.push('/explorarApp/itinerarioInfo')}
     >
@@ -37,8 +43,8 @@ function CardResultado({ item }: Readonly<{ item: ItinerarioSistemaResumenDTO }>
         {item.fotoPortada ? (
           <Image source={{ uri: item.fotoPortada }} style={styles.cardImage} resizeMode="cover" />
         ) : (
-          <View style={[styles.cardImage, styles.cardImageFallback]}>
-            <Ionicons name="image-outline" size={40} color="#9CA3AF" />
+          <View style={[styles.cardImage, styles.cardImageFallback, { backgroundColor: isDark ? '#2A303D' : '#F3F4F6' }]}>
+            <Ionicons name="image-outline" size={40} color={theme.textSecondary} />
           </View>
         )}
         <View style={styles.provinciasBadge}>
@@ -57,20 +63,20 @@ function CardResultado({ item }: Readonly<{ item: ItinerarioSistemaResumenDTO }>
       </View>
 
       <View style={styles.cardBody}>
-        <Text style={styles.cardTitulo}>{item.titulo}</Text>
-        <Text style={styles.cardDescripcion} numberOfLines={3}>
+        <Text style={[styles.cardTitulo, { color: theme.text }]}>{item.titulo}</Text>
+        <Text style={[styles.cardDescripcion, { color: theme.textSecondary }]} numberOfLines={3}>
           {item.descripcion}
         </Text>
         <View style={styles.etiquetasRow}>
           {item.etiquetas?.map((e) => (
-            <View key={e} style={styles.etiqueta}>
-              <Text style={styles.etiquetaText}>{CATEGORIA_LABEL[e] ?? e}</Text>
+            <View key={e} style={[styles.etiqueta, { backgroundColor: isDark ? '#2A303D' : '#F3F4F6' }]}>
+              <Text style={[styles.etiquetaText, { color: theme.textSecondary }]}>{CATEGORIA_LABEL[e] ?? e}</Text>
             </View>
           ))}
           {item.duracionDias != null && (
-            <View style={[styles.etiqueta, styles.etiquetaDias]}>
-              <Ionicons name="time-outline" size={12} color="#2F65E3" />
-              <Text style={[styles.etiquetaText, styles.etiquetaDiasText]}>
+            <View style={[styles.etiqueta, styles.etiquetaDias, { backgroundColor: isDark ? '#192C56' : '#EFF4FF' }]}>
+              <Ionicons name="time-outline" size={12} color={theme.primary} />
+              <Text style={[styles.etiquetaText, { color: theme.primary }]}>
                 {`${item.duracionDias} días`}
               </Text>
             </View>
@@ -84,6 +90,10 @@ function CardResultado({ item }: Readonly<{ item: ItinerarioSistemaResumenDTO }>
 export default function RecomendacionesScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
+
   const params = useLocalSearchParams<{
     resultados: string;
     provincia: string;
@@ -104,23 +114,31 @@ export default function RecomendacionesScreen() {
     : null;
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+    <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
+      
       {/* Header azul de resultados */}
-      <View style={styles.headerAzul}>
+      <View style={[
+        styles.headerAzul, 
+        { 
+          backgroundColor: isDark ? theme.surface : '#2F65E3',
+          borderBottomWidth: isDark ? 1 : 0,
+          borderBottomColor: theme.border
+        }
+      ]}>
         <TouchableOpacity
           style={styles.backBtn}
           onPress={() => router.back()}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+          <Ionicons name="arrow-back" size={20} color={isDark ? theme.primary : '#FFFFFF'} />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.headerLabel}>RESULTADOS PARA</Text>
-          <Text style={styles.headerTitulo}>{provinciaLabel ?? 'Argentina'}</Text>
+          <Text style={[styles.headerLabel, isDark && { color: theme.textSecondary }]}>RESULTADOS PARA</Text>
+          <Text style={[styles.headerTitulo, isDark && { color: theme.text }]}>{provinciaLabel ?? 'Argentina'}</Text>
           <View style={styles.chipsRow}>
             {Boolean(params.fechaInicio && params.fechaFin) && (
-              <View style={styles.chip}>
+              <View style={[styles.chip, isDark && { backgroundColor: '#2A303D' }]}>
                 <Ionicons name="calendar-outline" size={12} color="#FFFFFF" />
                 <Text style={styles.chipText}>
                   {resultados[0]?.duracionDias
@@ -130,7 +148,7 @@ export default function RecomendacionesScreen() {
               </View>
             )}
             {etiquetas.length > 0 && (
-              <View style={styles.chip}>
+              <View style={[styles.chip, isDark && { backgroundColor: '#2A303D' }]}>
                 <Ionicons name="pricetag-outline" size={12} color="#FFFFFF" />
                 <Text style={styles.chipText}>
                   {etiquetas.map((e) => CATEGORIA_LABEL[e]).join(' y ')}
@@ -143,18 +161,18 @@ export default function RecomendacionesScreen() {
 
       {/* Lista de resultados */}
       <ScrollView
-        style={styles.lista}
+        style={[styles.lista, { backgroundColor: theme.background }]}
         contentContainerStyle={styles.listaContent}
         showsVerticalScrollIndicator={false}
       >
         {resultados.length === 0 ? (
           <View style={styles.empty}>
-            <Ionicons name="search-outline" size={48} color="#D1D5DB" />
-            <Text style={styles.emptyTitle}>Sin resultados</Text>
-            <Text style={styles.emptySubtitle}>
+            <Ionicons name="search-outline" size={48} color={theme.textSecondary} />
+            <Text style={[styles.emptyTitle, { color: theme.text }]}>Sin resultados</Text>
+            <Text style={[styles.emptySubtitle, { color: theme.textSecondary }]}>
               Probá con otros filtros o fechas distintas.
             </Text>
-            <TouchableOpacity style={styles.emptyBtn} onPress={() => router.back()}>
+            <TouchableOpacity style={[styles.emptyBtn, { backgroundColor: theme.primary }]} onPress={() => router.back()}>
               <Text style={styles.emptyBtnText}>Volver a preferencias</Text>
             </TouchableOpacity>
           </View>
@@ -169,10 +187,8 @@ export default function RecomendacionesScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
   },
   headerAzul: {
-    backgroundColor: '#2F65E3',
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 20,
@@ -231,11 +247,9 @@ const styles = StyleSheet.create({
   },
   // Card de resultado
   card: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   cardImageContainer: {
     height: 180,
@@ -246,7 +260,6 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   cardImageFallback: {
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -290,11 +303,9 @@ const styles = StyleSheet.create({
   cardTitulo: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
   },
   cardDescripcion: {
     fontSize: 14,
-    color: '#4B5563',
     lineHeight: 20,
   },
   etiquetasRow: {
@@ -304,7 +315,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   etiqueta: {
-    backgroundColor: '#F3F4F6',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
@@ -312,7 +322,6 @@ const styles = StyleSheet.create({
   etiquetaText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#374151',
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
@@ -320,10 +329,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#EFF4FF',
-  },
-  etiquetaDiasText: {
-    color: '#2F65E3',
   },
   // Empty state
   empty: {
@@ -335,16 +340,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#374151',
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#9CA3AF',
     textAlign: 'center',
   },
   emptyBtn: {
     marginTop: 8,
-    backgroundColor: '#2F65E3',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 12,

@@ -20,19 +20,21 @@ import { ProvinciaSelector } from '../../components/Preferencias/ProvinciaSelect
 import { buscarPorPreferencias } from '../../src/services/itinerarioService';
 import { CATEGORIA_LABEL, CategoriaItinerario, Provincia, PROVINCIA_LABEL } from '../../src/types/itinerario';
 import { Header } from '../../components/common/Header/Header';
+import { useTheme } from '@/hooks/use-color-scheme';
+import { colors } from '@/constants/colors';
 
-const CATEGORIAS: { value: CategoriaItinerario; icon: React.ReactNode }[] = [
-  { value: CategoriaItinerario.NATURALEZA, icon: <NaturalezaIcon width={28} height={28} /> },
-  { value: CategoriaItinerario.GASTRONOMIA, icon: <GastronomiaIcon width={28} height={28} /> },
-  { value: CategoriaItinerario.AVENTURA, icon: <AventuraIcon width={28} height={28} /> },
-  { value: CategoriaItinerario.CULTURA, icon: <CultureIcon width={28} height={28} /> },
+const CATEGORIAS: { value: CategoriaItinerario; icon: (color: string) => React.ReactNode }[] = [
+  { value: CategoriaItinerario.NATURALEZA, icon: () => <NaturalezaIcon width={28} height={28} /> },
+  { value: CategoriaItinerario.GASTRONOMIA, icon: () => <GastronomiaIcon width={28} height={28} /> },
+  { value: CategoriaItinerario.AVENTURA, icon: () => <AventuraIcon width={28} height={28} /> },
+  { value: CategoriaItinerario.CULTURA, icon: () => <CultureIcon width={28} height={28} /> },
   {
     value: CategoriaItinerario.NOCHE,
-    icon: <Ionicons name="moon-outline" size={28} color="#2F65E3" />,
+    icon: (color) => <Ionicons name="moon-outline" size={28} color={color} />,
   },
   {
     value: CategoriaItinerario.COMPRA,
-    icon: <MaterialCommunityIcons name="shopping-outline" size={28} color="#2F65E3" />,
+    icon: (color) => <MaterialCommunityIcons name="shopping-outline" size={28} color={color} />,
   },
 ];
 
@@ -53,6 +55,10 @@ export default function PreferenciasScreen() {
   const [showCalendario, setShowCalendario] = useState(false);
   const [showProvincia, setShowProvincia] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const { colorScheme, toggleColorScheme } = useTheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
 
   const toggleCategoria = (cat: CategoriaItinerario) => {
     setCategorias((prev) => {
@@ -90,14 +96,14 @@ export default function PreferenciasScreen() {
   };
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+    <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <Header
         title="Buscar"
         showBackButton={true}
         onBackPress={() => router.back()}
-        onThemeTogglePress={() => Alert.alert('Tema', 'Cambio de tema no implementado.')}
-        onAvatarPress={() => Alert.alert('Perfil', 'Navegación al perfil de usuario.')}
+        onThemeTogglePress={toggleColorScheme}
+        onAvatarPress={() => router.push('/(tabs)/perfil')}
       />
 
       <ScrollView
@@ -107,19 +113,19 @@ export default function PreferenciasScreen() {
       >
         {/* Destino */}
         <View style={styles.seccion}>
-          <Text style={styles.pregunta}>¿A dónde quieres ir?</Text>
+          <Text style={[styles.pregunta, { color: theme.text }]}>¿A dónde quieres ir?</Text>
           <TouchableOpacity
-            style={styles.inputRow}
+            style={[styles.inputRow, { backgroundColor: theme.surface, borderColor: theme.border }]}
             onPress={() => setShowProvincia(true)}
             activeOpacity={0.7}
           >
-            <Ionicons name="location-outline" size={18} color="#9CA3AF" />
-            <Text style={[styles.inputText, !provincia && styles.inputPlaceholder]}>
+            <Ionicons name="location-outline" size={18} color={theme.textSecondary} />
+            <Text style={[styles.inputText, { color: provincia ? theme.text : theme.textSecondary }]}>
               {provincia ? PROVINCIA_LABEL[provincia] : 'Ej: Río Negro, Salta, Buenos Aires...'}
             </Text>
             {provincia && (
               <TouchableOpacity onPress={() => setProvincia(undefined)}>
-                <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+                <Ionicons name="close-circle" size={18} color={theme.textSecondary} />
               </TouchableOpacity>
             )}
           </TouchableOpacity>
@@ -127,15 +133,15 @@ export default function PreferenciasScreen() {
 
         {/* Fechas */}
         <View style={styles.seccion}>
-          <Text style={styles.labelSeccion}>SELECCIONA DIAS</Text>
-          <TouchableOpacity style={styles.fechasRow} onPress={() => setShowCalendario(true)} activeOpacity={0.8}>
-            <View style={[styles.fechaTab, styles.fechaTabActivo]}>
+          <Text style={[styles.labelSeccion, { color: theme.textSecondary }]}>SELECCIONA DIAS</Text>
+          <TouchableOpacity style={[styles.fechasRow, { backgroundColor: theme.primary }]} onPress={() => setShowCalendario(true)} activeOpacity={0.8}>
+            <View style={[styles.fechaTab, { backgroundColor: theme.primary }]}>
               <Ionicons name="calendar-outline" size={16} color="#FFFFFF" />
               <Text style={styles.fechaTabTextoActivo}>
                 {fechaInicio ? formatFecha(fechaInicio) : 'INICIO'}
               </Text>
             </View>
-            <View style={[styles.fechaTab, styles.fechaTabActivo]}>
+            <View style={[styles.fechaTab, { backgroundColor: theme.primary }]}>
               <Text style={styles.fechaTabTextoActivo}>
                 {fechaFin ? formatFecha(fechaFin) : 'FINAL'}
               </Text>
@@ -143,27 +149,40 @@ export default function PreferenciasScreen() {
           </TouchableOpacity>
           {(fechaInicio || fechaFin) && (
             <TouchableOpacity onPress={() => { setFechaInicio(undefined); setFechaFin(undefined); }}>
-              <Text style={styles.limpiarFechas}>Limpiar fechas</Text>
+              <Text style={[styles.limpiarFechas, { color: theme.primary }]}>Limpiar fechas</Text>
             </TouchableOpacity>
           )}
         </View>
 
         {/* Categorías */}
         <View style={styles.seccion}>
-          <Text style={styles.pregunta}>¿Qué te interesa?</Text>
-          <Text style={styles.subtituloCat}>Selecciona todas las categorías que quieras</Text>
+          <Text style={[styles.pregunta, { color: theme.text }]}>¿Qué te interesa?</Text>
+          <Text style={[styles.subtituloCat, { color: theme.textSecondary }]}>Selecciona todas las categorías que quieras</Text>
           <View style={styles.categoriasGrid}>
             {CATEGORIAS.map(({ value, icon }) => {
               const activa = categorias.has(value);
+              const cardBg = activa 
+                ? (isDark ? '#2A303D' : '#EFF4FF') 
+                : theme.surface;
+              const cardBorder = activa ? theme.primary : theme.border;
+              const labelColor = activa ? theme.primary : theme.text;
+              const iconColor = activa ? theme.primary : theme.textSecondary;
+
               return (
                 <TouchableOpacity
                   key={value}
-                  style={[styles.categoriaCard, activa && styles.categoriaCardActiva]}
+                  style={[
+                    styles.categoriaCard, 
+                    { 
+                      backgroundColor: cardBg, 
+                      borderColor: cardBorder 
+                    }
+                  ]}
                   onPress={() => toggleCategoria(value)}
                   activeOpacity={0.75}
                 >
-                  {icon}
-                  <Text style={[styles.categoriaLabel, activa && styles.categoriaLabelActiva]}>
+                  {icon(iconColor)}
+                  <Text style={[styles.categoriaLabel, { color: labelColor }]}>
                     {CATEGORIA_LABEL[value]}
                   </Text>
                 </TouchableOpacity>
@@ -174,9 +193,9 @@ export default function PreferenciasScreen() {
       </ScrollView>
 
       {/* Botón fijo abajo */}
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: theme.background, borderTopColor: theme.border }]}>
         <TouchableOpacity
-          style={[styles.btnBuscar, loading && styles.btnBuscarLoading]}
+          style={[styles.btnBuscar, { backgroundColor: theme.primary }, loading && styles.btnBuscarLoading]}
           onPress={handleBuscar}
           disabled={loading}
           activeOpacity={0.85}
@@ -190,7 +209,7 @@ export default function PreferenciasScreen() {
             </>
           )}
         </TouchableOpacity>
-        <Text style={styles.footerCaption}>Podrás editar cada detalle después.</Text>
+        <Text style={[styles.footerCaption, { color: theme.textSecondary }]}>Podrás editar cada detalle después.</Text>
       </View>
 
       <CalendarioViaje
@@ -213,44 +232,10 @@ export default function PreferenciasScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
   },
   scrollContent: {
     paddingHorizontal: 20,
     paddingBottom: 20,
-  },
-  encabezado: {
-    paddingTop: 24,
-    paddingBottom: 8,
-  },
-  titulo: {
-    fontSize: 32,
-    fontFamily: 'Inter-Bold',
-    fontWeight: '800',
-    color: '#111827',
-    letterSpacing: -0.8,
-    lineHeight: 38,
-  },
-  subtitulo: {
-    fontSize: 15,
-    color: '#6B7280',
-    marginTop: 6,
-    marginBottom: 16,
-  },
-  btnVolver: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#EF4444',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: 20,
-  },
-  btnVolverText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 14,
   },
   seccion: {
     marginTop: 28,
@@ -258,19 +243,16 @@ const styles = StyleSheet.create({
   pregunta: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#111827',
     marginBottom: 12,
   },
   labelSeccion: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#6B7280',
     letterSpacing: 1,
     marginBottom: 10,
   },
   subtituloCat: {
     fontSize: 13,
-    color: '#6B7280',
     marginTop: -6,
     marginBottom: 14,
   },
@@ -278,25 +260,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     paddingHorizontal: 14,
     paddingVertical: 14,
   },
   inputText: {
     flex: 1,
     fontSize: 15,
-    color: '#111827',
-  },
-  inputPlaceholder: {
-    color: '#9CA3AF',
   },
   fechasRow: {
     flexDirection: 'row',
     gap: 0,
-    backgroundColor: '#2F65E3',
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -308,9 +283,6 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
   },
-  fechaTabActivo: {
-    backgroundColor: '#2F65E3',
-  },
   fechaTabTextoActivo: {
     color: '#FFFFFF',
     fontWeight: '700',
@@ -319,7 +291,6 @@ const styles = StyleSheet.create({
   },
   limpiarFechas: {
     fontSize: 13,
-    color: '#2F65E3',
     marginTop: 8,
     textAlign: 'right',
   },
@@ -330,32 +301,20 @@ const styles = StyleSheet.create({
   },
   categoriaCard: {
     width: '47%',
-    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#E5E7EB',
     paddingVertical: 18,
     alignItems: 'center',
     gap: 8,
   },
-  categoriaCardActiva: {
-    borderColor: '#2F65E3',
-    backgroundColor: '#EFF4FF',
-  },
   categoriaLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#374151',
-  },
-  categoriaLabelActiva: {
-    color: '#2F65E3',
   },
   footer: {
     paddingTop: 12,
     paddingHorizontal: 20,
-    backgroundColor: '#F9FAFB',
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
     alignItems: 'center',
     gap: 8,
   },
@@ -364,7 +323,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: '#2F65E3',
     borderRadius: 16,
     paddingVertical: 16,
     width: '100%',
@@ -379,6 +337,5 @@ const styles = StyleSheet.create({
   },
   footerCaption: {
     fontSize: 12,
-    color: '#9CA3AF',
   },
 });
