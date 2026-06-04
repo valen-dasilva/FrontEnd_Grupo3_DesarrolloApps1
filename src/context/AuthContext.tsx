@@ -27,7 +27,10 @@ interface AuthContextValue {
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (partial: Partial<AuthUser>) => Promise<void>;  // 👈 nuevo
 }
+
+
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -101,13 +104,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await storage.clearSession();
   }, []);
 
+  const updateUser = useCallback(async (partial: Partial<AuthUser>) => {
+  setUser((prev) => {
+    if (!prev) return prev;
+    const next = { ...prev, ...partial };
+    // Persistir asíncronamente sin bloquear el render
+    storage.saveUser(next).catch(() => {});
+    return next;
+  });
+}, []);
+
   useEffect(() => {
     setUnauthorizedHandler(logout);
   }, [logout]);
 
   return (
     <AuthContext.Provider
-      value={{ user, token, isLoading, login, register, logout }}
+      value={{ user, token, isLoading, login, register, logout, updateUser }}
     >
       {children}
     </AuthContext.Provider>

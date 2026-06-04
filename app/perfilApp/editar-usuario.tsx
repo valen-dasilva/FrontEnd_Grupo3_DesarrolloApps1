@@ -1,8 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colors } from '@/constants/colors';
+import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -11,85 +10,165 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-
-const COLORS = {
-  primary: '#2F4FCD',
-  danger: '#C0392B',
-  bg: '#F4F5F7',
-  card: '#FFFFFF',
-  text: '#1A1A2E',
-  gray: '#8A8A9E',
-  border: '#E2E4EA',
-  inputBg: '#F7F8FA',
-};
+import Toast from 'react-native-toast-message';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { colors } from '@/constants/colors';
+import { useAuth } from '../../src/context/AuthContext';
+import { getProfile, updateProfile } from '../../src/services/profileService';
+import { ApiError } from '../../src/services/api';
 
 export default function EditarUsuarioScreen() {
   const router = useRouter();
-  const [nombre, setNombre] = useState('');
-  const [apellido, setApellido] = useState('');
-  const [correo, setCorreo] = useState('');
+  const { user, updateUser } = useAuth();
 
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? colors.dark : colors.light;
+
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Cargar perfil completo al entrar a la pantalla
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const profile = await getProfile(user.idUsuario);
+        setFirstName(profile.nombre);
+        setLastName(profile.apellido);
+        setEmail(profile.email);
+      } catch (err) {
+        Toast.show({
+          type: 'error',
+          text1: 'No se pudo cargar el perfil',
+          text2: err instanceof ApiError ? err.message : undefined,
+        });
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [user]);
+
+  const handleSave = async () => {
+    if (!user) return;
+
+    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
+      Toast.show({ type: 'error', text1: 'Completá todos los campos' });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const updated = await updateProfile(user.idUsuario, {
+        nombre: firstName.trim(),
+        apellido: lastName.trim(),
+        email: email.trim(),
+      });
+
+      // Refrescamos el AuthContext para que la pantalla de Perfil muestre los datos nuevos
+      await updateUser({
+        nombre: updated.nombre,
+        email: updated.email,
+      });
+
+      Toast.show({ type: 'success', text1: 'Perfil actualizado' });
+      router.back();
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Error al actualizar';
+      Toast.show({ type: 'error', text1: message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Iniciales para el avatar
+  const initials =
+    firstName && lastName
+      ? `${firstName[0]}${lastName[0]}`.toUpperCase()
+      : firstName
+        ? firstName.substring(0, 2).toUpperCase()
+        : 'U';
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={theme.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={[styles.avatarCircle, isDark && { backgroundColor: '#2A303D' }]}>
-          <Text style={[styles.avatarInitials, { color: theme.primary }]}>MR</Text>
+          <Text style={[styles.avatarInitials, { color: theme.primary }]}>{initials}</Text>
         </View>
         <Text style={[styles.changePhoto, { color: theme.primary }]}>Cambiar foto de perfil</Text>
 
         <Text style={[styles.label, { color: theme.text }]}>Nombre</Text>
         <TextInput
-          style={[styles.input, { 
-            backgroundColor: theme.surface, 
-            borderColor: theme.border, 
-            color: theme.text 
+          style={[styles.input, {
+            backgroundColor: theme.surface,
+            borderColor: theme.border,
+            color: theme.text,
           }]}
           placeholder="Mateo"
           placeholderTextColor={theme.textSecondary}
-          value={nombre}
-          onChangeText={setNombre}
+          value={firstName}
+          onChangeText={setFirstName}
         />
 
         <Text style={[styles.label, { color: theme.text }]}>Apellido</Text>
         <TextInput
-          style={[styles.input, { 
-            backgroundColor: theme.surface, 
-            borderColor: theme.border, 
-            color: theme.text 
+          style={[styles.input, {
+            backgroundColor: theme.surface,
+            borderColor: theme.border,
+            color: theme.text,
           }]}
           placeholder="Rossi"
           placeholderTextColor={theme.textSecondary}
-          value={apellido}
-          onChangeText={setApellido}
+          value={lastName}
+          onChangeText={setLastName}
         />
 
         <Text style={[styles.label, { color: theme.text }]}>Correo Electrónico</Text>
         <TextInput
-          style={[styles.input, { 
-            backgroundColor: theme.surface, 
-            borderColor: theme.border, 
-            color: theme.text 
+          style={[styles.input, {
+            backgroundColor: theme.surface,
+            borderColor: theme.border,
+            color: theme.text,
           }]}
           placeholder="tu@correo.com"
           placeholderTextColor={theme.textSecondary}
           keyboardType="email-address"
           autoCapitalize="none"
-          value={correo}
-          onChangeText={setCorreo}
+          value={email}
+          onChangeText={setEmail}
         />
 
-        <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: theme.primary }]}>
-          <Text style={styles.primaryBtnText}>✓  Guardar Cambios</Text>
+        <TouchableOpacity
+          style={[styles.primaryBtn, { backgroundColor: theme.primary, opacity: saving ? 0.6 : 1 }]}
+          onPress={handleSave}
+          disabled={saving}
+        >
+          {saving ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.primaryBtnText}>✓  Guardar Cambios</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.dangerBtn, { backgroundColor: theme.danger }]}
           onPress={() => router.back()}
+          disabled={saving}
         >
           <Text style={styles.dangerBtnText}>Cancelar</Text>
         </TouchableOpacity>
@@ -99,7 +178,7 @@ export default function EditarUsuarioScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.bg },
+  safe: { flex: 1 },
   scroll: { padding: 20, paddingBottom: 40 },
   avatarCircle: {
     width: 90,
@@ -111,10 +190,9 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginVertical: 16,
   },
-  avatarInitials: { fontSize: 28, fontWeight: '700', color: COLORS.primary },
+  avatarInitials: { fontSize: 28, fontWeight: '700' },
   changePhoto: {
     fontSize: 13,
-    color: COLORS.primary,
     textAlign: 'center',
     marginVertical: 12,
     fontWeight: '600',
@@ -122,20 +200,16 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.text,
     marginBottom: 6,
     marginTop: 10,
   },
   input: {
-    backgroundColor: COLORS.inputBg,
     borderRadius: 10,
     padding: 14,
     fontSize: 15,
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   primaryBtn: {
-    backgroundColor: COLORS.primary,
     borderRadius: 10,
     padding: 15,
     alignItems: 'center',
@@ -143,18 +217,10 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: { color: '#FFF', fontWeight: '700', fontSize: 15 },
   dangerBtn: {
-    backgroundColor: COLORS.danger,
     borderRadius: 10,
     padding: 15,
     alignItems: 'center',
     marginTop: 10,
   },
   dangerBtnText: { color: '#FFF', fontWeight: '700', fontSize: 15 },
-  deleteAccount: {
-    color: COLORS.danger,
-    textAlign: 'center',
-    marginTop: 16,
-    fontSize: 13,
-    fontWeight: '600',
-  },
 });
