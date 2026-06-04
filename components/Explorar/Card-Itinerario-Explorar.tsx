@@ -3,15 +3,15 @@ import { fonts } from '@/constants/fonts';
 import { icons } from '@/constants/icons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import { useState, type ReactNode } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { useState } from 'react';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { styles } from './Card-Itinerario-Explorar.styles';
 
 type Props = {
   title: string;
   description: string;
   category: string;
-  image: ReactNode;
+  image: string;
   rating?: string;
   duration?: string;
 };
@@ -36,7 +36,10 @@ export function ExploreItineraryCard({
 
       {/* Image */}
       <View style={styles.imageContainer}>
-        {image}
+        <Image
+          source={{ uri: image }}
+          style={styles.image}
+          resizeMode="cover" />
 
         {/* Heart Icon */}
         <TouchableOpacity style={styles.heartButton} onPress={() => setIsFavorite(!isFavorite)}>
