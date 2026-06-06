@@ -1,5 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { colors } from '@/constants/colors';
 
 import {
   SafeAreaView,
@@ -28,54 +30,73 @@ export default function CambiarContrasenaScreen() {
   const [nueva, setNueva] = useState('');
   const [confirmar, setConfirmar] = useState('');
 
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
+
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={styles.scroll}>
 
-        <View style={styles.lockCircle}>
+        <View style={[styles.lockCircle, isDark && { backgroundColor: '#2A303D' }]}>
           <Text style={{ fontSize: 26 }}>🔒</Text>
         </View>
 
-        <Text style={styles.bigTitle}>Protege tu cuenta</Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.bigTitle, { color: theme.text }]}>Protege tu cuenta</Text>
+        <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
           Ingresa tu contraseña actual y elige una nueva para proteger tu
           cuenta. Asegúrate de que sea única y difícil de adivinar.
         </Text>
 
-        <Text style={styles.label}>Contraseña actual</Text>
+        <Text style={[styles.label, { color: theme.text }]}>Contraseña actual</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { 
+            backgroundColor: theme.surface, 
+            borderColor: theme.border, 
+            color: theme.text 
+          }]}
           secureTextEntry
           placeholder="••••••••"
+          placeholderTextColor={theme.textSecondary}
           value={actual}
           onChangeText={setActual}
         />
 
-        <Text style={styles.label}>Nueva contraseña</Text>
+        <Text style={[styles.label, { color: theme.text }]}>Nueva contraseña</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { 
+            backgroundColor: theme.surface, 
+            borderColor: theme.border, 
+            color: theme.text 
+          }]}
           secureTextEntry
           placeholder="••••••••"
+          placeholderTextColor={theme.textSecondary}
           value={nueva}
           onChangeText={setNueva}
         />
 
-        <Text style={styles.label}>Confirmar nueva contraseña</Text>
+        <Text style={[styles.label, { color: theme.text }]}>Confirmar nueva contraseña</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { 
+            backgroundColor: theme.surface, 
+            borderColor: theme.border, 
+            color: theme.text 
+          }]}
           secureTextEntry
           placeholder="••••••••"
+          placeholderTextColor={theme.textSecondary}
           value={confirmar}
           onChangeText={setConfirmar}
         />
 
-        <TouchableOpacity style={styles.primaryBtn}>
+        <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: theme.primary }]}>
           <Text style={styles.primaryBtnText}>✓  Guardar Cambios</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.dangerBtn}
+          style={[styles.dangerBtn, { backgroundColor: theme.danger }]}
           onPress={() => router.back()}
         >
           <Text style={styles.dangerBtnText}>Cancelar</Text>

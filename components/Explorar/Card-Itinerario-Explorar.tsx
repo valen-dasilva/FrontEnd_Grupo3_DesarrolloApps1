@@ -1,10 +1,16 @@
+import React, { useState, type ReactNode } from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@/constants/colors';
 import { fonts } from '@/constants/fonts';
 import { icons } from '@/constants/icons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
+<<<<<<< HEAD
 import { useState } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
+=======
+import { useColorScheme } from '@/hooks/use-color-scheme';
+>>>>>>> 6fdff57a457dbfa4b4fe8b3827d7a5ad2a59130a
 import { styles } from './Card-Itinerario-Explorar.styles';
 
 type Props = {
@@ -26,10 +32,13 @@ export function ExploreItineraryCard({
 }: Props) {
   const router = useRouter();
   const [isFavorite, setIsFavorite] = useState(false);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
 
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
       activeOpacity={0.8}
       onPress={() => router.push('/explorarApp/itinerarioInfo')}
     >
@@ -41,19 +50,36 @@ export function ExploreItineraryCard({
           style={styles.image}
           resizeMode="cover" />
 
-        {/* Heart Icon */}
-        <TouchableOpacity style={styles.heartButton} onPress={() => setIsFavorite(!isFavorite)}>
+        {/* Heart Button */}
+        <TouchableOpacity 
+          style={[
+            styles.heartButton, 
+            { 
+              backgroundColor: isDark ? '#11131A' : '#FFFFFF', 
+              borderColor: theme.border, 
+              borderWidth: isDark ? 1 : 0 
+            }
+          ]} 
+          onPress={() => setIsFavorite(!isFavorite)}
+        >
           <MaterialIcons
             name={isFavorite ? icons.FavoriteFilled : icons.FavoriteOutline}
             size={fonts.size.xl}
-            color={isFavorite ? colors.danger : colors.textSecondary}
+            color={isFavorite ? theme.danger : theme.textSecondary}
           />
         </TouchableOpacity>
 
         {/* Category */}
-        <View style={styles.categoryBadge}>
-          <MaterialIcons name={icons.Museum} size={fonts.size.lg} color={colors.primary} />
-          <Text style={styles.categoryText}>{category}</Text>
+        <View style={[
+          styles.categoryBadge, 
+          { 
+            backgroundColor: isDark ? '#11131A' : '#FFFFFF', 
+            borderColor: theme.border, 
+            borderWidth: isDark ? 1 : 0 
+          }
+        ]}>
+          <MaterialIcons name={icons.Museum} size={fonts.size.lg} color={theme.primary} />
+          <Text style={[styles.categoryText, { color: theme.text }]}>{category}</Text>
         </View>
       </View>
 
@@ -62,25 +88,25 @@ export function ExploreItineraryCard({
 
         <View style={styles.headerRow}>
           {/* Title */}
-          <Text style={styles.title}>{title}</Text>
+          <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
 
           {/* Rating */}
-          <View style={styles.ratingBadge}>
-            <MaterialIcons name={icons.Star} size={fonts.size.sm} color={colors.warning} />
-            <Text style={styles.ratingText}>{rating}</Text>
+          <View style={[styles.ratingBadge, { backgroundColor: isDark ? '#2A303D' : '#FEF9C3' }]}>
+            <MaterialIcons name={icons.Star} size={fonts.size.sm} color={theme.warning} />
+            <Text style={[styles.ratingText, { color: theme.text }]}>{rating}</Text>
           </View>
         </View>
 
         {/* Description */}
-        <Text style={styles.description} numberOfLines={2}>
+        <Text style={[styles.description, { color: theme.textSecondary }]} numberOfLines={2}>
           {description}
         </Text>
 
         {/* Duration */}
         {duration && (
           <View style={styles.durationRow}>
-            <MaterialIcons name={icons.Schedule} size={fonts.size.md} color={colors.textSecondary} />
-            <Text style={styles.durationText}>{duration}</Text>
+            <MaterialIcons name={icons.Schedule} size={fonts.size.md} color={isDark ? theme.textSecondary : "#6B7280"} />
+            <Text style={[styles.durationText, { color: theme.textSecondary }]}>{duration}</Text>
           </View>
         )}
 
@@ -88,4 +114,3 @@ export function ExploreItineraryCard({
     </TouchableOpacity>
   );
 }
-

@@ -11,6 +11,8 @@ import { BottomSheet } from '../../components/BottomSheet';
 import { HeaderLogo } from '../../components/HeaderLogo';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../services/api';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { colors } from '@/constants/colors';
 
 // Debe coincidir con la validación del backend (RegisterRequest.contrasenia).
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -25,6 +27,9 @@ export const RegisterStep2Screen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
 
   const handleRegister = async () => {
     if (!password || !confirmPassword) {
@@ -80,7 +85,7 @@ export const RegisterStep2Screen: React.FC = () => {
   };
 
   return (
-    <LinearGradient colors={[COLORS.gradientStart, COLORS.gradientEnd]} style={styles.container}>
+    <LinearGradient colors={[theme.gradientStart, theme.gradientEnd]} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -95,8 +100,8 @@ export const RegisterStep2Screen: React.FC = () => {
 
           <BottomSheet>
             <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>Comienza tu viaje</Text>
-              <Text style={styles.sheetSubtitle}>Ingresá para sincronizar tus itinerarios y descubrir lugares únicos.</Text>
+              <Text style={[styles.sheetTitle, { color: theme.text }]}>Comienza tu viaje</Text>
+              <Text style={[styles.sheetSubtitle, { color: theme.textSecondary }]}>Ingresá para sincronizar tus itinerarios y descubrir lugares únicos.</Text>
             </View>
             
             <CustomInput
@@ -151,12 +156,10 @@ const styles = StyleSheet.create({
   sheetTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: COLORS.textDark,
     marginBottom: 8,
   },
   sheetSubtitle: {
     fontSize: 14,
-    color: COLORS.textLight,
     textAlign: 'center',
     paddingHorizontal: 10,
   },

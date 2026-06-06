@@ -9,6 +9,7 @@ import { CreateActivityCard } from '../../components/favorites_components/itiner
 import { InputTitulo } from '../../components/favorites_components/itinerary_edit/InputTittle/InputTitulo';
 import { colors } from '../../constants/colors';
 import { styles } from './edicionItinerario.styles';
+import { useTheme } from '@/hooks/use-color-scheme';
 
 // Mock de datos
 const INITIAL_ACTIVITIES = [
@@ -113,14 +114,15 @@ type DaySectionProps = Readonly<{
   onEdit: (activity: Activity) => void;
   onDelete: (id: string, title: string) => void;
   onAdd: (dayNum: number) => void;
+  theme: typeof colors.light;
 }>;
 
 // Extracted to avoid nesting > 4 levels inside the ScrollView render
-function DaySection({ dayNum, activities, onEdit, onDelete, onAdd }: DaySectionProps) {
+function DaySection({ dayNum, activities, onEdit, onDelete, onAdd, theme }: DaySectionProps) {
   const dayActivities = activities.filter((act) => act.day === dayNum);
   return (
     <View style={styles.daySection}>
-      <Text style={styles.dayTitle}>{`Día ${dayNum}`}</Text>
+      <Text style={[styles.dayTitle, { color: theme.textSecondary }]}>{`Día ${dayNum}`}</Text>
       <View style={styles.activityList}>
         {dayActivities.map((activity) => (
           <ActivityCard
@@ -144,6 +146,10 @@ export default function EdicionItinerarioScreen() {
   const [activities, setActivities] = useState(INITIAL_ACTIVITIES);
   const insets = useSafeAreaInsets();
   const router = useRouter();
+
+  const { colorScheme, toggleColorScheme } = useTheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
 
   const params = useLocalSearchParams<ActivityParams>();
 
@@ -214,20 +220,20 @@ export default function EdicionItinerarioScreen() {
   const days = Array.from(new Set(activities.map((act) => act.day))).sort((a, b) => a - b);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
 
       <Header
         title="Editar Itinerario"
         showBackButton={true}
         onBackPress={() => router.back()}
-        onThemeTogglePress={() => Alert.alert('Tema', 'Cambio de tema no implementado.')}
-        onAvatarPress={() => Alert.alert('Perfil', 'Navegación al perfil de usuario.')}
+        onThemeTogglePress={toggleColorScheme}
+        onAvatarPress={() => router.push('/(tabs)/perfil')}
       />
 
       <ScrollView
-        style={styles.scrollView}
+        style={[styles.scrollView, { backgroundColor: theme.background }]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -243,12 +249,13 @@ export default function EdicionItinerarioScreen() {
             onEdit={handleEditActivity}
             onDelete={handleDeleteActivity}
             onAdd={handleAddActivity}
+            theme={theme}
           />
         ))}
 
         {activities.length === 0 && (
           <View style={{ padding: 20, alignItems: 'center', width: '100%' }}>
-            <Text style={{ color: colors.textSecondary, fontFamily: 'Inter_400Regular', marginBottom: 16 }}>
+            <Text style={{ color: theme.textSecondary, fontFamily: 'Inter_400Regular', marginBottom: 16 }}>
               No hay actividades en este itinerario.
             </Text>
             <CreateActivityCard onPress={() => handleAddActivity(1)} />
@@ -259,8 +266,6 @@ export default function EdicionItinerarioScreen() {
           <Button label="Guardar cambios" onPress={handleSaveChanges} />
         </View>
       </ScrollView>
-
-
     </View>
   );
 }

@@ -6,28 +6,42 @@ import { Provincia, PROVINCIA_LABEL } from '@/src/types/itinerario';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { ProvinciaSelector } from '@/components/Preferencias/ProvinciaSelector';
 
 export function FiltrosDeBusqueda() {
   const [provincia, setProvincia] = useState<Provincia | undefined>();
   const [showProvincia, setShowProvincia] = useState(false);
-  return (
+  
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
 
+  return (
     <View style={styles.seccion}>
-      <Text style={styles.pregunta}>¿A dónde quieres ir?</Text>
+      <Text style={[styles.pregunta, { color: theme.text }]}>¿A dónde quieres ir?</Text>
       <TouchableOpacity
-        style={styles.inputRow}
+        style={[
+          styles.inputRow,
+          {
+            backgroundColor: theme.surface,
+            borderColor: isDark ? theme.border : colors.borderDark,
+          }
+        ]}
         onPress={() => setShowProvincia(true)}
         activeOpacity={0.7}
       >
-        <MaterialIcons name={icons.AddItinerary} size={fonts.size.lg} color={colors.textSecondary} />
-        <Text style={[styles.inputText, !provincia && styles.inputPlaceholder]}>
+        <MaterialIcons name={icons.AddItinerary} size={fonts.size.lg} color={theme.textSecondary} />
+        <Text style={[
+          styles.inputText,
+          { color: provincia ? theme.text : theme.textSecondary }
+        ]}>
           {provincia ? PROVINCIA_LABEL[provincia] : 'Ej: Río Negro, Salta, Buenos Aires...'}
         </Text>
         {provincia && (
           <TouchableOpacity onPress={() => setProvincia(undefined)}>
-            <MaterialIcons name="cancel" size={fonts.size.lg} color={colors.textSecondary} />
+            <MaterialIcons name="cancel" size={fonts.size.lg} color={theme.textSecondary} />
           </TouchableOpacity>
         )}
       </TouchableOpacity>
@@ -42,18 +56,6 @@ export function FiltrosDeBusqueda() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    paddingHorizontal: paddings.spacing.lg,
-    paddingVertical: paddings.spacing.sm,
-    borderRadius: paddings.radius.xxl,
-    borderWidth: 1,
-    borderColor: colors.borderDark,
-    marginBottom: paddings.spacing.xl,
-    marginTop: paddings.spacing.lg,
-  },
   seccion: {
     marginTop: paddings.spacing.xxxl - 4,
   },
@@ -79,8 +81,5 @@ const styles = StyleSheet.create({
     fontSize: fonts.size.sm + 1,
     fontFamily: fonts.family.bodyRegular,
     color: colors.text,
-  },
-  inputPlaceholder: {
-    color: colors.textSecondary,
   },
 });

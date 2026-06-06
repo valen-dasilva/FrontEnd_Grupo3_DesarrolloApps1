@@ -4,6 +4,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { styles } from './BottomNavBar.styles';
 import { colors } from '../../../constants/colors';
 import { icons } from '../../../constants/icons';
+import { useColorScheme } from '../../../hooks/use-color-scheme';
 
 export type TabName = 'Inicio' | 'Explorar' | 'Favoritos' | 'Perfil';
 
@@ -19,23 +20,31 @@ interface TabItemProps {
   iconName: React.ComponentProps<typeof MaterialIcons>['name'];
   isActive: boolean;
   onPress: () => void;
+  theme: typeof colors.light;
 }
 
-const TabItem: React.FC<TabItemProps> = ({ label, iconName, isActive, onPress }) => (
+const TabItem: React.FC<TabItemProps> = ({ label, iconName, isActive, onPress, theme }) => (
   <Pressable 
     onPress={onPress}
     style={styles.tabContainer}
     accessibilityRole="tab"
     accessibilityState={{ selected: isActive }}
   >
-    <View style={[styles.contentWrapper, isActive && styles.contentWrapperActive]}>
+    <View style={[
+      styles.contentWrapper, 
+      isActive && styles.contentWrapperActive,
+      isActive && { backgroundColor: theme.surfaceHighlight }
+    ]}>
       <MaterialIcons 
         name={iconName} 
         size={22} 
-        color={isActive ? colors.primary : colors.button_gray}
+        color={isActive ? theme.primary : theme.button_gray}
         style={{ marginBottom: 2 }}
       />
-      <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+      <Text style={[
+        styles.tabLabel, 
+        isActive ? { color: theme.primary } : { color: theme.button_gray }
+      ]}>
         {label}
       </Text>
     </View>
@@ -46,32 +55,46 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
   activeTab = 'Favoritos',
   onTabPress,
 }) => {
+  const colorScheme = useColorScheme();
+  const theme = colors[colorScheme];
+
   return (
-    <View style={styles.navBarContainer}>
+    <View style={[
+      styles.navBarContainer,
+      {
+        backgroundColor: theme.surface,
+        borderTopColor: theme.border,
+      }
+    ]}>
       <TabItem 
         label="Inicio" 
         iconName={icons.Home} 
         isActive={activeTab === 'Inicio'} 
         onPress={() => onTabPress?.('Inicio')} 
+        theme={theme}
       />
       <TabItem 
         label="Explorar" 
         iconName={icons.Explore} 
         isActive={activeTab === 'Explorar'} 
         onPress={() => onTabPress?.('Explorar')} 
+        theme={theme}
       />
       <TabItem 
         label="Favoritos" 
         iconName={icons.Favorite} 
         isActive={activeTab === 'Favoritos'} 
         onPress={() => onTabPress?.('Favoritos')} 
+        theme={theme}
       />
       <TabItem 
         label="Perfil" 
         iconName={icons.Person} 
         isActive={activeTab === 'Perfil'} 
         onPress={() => onTabPress?.('Perfil')} 
+        theme={theme}
       />
     </View>
   );
 };
+
