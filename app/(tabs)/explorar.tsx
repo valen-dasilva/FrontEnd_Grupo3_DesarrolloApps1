@@ -2,67 +2,124 @@ import { ExploreItineraryCard } from '@/components/Explorar/Card-Itinerario-Expl
 import { CategoriesCarousel } from '@/components/Explorar/Filtro-Categorias-Carrusel';
 import { FiltrosDeBusqueda } from '@/components/Filtros-de-busqueda';
 import { Header } from '@/components/common/Header/Header';
-<<<<<<< HEAD
-import { useItinerariesCards } from '@/hooks/useCardExploreItineraryService';
-import { MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-=======
-import TeatroColonIcon from '../../assets/images/Imagen-Teatro-Colon.svg';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colors } from '@/constants/colors';
->>>>>>> 6fdff57a457dbfa4b4fe8b3827d7a5ad2a59130a
 import { styles } from './explorar.styles';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useState, useEffect } from 'react';
+import { ScrollView, Text, View, ActivityIndicator } from 'react-native';
+import { CategoriaItinerario, Provincia, ItinerarioSistemaResumenDTO, CATEGORIA_LABEL } from '@/src/types/itinerario';
+import { buscarPorPreferencias } from '@/src/services/itinerarioService';
+
+function calculateDurationDays(startStr: string, endStr: string): number {
+  try {
+    const start = new Date(startStr);
+    const end = new Date(endStr);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return 0;
+    }
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays === 0 ? 1 : diffDays;
+  } catch {
+    return 0;
+  }
+}
 
 export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
-<<<<<<< HEAD
-  const { itineraries, loading, error } = useItinerariesCards();
-
-  if (loading) {
-    return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <Header title="Explorar" />
-        <MaterialIcons
-          name="hourglass-empty"
-          size={40}
-        />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <Header title="Explorar" />
-        <Text>{error}</Text>
-      </View>
-    );
-  }
-=======
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? colors.dark : colors.light;
->>>>>>> 6fdff57a457dbfa4b4fe8b3827d7a5ad2a59130a
+
+  const [provincia, setProvincia] = useState<Provincia | undefined>();
+  const [categoria, setCategoria] = useState<CategoriaItinerario | undefined>();
+  const [itineraries, setItineraries] = useState<ItinerarioSistemaResumenDTO[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    setError(null);
+
+    const tags = categoria ? [categoria] : undefined;
+
+    buscarPorPreferencias({ provincia, tags })
+      .then((data) => {
+        if (isMounted) {
+          setItineraries(data);
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          setError(err.message || 'Error al buscar itinerarios');
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [provincia, categoria]);
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: theme.background }]}>
       <Header title="Explorar" />
       <ScrollView style={[styles.container, { backgroundColor: theme.background }]} showsVerticalScrollIndicator={false}>
-        <FiltrosDeBusqueda />
-        <CategoriesCarousel />
+        <FiltrosDeBusqueda 
+          selectedProvincia={provincia} 
+          onProvinciaChange={setProvincia} 
+        />
+        <CategoriesCarousel 
+          selectedCategory={categoria} 
+          onCategorySelect={setCategoria} 
+        />
 
-        {itineraries.map((itinerary) => (
-          <ExploreItineraryCard
-            title={itinerary.title}
-            description={itinerary.description}
-            category={itinerary.tags?.[0] ?? "General"}
-            image={itinerary.photo}
-            rating="5.0k"
-            duration={"3 dias"}
-          />
-        ))}
+        {loading ? (
+          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={theme.primary} />
+            <Text style={{ color: theme.textSecondary, marginTop: 12 }}>Cargando itinerarios...</Text>
+          </View>
+        ) : error ? (
+          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+            <Text style={{ color: theme.danger, textAlign: 'center' }}>{error}</Text>
+          </View>
+        ) : itineraries.length === 0 ? (
+          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+            <Text style={{ color: theme.textSecondary, textAlign: 'center' }}>
+              No se encontraron itinerarios para tu búsqueda.
+            </Text>
+          </View>
+        ) : (
+          itineraries.map((itinerary) => {
+            const days = calculateDurationDays(itinerary.fechaInicio, itinerary.fechaFin);
+            const durationText = `${days} ${days === 1 ? 'día' : 'días'}`;
+
+            return (
+              <ExploreItineraryCard
+                key={itinerary.idItinerario}
+                idItinerario={itinerary.idItinerario}
+                title={itinerary.titulo}
+                description={itinerary.descripcion}
+                category={
+                  itinerary.etiquetas && itinerary.etiquetas.length > 0 
+                    ? CATEGORIA_LABEL[itinerary.etiquetas[0]] 
+                    : 'General'
+                }
+                image={itinerary.fotoPortada}
+                rating="5.0"
+                duration={durationText}
+                startDate={itinerary.fechaInicio}
+                endDate={itinerary.fechaFin}
+              />
+            );
+          })
+        )}
       </ScrollView>
     </View>
   );

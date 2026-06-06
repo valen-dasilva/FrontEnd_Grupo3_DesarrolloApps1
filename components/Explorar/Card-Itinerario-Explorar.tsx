@@ -1,34 +1,35 @@
 import React, { useState, type ReactNode } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@/constants/colors';
 import { fonts } from '@/constants/fonts';
 import { icons } from '@/constants/icons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-<<<<<<< HEAD
-import { useState } from 'react';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
-=======
 import { useColorScheme } from '@/hooks/use-color-scheme';
->>>>>>> 6fdff57a457dbfa4b4fe8b3827d7a5ad2a59130a
 import { styles } from './Card-Itinerario-Explorar.styles';
 
 type Props = {
+  idItinerario: number;
   title: string;
   description: string;
   category: string;
   image: string;
   rating?: string;
   duration?: string;
+  startDate?: string;
+  endDate?: string;
 };
 
 export function ExploreItineraryCard({
+  idItinerario,
   title,
   description,
   category,
   image,
   rating = "0",
   duration,
+  startDate,
+  endDate,
 }: Props) {
   const router = useRouter();
   const [isFavorite, setIsFavorite] = useState(false);
@@ -40,7 +41,19 @@ export function ExploreItineraryCard({
     <TouchableOpacity
       style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
       activeOpacity={0.8}
-      onPress={() => router.push('/explorarApp/itinerarioInfo')}
+      onPress={() => router.push({
+        pathname: '/explorarApp/itinerarioInfo',
+        params: {
+          idItinerario: String(idItinerario),
+          title,
+          description,
+          category,
+          image,
+          startDate: startDate ?? '',
+          endDate: endDate ?? '',
+          isFavorite: String(isFavorite)
+        }
+      })}
     >
 
       {/* Image */}

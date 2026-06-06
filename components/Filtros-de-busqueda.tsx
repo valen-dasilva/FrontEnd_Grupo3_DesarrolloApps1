@@ -10,8 +10,12 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { ProvinciaSelector } from '@/components/Preferencias/ProvinciaSelector';
 
-export function FiltrosDeBusqueda() {
-  const [provincia, setProvincia] = useState<Provincia | undefined>();
+interface FiltrosDeBusquedaProps {
+  selectedProvincia?: Provincia;
+  onProvinciaChange: (provincia: Provincia | undefined) => void;
+}
+
+export function FiltrosDeBusqueda({ selectedProvincia, onProvinciaChange }: FiltrosDeBusquedaProps) {
   const [showProvincia, setShowProvincia] = useState(false);
   
   const colorScheme = useColorScheme();
@@ -35,12 +39,15 @@ export function FiltrosDeBusqueda() {
         <MaterialIcons name={icons.AddItinerary} size={fonts.size.lg} color={theme.textSecondary} />
         <Text style={[
           styles.inputText,
-          { color: provincia ? theme.text : theme.textSecondary }
+          { color: selectedProvincia ? theme.text : theme.textSecondary }
         ]}>
-          {provincia ? PROVINCIA_LABEL[provincia] : 'Ej: Río Negro, Salta, Buenos Aires...'}
+          {selectedProvincia ? PROVINCIA_LABEL[selectedProvincia] : 'Ej: Río Negro, Salta, Buenos Aires...'}
         </Text>
-        {provincia && (
-          <TouchableOpacity onPress={() => setProvincia(undefined)}>
+        {selectedProvincia && (
+          <TouchableOpacity onPress={(e) => {
+            e.stopPropagation();
+            onProvinciaChange(undefined);
+          }}>
             <MaterialIcons name="cancel" size={fonts.size.lg} color={theme.textSecondary} />
           </TouchableOpacity>
         )}
@@ -48,8 +55,11 @@ export function FiltrosDeBusqueda() {
       <ProvinciaSelector
         visible={showProvincia}
         onClose={() => setShowProvincia(false)}
-        onSelect={setProvincia}
-        selected={provincia}
+        onSelect={(p) => {
+          onProvinciaChange(p);
+          setShowProvincia(false);
+        }}
+        selected={selectedProvincia}
       />
     </View>
   );

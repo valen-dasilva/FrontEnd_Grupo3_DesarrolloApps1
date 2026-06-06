@@ -81,3 +81,31 @@ export interface ItinerarioSistemaResumenDTO {
   duracionDias: number;
   etiquetas: CategoriaItinerario[];
 }
+
+export interface ActividadDTO {
+  idActividad: number;
+  nombre: string;
+  descripcion: string;
+  localidad: string;
+  direccion: string;
+}
+
+export interface ItemItinerarioSistemaDTO {
+  id: number;
+  dia: number;
+  hora: string; // "HH:mm:ss" format from LocalTime
+  actividad: ActividadDTO;
+}
+
+export interface ItinerarioSistemaDTO {
+  idItinerario: number;
+  titulo: string;
+  descripcion: string;
+  provincia: Provincia;
+  fechaInicio: string;
+  fechaFin: string;
+  fotoPortada: string;
+  duracionDias: number;
+  etiquetas: CategoriaItinerario[];
+  items: ItemItinerarioSistemaDTO[];
+}
