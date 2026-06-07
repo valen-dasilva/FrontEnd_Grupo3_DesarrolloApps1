@@ -1,9 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, TouchableOpacityProps, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../src/styles/colors';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colors } from '@/constants/colors';
+import { useTheme } from '@/hooks/use-color-scheme';
 
 interface CustomButtonProps extends TouchableOpacityProps {
   title: string;
@@ -12,36 +10,40 @@ interface CustomButtonProps extends TouchableOpacityProps {
 }
 
 export const CustomButton: React.FC<CustomButtonProps> = ({ title, variant = 'primary', showArrow = false, style, ...props }) => {
-  const colorScheme = useColorScheme();
+  const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === 'dark';
 
   const getBackgroundStyle = () => {
     switch (variant) {
       case 'primary': 
-        return styles.bgPrimary;
+        return { backgroundColor: theme.primary };
       case 'secondary': 
         return { 
-          backgroundColor: isDark ? '#2A303D' : COLORS.white,
+          backgroundColor: isDark ? theme.surfaceHighlight : theme.surface,
           borderWidth: isDark ? 1 : 0,
-          borderColor: isDark ? '#3A4256' : 'transparent',
+          borderColor: isDark ? theme.borderDark : 'transparent',
         };
       case 'outline': 
-        return styles.bgOutline;
+        return {
+          backgroundColor: 'transparent',
+          borderWidth: 1,
+          borderColor: theme.primary,
+        };
       default: 
-        return styles.bgPrimary;
+        return { backgroundColor: theme.primary };
     }
   };
 
   const getTextStyle = () => {
     switch (variant) {
       case 'primary': 
-        return styles.textPrimary;
+        return { color: theme.textInverse };
       case 'secondary': 
-        return { color: isDark ? '#FFFFFF' : COLORS.primaryBlue };
+        return { color: isDark ? theme.text : theme.primary };
       case 'outline': 
-        return styles.textOutline;
+        return { color: theme.primary };
       default: 
-        return styles.textPrimary;
+        return { color: theme.textInverse };
     }
   };
 
@@ -78,19 +80,5 @@ const styles = StyleSheet.create({
   },
   arrowIcon: {
     marginLeft: 8,
-  },
-  bgPrimary: {
-    backgroundColor: COLORS.primaryBlue,
-  },
-  textPrimary: {
-    color: COLORS.buttonText,
-  },
-  bgOutline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: COLORS.primaryBlue,
-  },
-  textOutline: {
-    color: COLORS.primaryBlue,
   },
 });

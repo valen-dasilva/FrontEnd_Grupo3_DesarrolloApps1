@@ -5,6 +5,7 @@ import { paddings } from '@/constants/paddings';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type Props = {
   time: string;
@@ -15,14 +16,18 @@ type Props = {
 };
 
 export function ActivityCard({ time, title, subtitle, location, isLast = false }: Props) {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
+
   return (
     <View style={[styles.activityItem, isLast && styles.activityItemLast]}>
-      <Text style={styles.activityTime}>{time}</Text>
-      <Text style={styles.activityTitle}>{title}</Text>
-      <Text style={styles.activitySubtitle}>{subtitle}</Text>
+      <Text style={[styles.activityTime, { color: theme.primary }]}>{time}</Text>
+      <Text style={[styles.activityTitle, { color: theme.text }]}>{title}</Text>
+      <Text style={[styles.activitySubtitle, { color: theme.textSecondary }]}>{subtitle}</Text>
       <View style={styles.locationRow}>
-        <MaterialIcons name={icons.AddItinerary} size={fonts.size.sm} color={colors.textSecondary} />
-        <Text style={styles.locationText}>{location}</Text>
+        <MaterialIcons name={icons.AddItinerary} size={fonts.size.sm} color={theme.textSecondary} />
+        <Text style={[styles.locationText, { color: theme.textSecondary }]}>{location}</Text>
       </View>
     </View>
   );

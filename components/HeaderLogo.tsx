@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
-import { COLORS } from '../src/styles/colors';
+import { useTheme } from '@/hooks/use-color-scheme';
 import BrandIcon from '../assets/images/icono.svg';
 
 interface HeaderLogoProps {
@@ -10,6 +10,8 @@ interface HeaderLogoProps {
 }
 
 export const HeaderLogo: React.FC<HeaderLogoProps> = ({ title, subtitle, largeLogo = false }) => {
+  const { theme } = useTheme();
+
   if (largeLogo) {
     return (
       <View style={styles.container}>
@@ -23,15 +25,15 @@ export const HeaderLogo: React.FC<HeaderLogoProps> = ({ title, subtitle, largeLo
 
   return (
     <View style={styles.container}>
-      <View style={styles.logoIconContainer}>
+      <View style={[styles.logoIconContainer, { backgroundColor: theme.textInverse }]}>
         <BrandIcon 
           width={54} 
           height={54} 
         />
       </View>
-      {title && <Text style={styles.title}>{title}</Text>}
+      {title && <Text style={[styles.title, { color: theme.textInverse }]}>{title}</Text>}
       {subtitle && (
-        <Text style={styles.subtitle}>
+        <Text style={[styles.subtitle, { color: theme.textInverse }]}>
           {subtitle}
         </Text>
       )}
@@ -48,7 +50,6 @@ const styles = StyleSheet.create({
   logoIconContainer: {
     width: 80,
     height: 80,
-    backgroundColor: COLORS.white,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -62,12 +63,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.white,
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 14,
-    color: COLORS.white,
     textAlign: 'center',
     paddingHorizontal: 40,
     lineHeight: 20,

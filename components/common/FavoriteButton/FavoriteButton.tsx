@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Pressable, Animated, StyleProp, ViewStyle } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { colors } from '../../../constants/colors';
+import { useTheme } from '@/hooks/use-color-scheme';
 import { icons } from '../../../constants/icons';
 import { styles } from './FavoriteButton.styles';
 
@@ -20,6 +20,7 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
   style,
 }) => {
   const scale = useRef(new Animated.Value(1)).current;
+  const { theme } = useTheme();
 
   const handlePressIn = () => {
     Animated.spring(scale, {
@@ -44,7 +45,7 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
       onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      style={[styles.heartButton, style]}
+      style={[styles.heartButton, { backgroundColor: theme.surface }, style]}
       accessibilityRole="button"
       accessibilityLabel={isFavorite ? "Remove from favorites" : "Add to favorites"}
     >
@@ -52,7 +53,7 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
         <MaterialIcons
           name={isFavorite ? icons.FavoriteFilled : icons.FavoriteOutline}
           size={18}
-          color={isFavorite ? colors.danger : colors.textSecondary}
+          color={isFavorite ? theme.danger : theme.textSecondary}
         />
       </Animated.View>
     </Pressable>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, Text, TextInput, View } from 'react-native';
-import { colors } from '../../../../constants/colors';
+import { useTheme } from '@/hooks/use-color-scheme';
 import { styles } from './EditModal.styles';
 
 export interface EditModalProps {
@@ -21,6 +21,7 @@ export const EditModal: React.FC<EditModalProps> = ({
   initialValue,
 }) => {
   const [text, setText] = useState(initialValue);
+  const { theme } = useTheme();
 
   // Sync state with initialValue when modal becomes visible
   useEffect(() => {
@@ -47,17 +48,17 @@ export const EditModal: React.FC<EditModalProps> = ({
         style={styles.backdrop}
       >
         <Pressable style={styles.dismissArea} onPress={onClose} />
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Editar Actividad</Text>
-          <Text style={styles.modalSubtitle}>Ingresa el nuevo título para la actividad:</Text>
+        <View style={[styles.modalContainer, { backgroundColor: theme.surface }]}>
+          <Text style={[styles.modalTitle, { color: theme.text }]}>Editar Actividad</Text>
+          <Text style={[styles.modalSubtitle, { color: theme.textSecondary }]}>Ingresa el nuevo título para la actividad:</Text>
 
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, { backgroundColor: theme.surfaceNeutralAlt, borderColor: theme.borderDark }]}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: theme.text }]}
               value={text}
               onChangeText={setText}
               placeholder="Ej. Trekking Glaciar"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor={theme.textSecondary}
               autoFocus
               selectTextOnFocus
             />
@@ -69,12 +70,13 @@ export const EditModal: React.FC<EditModalProps> = ({
               style={({ pressed }) => [
                 styles.button,
                 styles.cancelButton,
+                { backgroundColor: theme.surfaceNeutral },
                 pressed && styles.pressedState,
               ]}
               accessibilityRole="button"
               accessibilityLabel="Cancelar"
             >
-              <Text style={styles.cancelButtonText}>Cancelar</Text>
+              <Text style={[styles.cancelButtonText, { color: theme.textSecondary }]}>Cancelar</Text>
             </Pressable>
 
             <Pressable
@@ -82,12 +84,13 @@ export const EditModal: React.FC<EditModalProps> = ({
               style={({ pressed }) => [
                 styles.button,
                 styles.saveButton,
+                { backgroundColor: theme.primary },
                 pressed && styles.pressedState,
               ]}
               accessibilityRole="button"
               accessibilityLabel="Guardar cambios"
             >
-              <Text style={styles.saveButtonText}>Guardar</Text>
+              <Text style={[styles.saveButtonText, { color: theme.textInverse }]}>Guardar</Text>
             </Pressable>
           </View>
         </View>

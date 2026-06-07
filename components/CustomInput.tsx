@@ -1,27 +1,23 @@
 import React from 'react';
 import { TextInput, TextInputProps, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../src/styles/colors';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colors } from '@/constants/colors';
+import { useTheme } from '@/hooks/use-color-scheme';
 
 interface CustomInputProps extends TextInputProps {
   iconName?: keyof typeof Ionicons.glyphMap;
 }
 
 export const CustomInput: React.FC<CustomInputProps> = ({ iconName, style, ...props }) => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
 
   return (
     <View style={[styles.container, { backgroundColor: theme.inputBg, borderColor: theme.border }]}>
       {iconName && (
-        <Ionicons name={iconName} size={20} color={isDark ? theme.textSecondary : COLORS.textLight} style={styles.icon} />
+        <Ionicons name={iconName} size={20} color={theme.textSecondary} style={styles.icon} />
       )}
       <TextInput
         style={[styles.input, iconName ? styles.inputWithIcon : undefined, { color: theme.text }, style]}
-        placeholderTextColor={isDark ? theme.textSecondary : COLORS.textLight}
+        placeholderTextColor={theme.textSecondary}
         {...props}
       />
     </View>
