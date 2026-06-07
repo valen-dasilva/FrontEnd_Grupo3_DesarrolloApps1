@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { colors } from '../../../../constants/colors';
 import { icons } from '../../../../constants/icons';
 import { styles } from './ActivityCard.styles';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export interface ActivityCardProps {
   /** The time of the activity (e.g., '09:00') */
@@ -28,25 +29,29 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
   onEditPress,
   onDeletePress,
 }) => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? colors.dark : colors.light;
+
   return (
-    <View style={styles.cardContainer}>
-      <Text style={styles.timeText}>{time}</Text>
+    <View style={[styles.cardContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+      <Text style={[styles.timeText, { color: theme.primary }]}>{time}</Text>
 
       <View style={styles.bottomInfoRow}>
         <View style={styles.detailsColumn}>
-          <Text style={styles.titleText} numberOfLines={1}>
+          <Text style={[styles.titleText, { color: theme.text }]} numberOfLines={1}>
             {title}
           </Text>
-          <Text style={styles.descriptionText} numberOfLines={1}>
+          <Text style={[styles.descriptionText, { color: theme.textSecondary }]} numberOfLines={1}>
             {description}
           </Text>
           <View style={styles.locationRow}>
             <MaterialIcons
               name={icons.Location}
               size={12}
-              color={colors.textSecondary}
+              color={theme.textSecondary}
             />
-            <Text style={styles.locationText} numberOfLines={1}>
+            <Text style={[styles.locationText, { color: theme.textSecondary }]} numberOfLines={1}>
               {location}
             </Text>
           </View>
@@ -66,7 +71,7 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
             <MaterialIcons
               name={icons.Edit}
               size={20}
-              color={colors.primary}
+              color={theme.primary}
             />
           </Pressable>
 
@@ -83,7 +88,7 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
             <MaterialIcons
               name={icons.Delete}
               size={20}
-              color={colors.danger}
+              color={theme.danger}
             />
           </Pressable>
         </View>

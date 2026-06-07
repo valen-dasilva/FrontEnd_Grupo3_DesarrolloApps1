@@ -6,6 +6,7 @@ import { icons } from '../../constants/icons';
 import { colors } from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 import { paddings } from '../../constants/paddings';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type Props = {
     title?: string;
@@ -38,6 +39,10 @@ export function CardItinerarioInfoFav({
     const [isFavorite, setIsFavorite] = useState(true);
 
     const categoryIcon = categoryIconMap[category || ''] || icons.Museum;
+    
+    const colorScheme = useColorScheme();
+    const isDark = colorScheme === 'dark';
+    const theme = isDark ? colors.dark : colors.light;
 
     return (
         <View>
@@ -53,16 +58,16 @@ export function CardItinerarioInfoFav({
                     <View style={styles.heroTopBar}>
 
                         {/** Boton de atras */}
-                        <TouchableOpacity style={styles.contenedorCircular} onPress={onBackPress}>
-                            <MaterialIcons name={icons.ArrowBack} size={20} color="#111827" />
+                        <TouchableOpacity style={[styles.contenedorCircular, { backgroundColor: theme.surface }]} onPress={onBackPress}>
+                            <MaterialIcons name={icons.ArrowBack} size={20} color={theme.text} />
                         </TouchableOpacity>
 
                         {/** Boton de corazon */}
-                        <TouchableOpacity style={styles.contenedorCircular} onPress={() => setIsFavorite(!isFavorite)}>
+                        <TouchableOpacity style={[styles.contenedorCircular, { backgroundColor: theme.surface }]} onPress={() => setIsFavorite(!isFavorite)}>
                             <MaterialIcons 
                                 name={isFavorite ? icons.FavoriteFilled : icons.FavoriteOutline} 
                                 size={21} 
-                                color={colors.danger} 
+                                color={theme.danger} 
                             />
                         </TouchableOpacity>
                     </View>
@@ -71,14 +76,14 @@ export function CardItinerarioInfoFav({
                     <View style={styles.contenedorInfoInferior}>
 
                         {/** Insignia de la categoria */}
-                        <View style={styles.etiquetaCategoria}>
+                        <View style={[styles.etiquetaCategoria, { backgroundColor: theme.surface }]}>
                             <MaterialIcons 
                                 name={categoryIcon as any} 
                                 size={16} 
-                                color="#111827" 
+                                color={theme.text} 
                                 style={{ marginRight: 4 }} 
                             />
-                            <Text style={styles.etiquetaCategoriaTexto}>{category}</Text>
+                            <Text style={[styles.etiquetaCategoriaTexto, { color: theme.text }]}>{category}</Text>
                         </View>
 
                         <Text style={styles.titulo}>{title}</Text>
@@ -107,7 +112,7 @@ export function CardItinerarioInfoFav({
             </View>
 
             {/* Descripción */}
-            <Text style={styles.descripcion}>
+            <Text style={[styles.descripcion, { color: theme.textSecondary }]}>
                 {description}
             </Text>
         </View>

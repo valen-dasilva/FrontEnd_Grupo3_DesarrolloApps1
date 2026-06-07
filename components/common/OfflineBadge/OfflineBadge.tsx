@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleProp, ViewStyle } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { colors } from '../../../constants/colors';
+import { useTheme } from '@/hooks/use-color-scheme';
 import { icons } from '../../../constants/icons';
 import { styles } from './OfflineBadge.styles';
 
@@ -11,14 +11,15 @@ export interface OfflineBadgeProps {
 }
 
 export const OfflineBadge: React.FC<OfflineBadgeProps> = ({ style }) => {
+  const { theme } = useTheme();
   return (
-    <View style={[styles.offlineBadge, style]}>
+    <View style={[styles.offlineBadge, { backgroundColor: theme.surface }, style]}>
       <MaterialIcons 
         name={icons.CloudOffline}
         size={12}
-        color={colors.primary}
+        color={theme.primary}
       />
-      <Text style={styles.offlineBadgeText}>Disponible Offline</Text>
+      <Text style={[styles.offlineBadgeText, { color: theme.primary }]}>Disponible Offline</Text>
     </View>
   );
 };
