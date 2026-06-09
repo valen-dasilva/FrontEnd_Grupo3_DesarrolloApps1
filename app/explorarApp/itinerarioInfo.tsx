@@ -1,16 +1,16 @@
-import { paddings } from '@/constants/paddings';
-import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
-import React, { useMemo } from 'react';
-import { ScrollView, Text, View, ActivityIndicator } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Header } from '../../components/common/Header/Header';
-import { ItineraryInfoCard } from '../../components/Explorar/Card-Itinerario-Info';
-import { ActivityCard } from '../../components/common/ActivityCard/ActivityCard';
-import { styles } from './itinerarioInfo.styles';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colors } from '@/constants/colors';
+import { paddings } from '@/constants/paddings';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useItinerarioDetalle } from '@/hooks/useItinerarioDetalle';
 import { ItemItinerarioSistemaDTO } from '@/src/types/itinerario';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useMemo } from 'react';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ActivityCard } from '../../components/common/ActivityCard/ActivityCard';
+import { Header } from '../../components/common/Header/Header';
+import { ItineraryInfoCard } from '../../components/Explorar/Card-Itinerario-Info';
+import { styles } from './itinerarioInfo.styles';
 
 /** Convierte "HH:mm:ss" → "HH:mm" */
 function formatHora(hora: string): string {
@@ -94,15 +94,14 @@ export default function ItineraryInfoScreen() {
         {/* Cards de actividades por día */}
         {!loading && !error && dias.map((dia, diaIdx) => {
           const items = itemsPorDia[dia];
+          const isLastDay = diaIdx === dias.length - 1;
           return (
             <View
               key={dia}
               style={[
                 styles.dayCard,
-                {
-                  backgroundColor: theme.surface,
-                  marginBottom: diaIdx === dias.length - 1 ? paddings.spacing.huge : undefined,
-                },
+                { backgroundColor: theme.surface },
+                isLastDay && { marginBottom: paddings.spacing.huge },
               ]}
             >
               <Text style={[styles.dayTitle, { color: theme.text }]}>Día {dia}</Text>

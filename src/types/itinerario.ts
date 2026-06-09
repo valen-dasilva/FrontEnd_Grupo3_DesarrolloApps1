@@ -80,6 +80,7 @@ export interface ItinerarioSistemaResumenDTO {
   fotoPortada: string;
   duracionDias: number;
   etiquetas: CategoriaItinerario[];
+  likes: number;
 }
 
 export interface ActividadDTO {

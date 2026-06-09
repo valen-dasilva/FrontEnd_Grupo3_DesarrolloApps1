@@ -2,14 +2,14 @@ import { ExploreItineraryCard } from '@/components/Explorar/Card-Itinerario-Expl
 import { CategoriesCarousel } from '@/components/Explorar/Filtro-Categorias-Carrusel';
 import { FiltrosDeBusqueda } from '@/components/Filtros-de-busqueda';
 import { Header } from '@/components/common/Header/Header';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colors } from '@/constants/colors';
-import { styles } from './explorar.styles';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import React, { useState, useEffect } from 'react';
-import { ScrollView, Text, View, ActivityIndicator } from 'react-native';
-import { CategoriaItinerario, Provincia, ItinerarioSistemaResumenDTO, CATEGORIA_LABEL } from '@/src/types/itinerario';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { buscarPorPreferencias } from '@/src/services/itinerarioService';
+import { CATEGORIA_LABEL, CategoriaItinerario, ItinerarioSistemaResumenDTO, Provincia } from '@/src/types/itinerario';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { styles } from './explorar.styles';
 
 function calculateDurationDays(startStr: string, endStr: string): number {
   try {
@@ -71,13 +71,13 @@ export default function ExploreScreen() {
     <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: theme.background }]}>
       <Header title="Explorar" />
       <ScrollView style={[styles.container, { backgroundColor: theme.background }]} showsVerticalScrollIndicator={false}>
-        <FiltrosDeBusqueda 
-          selectedProvincia={provincia} 
-          onProvinciaChange={setProvincia} 
+        <FiltrosDeBusqueda
+          selectedProvincia={provincia}
+          onProvinciaChange={setProvincia}
         />
-        <CategoriesCarousel 
-          selectedCategory={categoria} 
-          onCategorySelect={setCategoria} 
+        <CategoriesCarousel
+          selectedCategory={categoria}
+          onCategorySelect={setCategoria}
         />
 
         {loading ? (
@@ -107,12 +107,12 @@ export default function ExploreScreen() {
                 title={itinerary.titulo}
                 description={itinerary.descripcion}
                 category={
-                  itinerary.etiquetas && itinerary.etiquetas.length > 0 
-                    ? CATEGORIA_LABEL[itinerary.etiquetas[0]] 
+                  itinerary.etiquetas && itinerary.etiquetas.length > 0
+                    ? CATEGORIA_LABEL[itinerary.etiquetas[0]]
                     : 'General'
                 }
                 image={itinerary.fotoPortada}
-                rating="5.0"
+                rating={itinerary.likes.toString()}
                 duration={durationText}
                 startDate={itinerary.fechaInicio}
                 endDate={itinerary.fechaFin}
