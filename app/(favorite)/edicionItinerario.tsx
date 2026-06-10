@@ -122,12 +122,8 @@ export default function EdicionItinerarioScreen() {
     });
   };
 
-  const handleSaveChanges = () => {
-    Alert.alert(
-      'Cambios Guardados',
-      `Tus cambios han sido aplicados.`,
-      [{ text: 'Aceptar', onPress: () => router.back() }]
-    );
+  const handleGoBack = () => {
+    router.back();
   };
 
   const days = Array.from(new Set(activities.map((act) => act.dia))).sort((a, b) => a - b);
@@ -181,7 +177,7 @@ export default function EdicionItinerarioScreen() {
                 )}
 
                 <View style={styles.buttonWrapper}>
-                  <Button label="Volver a Detalles" onPress={handleSaveChanges} />
+                  <Button label="Volver a Detalles" onPress={handleGoBack} />
                 </View>
             </>
         )}
