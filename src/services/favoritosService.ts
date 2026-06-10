@@ -7,7 +7,9 @@ export interface UpdateDatesRequest{
     }
  
 export interface ItinerarioResumen {
-    id: number;
+  id: number; // mapped to idItinerarioUsuario
+  idItinerarioUsuario: number;
+  idItinerarioSistema: number;
   titulo: string;
   provincia: string;
   fechaInicio: string; //fecha
@@ -15,7 +17,6 @@ export interface ItinerarioResumen {
   fotoPortada: string;
   duracionDias: number;
   etiquetas: string[];
-
 }
 
 
@@ -46,14 +47,37 @@ const FAVS_PATH = '/favoritos';
 
 //guardar en favoritos un itinerario
 export const postItinerario = async (idItinerario: number): Promise<ItinerarioResumen> => {
-    const response = await apiClient.post<ItinerarioResumen>(`${FAVS_PATH}/${idItinerario}`);
-    return response.data;
+    const response = await apiClient.post<any>(`${FAVS_PATH}/${idItinerario}`);
+    const data = response.data;
+    return {
+      id: data.idItinerarioUsuario,
+      idItinerarioUsuario: data.idItinerarioUsuario,
+      idItinerarioSistema: data.idItinerarioSistema,
+      titulo: data.titulo,
+      provincia: data.provincia,
+      fechaInicio: data.fechaInicio,
+      fechaFin: data.fechaFin,
+      fotoPortada: data.fotoPortada,
+      duracionDias: data.duracionDias,
+      etiquetas: data.etiquetas,
+    };
 } 
 
 //obtener todos los itinerarios de favoritos
 export const getItinerarios = async (): Promise<ItinerarioResumen[]> => {
-    const response = await apiClient.get<ItinerarioResumen[]>(`${FAVS_PATH}`);
-    return response.data;
+    const response = await apiClient.get<any[]>(`${FAVS_PATH}`);
+    return response.data.map((data: any) => ({
+      id: data.idItinerarioUsuario,
+      idItinerarioUsuario: data.idItinerarioUsuario,
+      idItinerarioSistema: data.idItinerarioSistema,
+      titulo: data.titulo,
+      provincia: data.provincia,
+      fechaInicio: data.fechaInicio,
+      fechaFin: data.fechaFin,
+      fotoPortada: data.fotoPortada,
+      duracionDias: data.duracionDias,
+      etiquetas: data.etiquetas,
+    }));
 }
 
 //devuelve el itinerario activo o proximo a iniciar

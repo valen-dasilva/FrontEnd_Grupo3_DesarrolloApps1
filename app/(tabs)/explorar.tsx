@@ -110,6 +110,10 @@ export default function ExploreScreen() {
             const days = calculateDurationDays(itinerary.fechaInicio, itinerary.fechaFin);
             const durationText = `${days} ${days === 1 ? 'día' : 'días'}`;
 
+            const matchingFav = listItinerarioResumen.find(fav => fav.idItinerarioSistema === itinerary.idItinerario);
+            const isFavorite = !!matchingFav;
+            const idFavorito = matchingFav?.id;
+
             return (
               <ExploreItineraryCard
                 key={itinerary.idItinerario}
@@ -126,7 +130,8 @@ export default function ExploreScreen() {
                 duration={durationText}
                 startDate={itinerary.fechaInicio}
                 endDate={itinerary.fechaFin}
-                isFavorite={listItinerarioResumen.some(fav => fav.id === itinerary.idItinerario)}
+                isFavorite={isFavorite}
+                idFavorito={idFavorito}
               />
             );
           })

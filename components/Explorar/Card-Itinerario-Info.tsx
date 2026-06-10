@@ -17,6 +17,7 @@ type Props = {
   description?: string;
   image?: string;
   isFavorite?: boolean;
+  idFavorito?: number;
   onBackPress?: () => void;
 };
 
@@ -66,15 +67,21 @@ export function ItineraryInfoCard({
   description = "Visita guiada por el emblemático Teatro Colón, descubriendo su historia, arquitectura y secretos detrás del escenario.",
   image,
   isFavorite = false,
+  idFavorito,
   onBackPress
 }: Props) {
   const [fav, setFav] = useState(isFavorite);
+  const [favId, setFavId] = useState<number | undefined>(idFavorito);
   const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === 'dark';
 
   useEffect(() => {
     setFav(isFavorite);
   }, [isFavorite]);
+
+  useEffect(() => {
+    setFavId(idFavorito);
+  }, [idFavorito]);
 
   const handleFavoriteToggle = async () => {
     if (idItinerario === undefined) {
@@ -85,9 +92,15 @@ export function ItineraryInfoCard({
     setFav(nextFav);
     try {
       if (nextFav) {
-        await postItinerario(idItinerario);
+        const res = await postItinerario(idItinerario);
+        setFavId(res.id);
       } else {
-        await deleteItinerario(idItinerario);
+        if (favId !== undefined) {
+          await deleteItinerario(favId);
+          setFavId(undefined);
+        } else {
+          console.warn("Cannot delete favorite: favId is undefined");
+        }
       }
     } catch (error) {
       setFav(!nextFav);

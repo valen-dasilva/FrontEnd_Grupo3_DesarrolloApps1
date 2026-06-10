@@ -20,6 +20,7 @@ type Props = {
   startDate?: string;
   endDate?: string;
   isFavorite?: boolean;
+  idFavorito?: number;
 };
 
 export function ExploreItineraryCard({
@@ -33,9 +34,11 @@ export function ExploreItineraryCard({
   startDate,
   endDate,
   isFavorite = false,
+  idFavorito,
 }: Props) {
   const router = useRouter();
   const [isFav, setIsFav] = useState(isFavorite);
+  const [favId, setFavId] = useState<number | undefined>(idFavorito);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? colors.dark : colors.light;
@@ -44,14 +47,24 @@ export function ExploreItineraryCard({
     setIsFav(isFavorite);
   }, [isFavorite]);
 
+  useEffect(() => {
+    setFavId(idFavorito);
+  }, [idFavorito]);
+
   const handleFavoriteToggle = async () => {
     const nextFav = !isFav;
     setIsFav(nextFav);
     try {
       if (nextFav) {
-        await postItinerario(idItinerario);
+        const res = await postItinerario(idItinerario);
+        setFavId(res.id);
       } else {
-        await deleteItinerario(idItinerario);
+        if (favId !== undefined) {
+          await deleteItinerario(favId);
+          setFavId(undefined);
+        } else {
+          console.warn("Cannot delete favorite: favId is undefined");
+        }
       }
     } catch (error) {
       setIsFav(!nextFav);
@@ -73,7 +86,8 @@ export function ExploreItineraryCard({
           image,
           startDate: startDate ?? '',
           endDate: endDate ?? '',
-          isFavorite: String(isFav)
+          isFavorite: String(isFav),
+          idFavorito: favId !== undefined ? String(favId) : '',
         }
       })}
     >
