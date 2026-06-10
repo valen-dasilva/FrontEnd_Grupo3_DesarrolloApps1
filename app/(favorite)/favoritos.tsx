@@ -1,5 +1,5 @@
-import { Stack, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { Stack, useRouter, useFocusEffect } from 'expo-router';
+import React, { useState, useCallback } from 'react';
 import { ScrollView, StatusBar, Text, View, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../../components/common/Header/Header';
@@ -21,8 +21,15 @@ export default function FavoritosScreen() {
   const {
     listItinerarioResumen,
     isLoading,
-    quitItineraryFromFavs
+    quitItineraryFromFavs,
+    loadItinerarios
   } = useFavoritosHook();
+
+  useFocusEffect(
+    useCallback(() => {
+      loadItinerarios();
+    }, [loadItinerarios])
+  );
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 

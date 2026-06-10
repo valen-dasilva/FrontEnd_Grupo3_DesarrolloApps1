@@ -6,10 +6,12 @@ import { colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { buscarPorPreferencias } from '@/src/services/itinerarioService';
 import { CATEGORIA_LABEL, CategoriaItinerario, ItinerarioSistemaResumenDTO, Provincia } from '@/src/types/itinerario';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './explorar.styles';
+import { useFavoritosHook } from '@/src/hooks/favoritosHook';
+import { useFocusEffect } from 'expo-router';
 
 function calculateDurationDays(startStr: string, endStr: string): number {
   try {
@@ -37,6 +39,14 @@ export default function ExploreScreen() {
   const [itineraries, setItineraries] = useState<ItinerarioSistemaResumenDTO[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { listItinerarioResumen, loadItinerarios } = useFavoritosHook();
+
+  useFocusEffect(
+    useCallback(() => {
+      loadItinerarios();
+    }, [loadItinerarios])
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -116,6 +126,7 @@ export default function ExploreScreen() {
                 duration={durationText}
                 startDate={itinerary.fechaInicio}
                 endDate={itinerary.fechaFin}
+                isFavorite={listItinerarioResumen.some(fav => fav.id === itinerary.idItinerario)}
               />
             );
           })
