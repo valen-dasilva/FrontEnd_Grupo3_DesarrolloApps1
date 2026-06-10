@@ -2,11 +2,13 @@
 // Recibe los resultados como parámetro de ruta (JSON serializado desde preferencias.tsx)
 // y delega la presentación a los componentes de components/Recomendaciones/.
 
+import { ExploreItineraryCard } from '@/components/Explorar/Card-Itinerario-Explorar';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
+  CATEGORIA_LABEL,
   CategoriaItinerario,
   ItinerarioSistemaResumenDTO,
   Provincia,
@@ -14,7 +16,6 @@ import {
 } from '../../src/types/itinerario';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colors } from '@/constants/colors';
-import { CardResultado } from '../../components/Recomendaciones/CardResultado';
 import { ResultadosHeader } from '../../components/Recomendaciones/ResultadosHeader';
 import { ResultadosEmptyState } from '../../components/Recomendaciones/ResultadosEmptyState';
 
@@ -70,7 +71,18 @@ export default function RecomendacionesScreen() {
           <ResultadosEmptyState onBack={() => router.back()} />
         ) : (
           resultados.map((item) => (
-            <CardResultado key={item.idItinerario} item={item} />
+            <ExploreItineraryCard
+              key={item.idItinerario}
+              idItinerario={item.idItinerario}
+              title={item.titulo}
+              description={item.descripcion}
+              category={item.etiquetas?.length > 0 ? CATEGORIA_LABEL[item.etiquetas[0]] : 'General'}
+              image={item.fotoPortada}
+              rating={item.likes.toString()}
+              duration={`${item.duracionDias} ${item.duracionDias === 1 ? 'día' : 'días'}`}
+              startDate={item.fechaInicio}
+              endDate={item.fechaFin}
+            />
           ))
         )}
       </ScrollView>

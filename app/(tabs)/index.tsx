@@ -1,5 +1,14 @@
-import React from 'react';
-import { Dimensions, ScrollView, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,6 +16,10 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Header } from '@/components/common/Header/Header';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colors } from '@/constants/colors';
+import { useAuth } from '@/src/context/AuthContext';
+import { getItinerarioEnCurso } from '@/src/services/itinerarioService';
+import { ItinerarioEnCursoDTO, PROVINCIA_LABEL } from '@/src/types/itinerario';
+import { formatFechaCorta } from '@/src/utils/dateUtils';
 
 const { width } = Dimensions.get('window');
 
@@ -16,9 +29,24 @@ export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? colors.dark : colors.light;
+  const { user } = useAuth();
+
+  const [itinerarioActivo, setItinerarioActivo] = useState<ItinerarioEnCursoDTO | null>(null);
+  const [loadingItinerario, setLoadingItinerario] = useState(true);
+
+  useEffect(() => {
+    if (!user) {
+      setLoadingItinerario(false);
+      return;
+    }
+    setLoadingItinerario(true);
+    getItinerarioEnCurso(user.idUsuario).then((data) => {
+      setItinerarioActivo(data);
+      setLoadingItinerario(false);
+    });
+  }, [user]);
 
   const handleEnCursoPress = () => {
-    // Navegar al detalle del itinerario pre-existente
     router.push('/explorarApp/itinerarioInfo');
   };
 
@@ -26,9 +54,13 @@ export default function HomeScreen() {
     router.push('/inicioApp/preferencias');
   };
 
+  // Fuente de imagen: URL de Supabase Storage si existe, imagen local como fallback
+  const imagenPortada = itinerarioActivo?.fotoPortada
+    ? { uri: itinerarioActivo.fotoPortada }
+    : require('../../assets/images/bariloche_escapada.png');
+
   return (
     <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: theme.background }]}>
-      {/* Cabecera Unificada utilizando el componente de Tobias */}
       <Header title="Inicio" />
 
       <ScrollView
@@ -38,81 +70,145 @@ export default function HomeScreen() {
       >
         {/* Mensaje de Bienvenida */}
         <View style={styles.greetingContainer}>
-          <Text style={[styles.greetingTitle, { color: theme.text }]}>¡Hola, Viajero!</Text>
-          <Text style={[styles.greetingSubtitle, { color: theme.textSecondary }]}>¿A dónde te llevará tu próxima aventura?</Text>
+          <Text style={[styles.greetingTitle, { color: theme.text }]}>
+            ¡Hola, {user?.nombre ?? 'Viajero'}!
+          </Text>
+          <Text style={[styles.greetingSubtitle, { color: theme.textSecondary }]}>
+            ¿A dónde te llevará tu próxima aventura?
+          </Text>
         </View>
 
         {/* Sección Viaje en Curso */}
-        <TouchableOpacity
-          style={[
-            styles.enCursoCard, 
-            { 
-              backgroundColor: theme.card,
-              borderColor: theme.border,
-              borderWidth: isDark ? 1 : 0
-            }
-          ]}
-          activeOpacity={0.9}
-          onPress={handleEnCursoPress}
-        >
-          <View style={styles.imageContainer}>
-            <Image
-              source={require('../../assets/images/bariloche_escapada.png')}
-              style={styles.cardImage}
-              resizeMode="cover"
-            />
-            {/* Degradado premium para asegurar la legibilidad del texto en blanco */}
-            <LinearGradient
-              colors={['transparent', 'rgba(0, 0, 0, 0.75)']}
-              style={styles.gradientOverlay}
-            />
+        {loadingItinerario ? (
+          <View style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={theme.primary} />
+            <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
+              Cargando tu viaje...
+            </Text>
+          </View>
+        ) : itinerarioActivo ? (
+          /* Card con datos reales del itinerario activo */
+          <TouchableOpacity
+            style={[
+              styles.enCursoCard,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+                borderWidth: isDark ? 1 : 0,
+              },
+            ]}
+            activeOpacity={0.9}
+            onPress={handleEnCursoPress}
+          >
+            <View style={styles.imageContainer}>
+              <Image source={imagenPortada} style={styles.cardImage} resizeMode="cover" />
+              <LinearGradient
+                colors={['transparent', 'rgba(0, 0, 0, 0.75)']}
+                style={styles.gradientOverlay}
+              />
 
-            {/* Badge flotante "En curso" */}
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>En curso</Text>
+              {/* Badge "En curso" */}
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>En curso</Text>
+              </View>
+
+              {/* Título y botón de acción */}
+              <View style={styles.titleOverlayRow}>
+                <Text style={styles.cardTitle} numberOfLines={2}>
+                  {itinerarioActivo.titulo}
+                </Text>
+                <TouchableOpacity
+                  style={styles.arrowButton}
+                  onPress={handleEnCursoPress}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
             </View>
 
-            {/* Título flotante y botón de acción */}
-            <View style={styles.titleOverlayRow}>
-              <Text style={styles.cardTitle}>Escapada a Bariloche</Text>
-              <TouchableOpacity
-                style={styles.arrowButton}
-                onPress={handleEnCursoPress}
-                activeOpacity={0.7}
+            {/* Metadatos (Fechas y Ubicación) */}
+            <View style={styles.metadataRow}>
+              <View style={styles.metaItem}>
+                <Ionicons
+                  name="calendar-outline"
+                  size={16}
+                  color={isDark ? theme.textSecondary : '#6B7280'}
+                />
+                <Text style={[styles.metaText, { color: theme.textSecondary }]}>
+                  {formatFechaCorta(itinerarioActivo.fechaInicio)} -{' '}
+                  {formatFechaCorta(itinerarioActivo.fechaFin)}
+                </Text>
+              </View>
+              <Text style={[styles.dotSeparator, { color: isDark ? '#4B5563' : '#D1D5DB' }]}>
+                •
+              </Text>
+              <View style={styles.metaItem}>
+                <Ionicons
+                  name="location-outline"
+                  size={16}
+                  color={isDark ? theme.textSecondary : '#6B7280'}
+                />
+                <Text style={[styles.metaText, { color: theme.textSecondary }]}>
+                  {PROVINCIA_LABEL[itinerarioActivo.provincia] ?? itinerarioActivo.provincia},
+                  Argentina
+                </Text>
+              </View>
+            </View>
+
+            {/* Sub-tarjeta de Próxima Actividad — solo si el backend la devuelve */}
+            {itinerarioActivo.proximaActividad && (
+              <View
+                style={[
+                  styles.actividadCard,
+                  {
+                    backgroundColor: isDark ? '#191D26' : '#F5F7FF',
+                    borderColor: isDark ? '#2A303C' : '#EEF2FF',
+                  },
+                ]}
               >
-                <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
+                <Text style={styles.actividadHeader}>Próxima actividad</Text>
+                <View style={styles.actividadDetailsRow}>
+                  <Text style={[styles.actividadTitle, { color: theme.text }]} numberOfLines={1}>
+                    {itinerarioActivo.proximaActividad.nombre}
+                  </Text>
+                  {itinerarioActivo.proximaActividad.hora && (
+                    <Text style={styles.actividadTime}>
+                      {itinerarioActivo.proximaActividad.hora}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            )}
+          </TouchableOpacity>
+        ) : (
+          /* Estado vacío: no hay viaje en curso */
+          <View
+            style={[
+              styles.sinViajeCard,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+                borderWidth: isDark ? 1 : 0,
+              },
+            ]}
+          >
+            <Ionicons name="map-outline" size={36} color={theme.textSecondary} />
+            <Text style={[styles.sinViajeTitle, { color: theme.text }]}>
+              No tenés viajes en curso
+            </Text>
+            <Text style={[styles.sinViajeSubtitle, { color: theme.textSecondary }]}>
+              Buscá un itinerario y armá tu próxima aventura.
+            </Text>
+            <TouchableOpacity
+              style={[styles.sinViajeCTA, { backgroundColor: theme.primary }]}
+              onPress={handlePreferenciasPress}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.sinViajeCTAText}>Explorar itinerarios</Text>
+            </TouchableOpacity>
           </View>
-
-          {/* Metadatos (Fechas y Ubicación) */}
-          <View style={styles.metadataRow}>
-            <View style={styles.metaItem}>
-              <Ionicons name="calendar-outline" size={16} color={isDark ? theme.textSecondary : "#6B7280"} />
-              <Text style={[styles.metaText, { color: theme.textSecondary }]}>12 Oct - 18 Oct</Text>
-            </View>
-            <Text style={[styles.dotSeparator, { color: isDark ? '#4B5563' : '#D1D5DB' }]}>•</Text>
-            <View style={styles.metaItem}>
-              <Ionicons name="location-outline" size={16} color={isDark ? theme.textSecondary : "#6B7280"} />
-              <Text style={[styles.metaText, { color: theme.textSecondary }]}>Río Negro, Argentina</Text>
-            </View>
-          </View>
-
-          {/* Sub-tarjeta de la Próxima Actividad */}
-          <View style={[
-            styles.actividadCard, 
-            { 
-              backgroundColor: isDark ? '#191D26' : '#F5F7FF',
-              borderColor: isDark ? '#2A303C' : '#EEF2FF'
-            }
-          ]}>
-            <Text style={styles.actividadHeader}>Próxima actividad</Text>
-            <View style={styles.actividadDetailsRow}>
-              <Text style={[styles.actividadTitle, { color: theme.text }]}>Excursión Circuito Chico</Text>
-              <Text style={styles.actividadTime}>10:00 AM</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
+        )}
 
         {/* Sección Buscar por Preferencias */}
         <TouchableOpacity
@@ -155,6 +251,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 6,
     lineHeight: 22,
+  },
+  loadingCard: {
+    height: 120,
+    borderRadius: 24,
+    marginTop: 16,
+    marginBottom: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
   },
   enCursoCard: {
     borderRadius: 24,
@@ -279,6 +387,43 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: 'Inter-Bold',
     color: '#2563EB',
+  },
+  sinViajeCard: {
+    borderRadius: 24,
+    marginTop: 16,
+    marginBottom: 24,
+    paddingVertical: 36,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    gap: 10,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  sinViajeTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
+    marginTop: 4,
+  },
+  sinViajeSubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  sinViajeCTA: {
+    marginTop: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 100,
+  },
+  sinViajeCTAText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'Inter-Bold',
   },
   yellowCard: {
     backgroundColor: '#FFC837',
