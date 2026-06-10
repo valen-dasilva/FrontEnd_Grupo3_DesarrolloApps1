@@ -1,13 +1,15 @@
 import { fonts } from '@/constants/fonts';
 import { icons } from '@/constants/icons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
 import TeatroColonIcon from '../../assets/images/Imagen-Teatro-Colon.svg';
 import { styles } from './Card-Itinerario-Info.styles';
 import { useTheme } from '@/hooks/use-color-scheme';
+import { postItinerario, deleteItinerario } from '@/src/services/favoritosService';
 
 type Props = {
+  idItinerario?: number;
   title?: string;
   category?: string;
   startDate?: string;
@@ -56,6 +58,7 @@ function formatDateRange(startStr?: string, endStr?: string): string {
 }
 
 export function ItineraryInfoCard({
+  idItinerario,
   title = "Teatro Colón",
   category = "Cultura",
   startDate,
@@ -68,6 +71,29 @@ export function ItineraryInfoCard({
   const [fav, setFav] = useState(isFavorite);
   const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === 'dark';
+
+  useEffect(() => {
+    setFav(isFavorite);
+  }, [isFavorite]);
+
+  const handleFavoriteToggle = async () => {
+    if (idItinerario === undefined) {
+      console.warn("Cannot toggle favorite: idItinerario is undefined");
+      return;
+    }
+    const nextFav = !fav;
+    setFav(nextFav);
+    try {
+      if (nextFav) {
+        await postItinerario(idItinerario);
+      } else {
+        await deleteItinerario(idItinerario);
+      }
+    } catch (error) {
+      setFav(!nextFav);
+      console.error("Error toggling favorite:", error);
+    }
+  };
 
   const categoryIcon = categoryIconMap[category || ''] || icons.Museum;
 
@@ -114,7 +140,7 @@ export function ItineraryInfoCard({
                   borderWidth: isDark ? 1 : 0
                 }
               ]} 
-              onPress={() => setFav(!fav)}
+              onPress={handleFavoriteToggle}
             >
               <MaterialIcons
                 name={fav ? icons.FavoriteFilled : icons.FavoriteOutline}

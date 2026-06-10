@@ -65,6 +65,7 @@ export default function ItineraryInfoScreen() {
 
         {/* Card de la Imagen Principal */}
         <ItineraryInfoCard
+          idItinerario={params.idItinerario ? Number(params.idItinerario) : undefined}
           title={params.title}
           category={params.category}
           startDate={params.startDate}
