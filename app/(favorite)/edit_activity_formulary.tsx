@@ -1,12 +1,13 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
-import { Alert, ScrollView, StatusBar, View } from 'react-native';
+import { ScrollView, StatusBar, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../../components/common/Header/Header';
 import { EditActivityFormulary } from '../../components/favorites_components/edit_actvity_formulary/EditActivityFormulary';
 import { colors } from '../../constants/colors';
 import { styles } from './edit_activity_formulary.style';
 import { useTheme } from '@/hooks/use-color-scheme';
+import { useFavoritosDetailsHook } from '../../src/hooks/favoritosHook';
 
 export default function EditActivityFormularyScreen() {
   const router = useRouter();
@@ -16,13 +17,16 @@ export default function EditActivityFormularyScreen() {
   const theme = isDark ? colors.dark : colors.light;
 
   const params = useLocalSearchParams<{
-    id: string;
+    idItinerario: string;
+    idItem?: string;
     day: string;
     time: string;
     title: string;
     description: string;
     location: string;
   }>();
+
+  const { editItem, newItem } = useFavoritosDetailsHook();
 
   const initialValues = {
     title: params.title || '',
@@ -31,19 +35,23 @@ export default function EditActivityFormularyScreen() {
     location: params.location || '',
   };
 
-  const handleSave = (updatedValues: typeof initialValues) => {
-    // Navigate back to edicionItinerario, passing the updated values and original day
-    router.replace({
-      pathname: '/edicionItinerario',
-      params: {
-        updatedActivityId: params.id,
-        updatedTitle: updatedValues.title,
-        updatedDescription: updatedValues.description,
-        updatedTime: updatedValues.time,
-        updatedLocation: updatedValues.location,
-        updatedDay: params.day || '1',
-      },
-    });
+  const handleSave = async (updatedValues: typeof initialValues) => {
+    const itemData = {
+        nombreActividad: updatedValues.title,
+        descripcion: updatedValues.description,
+        localidad: updatedValues.location,
+        direccion: updatedValues.location,
+        dia: Number(params.day || '1'),
+        hora: updatedValues.time,
+    };
+
+    if (params.idItem) {
+        await editItem(Number(params.idItinerario), Number(params.idItem), itemData);
+    } else {
+        await newItem(Number(params.idItinerario), itemData);
+    }
+
+    router.back();
   };
 
   return (

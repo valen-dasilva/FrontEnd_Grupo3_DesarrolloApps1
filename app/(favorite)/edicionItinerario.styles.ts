@@ -43,4 +43,16 @@ export const styles = StyleSheet.create({
     marginTop: paddings.spacing.md,
     marginBottom: paddings.spacing.lg,
   },
+  loader: {
+    marginTop: 50,
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: 'center',
+    width: '100%',
+  },
+  emptyText: {
+    fontFamily: fonts.family.bodyRegular,
+    marginBottom: 16,
+  },
 });
