@@ -58,12 +58,32 @@ export function CardItinerarioInfoFav({
                     <View style={styles.heroTopBar}>
 
                         {/** Boton de atras */}
-                        <TouchableOpacity style={[styles.contenedorCircular, { backgroundColor: theme.surface }]} onPress={onBackPress}>
+                        <TouchableOpacity 
+                            style={[
+                                styles.contenedorCircular, 
+                                { 
+                                    backgroundColor: isDark ? '#11131A' : '#FFFFFF',
+                                    borderColor: theme.border,
+                                    borderWidth: isDark ? 1 : 0
+                                }
+                            ]} 
+                            onPress={onBackPress}
+                        >
                             <MaterialIcons name={icons.ArrowBack} size={20} color={theme.text} />
                         </TouchableOpacity>
 
                         {/** Boton de corazon */}
-                        <TouchableOpacity style={[styles.contenedorCircular, { backgroundColor: theme.surface }]} onPress={() => setIsFavorite(!isFavorite)}>
+                        <TouchableOpacity 
+                            style={[
+                                styles.contenedorCircular, 
+                                { 
+                                    backgroundColor: isDark ? '#11131A' : '#FFFFFF',
+                                    borderColor: theme.border,
+                                    borderWidth: isDark ? 1 : 0
+                                }
+                            ]} 
+                            onPress={() => setIsFavorite(!isFavorite)}
+                        >
                             <MaterialIcons 
                                 name={isFavorite ? icons.FavoriteFilled : icons.FavoriteOutline} 
                                 size={21} 
@@ -76,11 +96,18 @@ export function CardItinerarioInfoFav({
                     <View style={styles.contenedorInfoInferior}>
 
                         {/** Insignia de la categoria */}
-                        <View style={[styles.etiquetaCategoria, { backgroundColor: theme.surface }]}>
+                        <View style={[
+                            styles.etiquetaCategoria, 
+                            { 
+                                backgroundColor: isDark ? '#11131A' : '#FFFFFF',
+                                borderColor: theme.border,
+                                borderWidth: isDark ? 1 : 0
+                            }
+                        ]}>
                             <MaterialIcons 
                                 name={categoryIcon as any} 
                                 size={16} 
-                                color={theme.text} 
+                                color={theme.primary} 
                                 style={{ marginRight: 4 }} 
                             />
                             <Text style={[styles.etiquetaCategoriaTexto, { color: theme.text }]}>{category}</Text>
