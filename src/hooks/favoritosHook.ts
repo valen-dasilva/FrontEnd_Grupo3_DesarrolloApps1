@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { Alert } from 'react-native';
 import { ApiError } from '../services/api';
 import {
     deleteItem,
@@ -27,7 +28,7 @@ export const useFavoritosHook = () => {
 
 
     //cargar lista de itinerarios
-    const loadItinerarios = async () => {
+    const loadItinerarios = useCallback(async () => {
         try {
             setIsLoading(true);
             const datos = await getItinerarios();
@@ -38,9 +39,9 @@ export const useFavoritosHook = () => {
         } finally {
             setIsLoading(false);
         }
-    }
+    }, []);
 
-    useEffect(() => { loadItinerarios() }, [])
+    useEffect(() => { loadItinerarios() }, [loadItinerarios])
 
 
 
@@ -52,7 +53,7 @@ export const useFavoritosHook = () => {
             const data = await postItinerario(idItinerary);
             setListItinerarioResumen((prev) => [...prev, data]);
         } catch (err) {
-            alert(err instanceof ApiError ? err.message : "No se pudo guardar en favoritos.")
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo guardar en favoritos.")
         } finally {
             setIsMutating(false);
         }
@@ -66,7 +67,7 @@ export const useFavoritosHook = () => {
             setListItinerarioResumen((prev) => prev.filter((o) => o.id !== idItinerario));
             setIsLoading(false)
         } catch (err) {
-            alert(err instanceof ApiError ? err.message : 'No se pudo cargar los itinerarios.');
+            Alert.alert("Error", err instanceof ApiError ? err.message : 'No se pudo eliminar el itinerario de favoritos.');
         } finally {
             setIsMutating(false)
         }
@@ -82,7 +83,7 @@ export const useFavoritosHook = () => {
             if (err instanceof ApiError && err.status === 404) {
                 setActiveItinerary(null);
             } else {
-                alert(err instanceof ApiError ? err.message : "Error al obtener itinerario activo.");
+                Alert.alert("Error", err instanceof ApiError ? err.message : "Error al obtener itinerario activo.");
             }
         } finally {
             setIsLoading(false);
@@ -103,13 +104,13 @@ export const useFavoritosHook = () => {
 
 }
 
-export const useFavoritosDetailsHookq = () => {
+export const useFavoritosDetailsHook = () => {
     const [itineraryDetails, setItineraryDetails] = useState<ItinerarioUsuario>();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isMutating, setIsMutating] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    const loadItineraryInfo = async (idItinerary: number) => {
+    const loadItineraryInfo = useCallback(async (idItinerary: number) => {
         try {
             setIsLoading(true);
             const data = await getItinerarioDetalles(idItinerary);
@@ -119,7 +120,7 @@ export const useFavoritosDetailsHookq = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
 
     //modificar fechas del itinerario
     const putItineraryDates = async (idItinerary: number, dates: UpdateDatesRequest) => {
@@ -128,7 +129,7 @@ export const useFavoritosDetailsHookq = () => {
             const updatedItinerary = await putItinerarioFechas(idItinerary, dates);
             setItineraryDetails(updatedItinerary);
         } catch (err) {
-            alert(err instanceof ApiError ? err.message : "No se pudo modificar las fechas.");
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo modificar las fechas.");
         } finally {
             setIsMutating(false);
         }
@@ -147,7 +148,7 @@ export const useFavoritosDetailsHookq = () => {
                 };
             });
         } catch (err) {
-            alert(err instanceof ApiError ? err.message : "No se pudo crear la actividad");
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo crear la actividad");
         } finally {
             setIsMutating(false);
         }
@@ -166,7 +167,7 @@ export const useFavoritosDetailsHookq = () => {
                 };
             });
         } catch (err) {
-            alert(err instanceof ApiError ? err.message : "No se pudo modificar la actividad");
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo modificar la actividad");
         } finally {
             setIsMutating(false);
         }
@@ -185,7 +186,7 @@ export const useFavoritosDetailsHookq = () => {
                 };
             });
         } catch (err) {
-            alert(err instanceof ApiError ? err.message : "No se pudo modificar la actividad");
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo eliminar la actividad");
         } finally {
             setIsMutating(false);
         }
