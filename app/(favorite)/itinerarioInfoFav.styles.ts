@@ -37,4 +37,11 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: paddings.spacing.xxl,
   },
+  loader: {
+    marginTop: 50,
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 50,
+  },
 });
