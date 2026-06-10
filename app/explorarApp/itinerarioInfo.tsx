@@ -29,6 +29,7 @@ export default function ItineraryInfoScreen() {
     endDate?: string;
     description?: string;
     isFavorite?: string;
+    idFavorito?: string;
   }>();
 
   const insets = useSafeAreaInsets();
@@ -65,6 +66,7 @@ export default function ItineraryInfoScreen() {
 
         {/* Card de la Imagen Principal */}
         <ItineraryInfoCard
+          idItinerario={params.idItinerario ? Number(params.idItinerario) : undefined}
           title={params.title}
           category={params.category}
           startDate={params.startDate}
@@ -72,6 +74,7 @@ export default function ItineraryInfoScreen() {
           description={params.description}
           image={params.image}
           isFavorite={params.isFavorite === 'true'}
+          idFavorito={params.idFavorito ? Number(params.idFavorito) : undefined}
           onBackPress={() => router.back()}
         />
 

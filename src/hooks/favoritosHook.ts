@@ -16,6 +16,13 @@ import {
     putItinerarioFechas,
     UpdateDatesRequest
 } from '../services/favoritosService';
+import {
+    getDownloadedIds,
+    getOfflineItinerariesList,
+    getOfflineItineraryDetails,
+    saveItineraryOffline,
+    removeItineraryOffline
+} from '../services/itineraryStorage';
 
 export const useFavoritosHook = () => {
     const [listItinerarioResumen, setListItinerarioResumen] = useState<ItinerarioResumen[]>([]);
@@ -23,19 +30,22 @@ export const useFavoritosHook = () => {
     const [isMutating, setIsMutating] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [activeItinerary, setActiveItinerary] = useState<ItinerarioUsuario | null>(null);
-
-
-
+    const [downloadedIds, setDownloadedIds] = useState<number[]>([]);
 
     //cargar lista de itinerarios
     const loadItinerarios = useCallback(async () => {
         try {
             setIsLoading(true);
+            const offlineIds = await getDownloadedIds();
+            setDownloadedIds(offlineIds);
+
             const datos = await getItinerarios();
             setListItinerarioResumen(datos);
             setError(null);
         } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'No se pudo cargar los itinerarios.');
+            const offlineList = await getOfflineItinerariesList();
+            setListItinerarioResumen(offlineList);
+            setError(null);
         } finally {
             setIsLoading(false);
         }
@@ -90,6 +100,36 @@ export const useFavoritosHook = () => {
         }
     }
 
+    // Descargar itinerario para offline
+    const downloadItinerary = async (summary: ItinerarioResumen) => {
+        try {
+            setIsMutating(true);
+            const details = await getItinerarioDetalles(summary.id);
+            await saveItineraryOffline(summary, details);
+            const offlineIds = await getDownloadedIds();
+            setDownloadedIds(offlineIds);
+        } catch (err) {
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo descargar el itinerario.");
+        } finally {
+            setIsMutating(false);
+        }
+    };
+
+    // Eliminar descarga offline
+    const removeDownload = async (id: number) => {
+        try {
+            setIsMutating(true);
+            await removeItineraryOffline(id);
+            const offlineIds = await getDownloadedIds();
+            setDownloadedIds(offlineIds);
+        } catch (err) {
+            setError(err instanceof ApiError ? err.message : "No se pudo encontrar el itinerario.");
+            Alert.alert("Error", "No se pudo eliminar la descarga local.");
+        } finally {
+            setIsMutating(false);
+        }
+    };
+
     return {
         loadItinerarios,
         addItineraryToFavs,
@@ -100,6 +140,9 @@ export const useFavoritosHook = () => {
         isMutating,
         error,
         activeItinerary,
+        downloadedIds,
+        downloadItinerary,
+        removeDownload,
     }
 
 }
@@ -115,8 +158,15 @@ export const useFavoritosDetailsHook = () => {
             setIsLoading(true);
             const data = await getItinerarioDetalles(idItinerary);
             setItineraryDetails(data);
+            setError(null);
         } catch (err) {
-            setError(err instanceof ApiError ? err.message : "No se pudo encontrar el itinerario.");
+            const offlineDetails = await getOfflineItineraryDetails(idItinerary);
+            if (offlineDetails) {
+                setItineraryDetails(offlineDetails);
+                setError(null);
+            } else {
+                setError(err instanceof ApiError ? err.message : "No se pudo encontrar el itinerario.");
+            }
         } finally {
             setIsLoading(false);
         }

@@ -1,4 +1,4 @@
-import React, { useState, type ReactNode } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { colors } from '@/constants/colors';
 import { fonts } from '@/constants/fonts';
@@ -7,6 +7,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { styles } from './Card-Itinerario-Explorar.styles';
+import { postItinerario, deleteItinerario } from '@/src/services/favoritosService';
 
 type Props = {
   idItinerario: number;
@@ -18,6 +19,8 @@ type Props = {
   duration?: string;
   startDate?: string;
   endDate?: string;
+  isFavorite?: boolean;
+  idFavorito?: number;
 };
 
 export function ExploreItineraryCard({
@@ -30,12 +33,44 @@ export function ExploreItineraryCard({
   duration,
   startDate,
   endDate,
+  isFavorite = false,
+  idFavorito,
 }: Props) {
   const router = useRouter();
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isFav, setIsFav] = useState(isFavorite);
+  const [favId, setFavId] = useState<number | undefined>(idFavorito);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? colors.dark : colors.light;
+
+  useEffect(() => {
+    setIsFav(isFavorite);
+  }, [isFavorite]);
+
+  useEffect(() => {
+    setFavId(idFavorito);
+  }, [idFavorito]);
+
+  const handleFavoriteToggle = async () => {
+    const nextFav = !isFav;
+    setIsFav(nextFav);
+    try {
+      if (nextFav) {
+        const res = await postItinerario(idItinerario);
+        setFavId(res.id);
+      } else {
+        if (favId !== undefined) {
+          await deleteItinerario(favId);
+          setFavId(undefined);
+        } else {
+          console.warn("Cannot delete favorite: favId is undefined");
+        }
+      }
+    } catch (error) {
+      setIsFav(!nextFav);
+      console.error("Error toggling favorite:", error);
+    }
+  };
 
   return (
     <TouchableOpacity
@@ -51,7 +86,8 @@ export function ExploreItineraryCard({
           image,
           startDate: startDate ?? '',
           endDate: endDate ?? '',
-          isFavorite: String(isFavorite)
+          isFavorite: String(isFav),
+          idFavorito: favId !== undefined ? String(favId) : '',
         }
       })}
     >
@@ -73,12 +109,12 @@ export function ExploreItineraryCard({
               borderWidth: isDark ? 1 : 0 
             }
           ]} 
-          onPress={() => setIsFavorite(!isFavorite)}
+          onPress={handleFavoriteToggle}
         >
           <MaterialIcons
-            name={isFavorite ? icons.FavoriteFilled : icons.FavoriteOutline}
+            name={isFav ? icons.FavoriteFilled : icons.FavoriteOutline}
             size={fonts.size.xl}
-            color={isFavorite ? theme.danger : theme.textSecondary}
+            color={isFav ? theme.danger : theme.textSecondary}
           />
         </TouchableOpacity>
 
