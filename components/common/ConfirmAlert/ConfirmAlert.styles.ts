@@ -47,7 +47,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
   },
   confirmButton: {
-    backgroundColor: colors.light.error, // or some other prominent color
+    backgroundColor: colors.light.danger, // or some other prominent color
   },
   buttonText: {
     fontSize: 16,

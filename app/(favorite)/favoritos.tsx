@@ -96,7 +96,7 @@ export default function FavoritosScreen() {
                 title="Aún no tienes favoritos"
                 description="Explora destinos increíbles y guarda los itinerarios que más te gusten para tenerlos siempre a mano."
                 actionLabel="Ir a Explorar"
-                onActionPress={() => router.push('/explorarApp')}
+                onActionPress={() => router.push('/explorar')}
               />
             </View>
           )}
