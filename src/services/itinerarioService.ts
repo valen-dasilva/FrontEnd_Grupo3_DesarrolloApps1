@@ -1,6 +1,7 @@
 import {
   CategoriaItinerario,
   ItinerarioSistemaResumenDTO,
+  ItinerarioSistemaDTO,
   Provincia,
 } from "../types/itinerario";
 import { apiClient } from "./api";
@@ -23,5 +24,13 @@ export async function buscarPorPreferencias(
   const qs = query.toString();
   return apiClient
     .get<ItinerarioSistemaResumenDTO[]>(`/itinerario/buscar${qs ? `?${qs}` : ""}`)
+    .then((r) => r.data);
+}
+
+export async function obtenerItinerarioPorId(
+  id: number,
+): Promise<ItinerarioSistemaDTO> {
+  return apiClient
+    .get<ItinerarioSistemaDTO>(`/itinerario/${id}`)
     .then((r) => r.data);
 }

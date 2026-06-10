@@ -1,8 +1,8 @@
-import { StyleSheet } from 'react-native';
 import { colors } from '@/constants/colors';
 import { fonts } from '@/constants/fonts';
 import { paddings } from '@/constants/paddings';
 import { Colors } from '@/constants/theme';
+import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
   card: {
@@ -20,6 +20,11 @@ export const styles = StyleSheet.create({
     borderTopLeftRadius: paddings.radius.md,
     borderTopRightRadius: paddings.radius.md,
     overflow: "hidden",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+    //position: "absolute",
   },
   heartButton: {
     position: 'absolute',
@@ -51,7 +56,7 @@ export const styles = StyleSheet.create({
   },
   categoryText: {
     color: Colors.light.text,
-    fontSize: fonts.size.sm - 1, 
+    fontSize: fonts.size.sm - 1,
     fontFamily: fonts.family.bodySemiBold,
   },
   content: {
