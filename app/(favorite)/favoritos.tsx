@@ -2,6 +2,7 @@ import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, StatusBar, Text, View, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import { Header } from '../../components/common/Header/Header';
 import { ItineraryCard } from '../../components/favorites_components/favorite_principal/ItineraryCard/ItineraryCard';
 import { EmptyState } from '../../components/favorites_components/favorite_principal/EmptyState/EmptyState';
@@ -21,7 +22,10 @@ export default function FavoritosScreen() {
   const {
     listItinerarioResumen,
     isLoading,
-    quitItineraryFromFavs
+    quitItineraryFromFavs,
+    downloadedIds,
+    downloadItinerary,
+    removeDownload
   } = useFavoritosHook();
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
@@ -41,8 +45,28 @@ export default function FavoritosScreen() {
     // por ahora no implementado
   };
 
-  const handleToggleDownload = (_id: number) => {
-    // por ahora no implementado
+  const handleToggleDownload = (id: number) => {
+    const isDownloaded = downloadedIds.includes(id);
+    const itinerary = listItinerarioResumen.find(i => i.id === id);
+    if (!itinerary) return;
+
+    if (isDownloaded) {
+      removeDownload(id).then(() => {
+        Toast.show({
+          type: 'info',
+          text1: 'Descarga eliminada',
+          text2: 'El itinerario ya no estará disponible offline.',
+        });
+      });
+    } else {
+      downloadItinerary(itinerary).then(() => {
+        Toast.show({
+          type: 'success',
+          text1: '¡Descarga completa!',
+          text2: 'El itinerario ya está disponible offline.',
+        });
+      });
+    }
   };
 
   return (
@@ -80,7 +104,7 @@ export default function FavoritosScreen() {
                   location={itinerary.provincia}
                   duration={`${itinerary.duracionDias} Días`}
                   imageUrl={itinerary.fotoPortada}
-                  isOfflineAvailable={false}
+                  isOfflineAvailable={downloadedIds.includes(itinerary.id)}
                   isFavorite={true}
                   isPinned={false}
                   onPressDetail={() => router.push({ pathname: '/itinerarioInfoFav', params: { id: itinerary.id } })}
