@@ -10,16 +10,13 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Dimensions,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-const { width } = Dimensions.get("window");
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -40,7 +37,7 @@ export default function HomeScreen() {
       return;
     }
     setLoadingItinerario(true);
-    getItinerarioEnCurso(user.idUsuario).then((data) => {
+    getItinerarioEnCurso().then((data) => {
       setItinerarioActivo(data);
       setLoadingItinerario(false);
     });
@@ -49,9 +46,6 @@ export default function HomeScreen() {
   const handlePreferenciasPress = () => {
     router.push("/inicioApp/preferencias");
   };
-
-  // Fuente de imagen: URL de Supabase Storage si existe, imagen local como fallback
-  const imagenPortada = itinerarioActivo?.fotoPortada;
 
   return (
     <View
@@ -182,130 +176,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 14,
-  },
-  enCursoCard: {
-    borderRadius: 24,
-    overflow: "hidden",
-    marginTop: 16,
-    marginBottom: 24,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 16,
-    elevation: 4,
-  },
-  imageContainer: {
-    height: 220,
-    position: "relative",
-  },
-  cardImage: {
-    width: "100%",
-    height: "100%",
-  },
-  gradientOverlay: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 120,
-  },
-  badge: {
-    position: "absolute",
-    top: 16,
-    left: 16,
-    backgroundColor: "#2563EB",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 100,
-  },
-  badgeText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "bold",
-    fontFamily: "Inter-Bold",
-  },
-  titleOverlayRow: {
-    position: "absolute",
-    bottom: 16,
-    left: 16,
-    right: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  cardTitle: {
-    color: "#FFFFFF",
-    fontSize: 22,
-    fontFamily: "Inter-Bold",
-    fontWeight: "bold",
-    flex: 1,
-    marginRight: 10,
-    textShadowColor: "rgba(0, 0, 0, 0.4)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
-  },
-  arrowButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "rgba(255, 255, 255, 0.25)",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.4)",
-  },
-  metadataRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    gap: 8,
-  },
-  metaItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  metaText: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  dotSeparator: {
-    fontSize: 14,
-  },
-  actividadCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginHorizontal: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-  },
-  actividadHeader: {
-    fontSize: 11,
-    textTransform: "uppercase",
-    color: "#6366F1",
-    fontWeight: "bold",
-    fontFamily: "Inter-Bold",
-    letterSpacing: 0.5,
-  },
-  actividadDetailsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 6,
-  },
-  actividadTitle: {
-    fontSize: 15,
-    fontFamily: "Inter-Bold",
-    fontWeight: "bold",
-    flex: 1,
-    marginRight: 8,
-  },
-  actividadTime: {
-    fontSize: 14,
-    fontWeight: "bold",
-    fontFamily: "Inter-Bold",
-    color: "#2563EB",
   },
   sinViajeCard: {
     borderRadius: 24,

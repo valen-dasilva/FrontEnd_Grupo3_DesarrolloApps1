@@ -5,6 +5,7 @@ import {
   ItinerarioSistemaResumenDTO,
   Provincia,
 } from "../types/itinerario";
+
 import { apiClient } from "./api";
 
 export interface BuscarParams {
@@ -36,14 +37,12 @@ export async function obtenerItinerarioPorId(
     .then((r) => r.data);
 }
 
-// Devuelve el itinerario activo del usuario (fecha_inicio <= hoy <= fecha_fin),
-// o null si no tiene ninguno en curso. Nunca lanza — los errores se tragan silenciosamente
-// para que la pantalla de inicio no rompa si el backend no responde.
-export async function getItinerarioEnCurso(
-  userId: number,
-): Promise<ItinerarioEnCursoDTO | null> {
+// Devuelve el itinerario activo del usuario (fechaFin >= hoy, el más próximo),
+// o null si no tiene ninguno en curso o próximo.
+// El backend lo identifica por el JWT — no hace falta pasar el userId.
+export async function getItinerarioEnCurso(): Promise<ItinerarioEnCursoDTO | null> {
   return apiClient
-    .get<ItinerarioEnCursoDTO>(`/itinerario-usuario/activo/${userId}`)
+    .get<ItinerarioEnCursoDTO>("/favoritos/activo")
     .then((r) => r.data)
     .catch(() => null);
 }

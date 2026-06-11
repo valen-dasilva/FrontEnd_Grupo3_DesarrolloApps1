@@ -1,6 +1,6 @@
 import { colors } from "@/constants/colors";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { ItinerarioEnCursoDTO, PROVINCIA_LABEL } from "@/src/types/itinerario";
+import { ItinerarioEnCursoDTO, ItemItinerarioUsuarioDTO, PROVINCIA_LABEL } from "@/src/types/itinerario";
 import { formatFechaCorta } from "@/src/utils/dateUtils";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -8,17 +8,56 @@ import { router } from "expo-router";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
+// Busca la próxima actividad para mostrar en la card:
+// - Si el viaje aún no empezó: primera actividad del día 1
+// - Si está en curso: siguiente actividad del día actual (o la última si ya pasaron todas)
+// - Si ya terminó: null
+function getProximaActividad(
+  fechaInicio: string,
+  items: ItemItinerarioUsuarioDTO[]
+): ItemItinerarioUsuarioDTO | null {
+  if (!items?.length) return null;
+
+  const hoy = new Date();
+  const inicio = new Date(fechaInicio + "T00:00:00");
+  const diaActual = Math.floor((hoy.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+  // El viaje todavía no empezó → mostrar la primera actividad del día 1
+  if (diaActual < 1) {
+    const itemsDia1 = items
+      .filter((item) => item.dia === 1)
+      .sort((a, b) => (a.hora ?? "").localeCompare(b.hora ?? ""));
+    return itemsDia1[0] ?? items[0];
+  }
+
+  const itemsHoy = items.filter((item) => item.dia === diaActual);
+  if (!itemsHoy.length) return null;
+
+  const ahoraMinutos = hoy.getHours() * 60 + hoy.getMinutes();
+
+  const proxima = itemsHoy
+    .filter((item) => {
+      if (!item.hora) return true;
+      const [h, m] = item.hora.split(":").map(Number);
+      return h * 60 + m >= ahoraMinutos;
+    })
+    .sort((a, b) => (a.hora ?? "").localeCompare(b.hora ?? ""))[0];
+
+  // Si todas las actividades del día ya pasaron, mostramos la última
+  return proxima ?? itemsHoy[itemsHoy.length - 1];
+}
+
 export default function ActiveItineraryCard({
   itinerarioActivo,
 }: {
   itinerarioActivo: ItinerarioEnCursoDTO;
 }) {
-  // El hook useColorScheme se puede usar directamente aquí porque este componente se monta dentro de la pantalla principal que ya lo envuelve
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const theme = isDark ? colors.dark : colors.light;
 
   const imagenPortada = { uri: itinerarioActivo.fotoPortada };
+  const proximaActividad = getProximaActividad(itinerarioActivo.fechaInicio, itinerarioActivo.items);
 
   const handleEnCursoPress = () => {
     router.push("/explorarApp/itinerarioInfo");
@@ -103,8 +142,8 @@ export default function ActiveItineraryCard({
         </View>
       </View>
 
-      {/* Sub-tarjeta de Próxima Actividad — solo si el backend la devuelve */}
-      {itinerarioActivo.proximaActividad && (
+      {/* Sub-tarjeta de Próxima Actividad — calculada desde items */}
+      {proximaActividad && (
         <View
           style={[
             styles.actividadCard,
@@ -120,11 +159,11 @@ export default function ActiveItineraryCard({
               style={[styles.actividadTitle, { color: theme.text }]}
               numberOfLines={1}
             >
-              {itinerarioActivo.proximaActividad.nombre}
+              {proximaActividad.nombreActividad}
             </Text>
-            {itinerarioActivo.proximaActividad.hora && (
+            {proximaActividad.hora && (
               <Text style={styles.actividadTime}>
-                {itinerarioActivo.proximaActividad.hora}
+                {proximaActividad.hora.substring(0, 5)}
               </Text>
             )}
           </View>
@@ -133,6 +172,7 @@ export default function ActiveItineraryCard({
     </TouchableOpacity>
   );
 }
+
 const styles = StyleSheet.create({
   enCursoCard: {
     borderRadius: 24,
