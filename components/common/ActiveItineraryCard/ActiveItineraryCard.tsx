@@ -1,6 +1,11 @@
 import { colors } from "@/constants/colors";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { ItinerarioEnCursoDTO, ItemItinerarioUsuarioDTO, PROVINCIA_LABEL } from "@/src/types/itinerario";
+import {
+    CATEGORIA_LABEL,
+    ItinerarioEnCursoDTO,
+    ItemItinerarioUsuarioDTO,
+    PROVINCIA_LABEL,
+} from "@/src/types/itinerario";
 import { formatFechaCorta } from "@/src/utils/dateUtils";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -14,13 +19,14 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 // - Si ya terminó: null
 function getProximaActividad(
   fechaInicio: string,
-  items: ItemItinerarioUsuarioDTO[]
+  items: ItemItinerarioUsuarioDTO[],
 ): ItemItinerarioUsuarioDTO | null {
   if (!items?.length) return null;
 
   const hoy = new Date();
   const inicio = new Date(fechaInicio + "T00:00:00");
-  const diaActual = Math.floor((hoy.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  const diaActual =
+    Math.floor((hoy.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
   // El viaje todavía no empezó → mostrar la primera actividad del día 1
   if (diaActual < 1) {
@@ -57,10 +63,28 @@ export default function ActiveItineraryCard({
   const theme = isDark ? colors.dark : colors.light;
 
   const imagenPortada = { uri: itinerarioActivo.fotoPortada };
-  const proximaActividad = getProximaActividad(itinerarioActivo.fechaInicio, itinerarioActivo.items);
+  const proximaActividad = getProximaActividad(
+    itinerarioActivo.fechaInicio,
+    itinerarioActivo.items,
+  );
 
   const handleEnCursoPress = () => {
-    router.push("/explorarApp/itinerarioInfo");
+    router.push({
+      pathname: "/explorarApp/itinerarioInfo",
+      params: {
+        idItinerario: itinerarioActivo.idItinerarioSistema.toString(),
+        title: itinerarioActivo.titulo,
+        image: itinerarioActivo.fotoPortada ?? "",
+        category: itinerarioActivo.etiquetas?.length > 0
+          ? CATEGORIA_LABEL[itinerarioActivo.etiquetas[0]]
+          : "General",
+        startDate: itinerarioActivo.fechaInicio,
+        endDate: itinerarioActivo.fechaFin,
+        description: itinerarioActivo.descripcion,
+        isFavorite: "true",
+        idFavorito: itinerarioActivo.idItinerarioUsuario.toString(),
+      },
+    });
   };
 
   return (
