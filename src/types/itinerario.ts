@@ -110,3 +110,23 @@ export interface ItinerarioSistemaDTO {
   etiquetas: CategoriaItinerario[];
   items: ItemItinerarioSistemaDTO[];
 }
+
+// DTO para la próxima actividad del itinerario activo del usuario.
+export interface ActividadEnCursoDTO {
+  nombre: string;
+  hora?: string;   // "HH:mm" — null si la actividad no tiene hora cargada
+  dia: number;
+}
+
+// DTO del itinerario activo del usuario (aquel cuyas fechas contienen el día de hoy).
+// Devuelto por GET /itinerario-usuario/activo/{userId}
+export interface ItinerarioEnCursoDTO {
+  idItinerarioUsuario: number;
+  titulo: string;
+  provincia: Provincia;
+  fechaInicio: string;
+  fechaFin: string;
+  fotoPortada?: string;
+  duracionDias: number;
+  proximaActividad?: ActividadEnCursoDTO;
+}

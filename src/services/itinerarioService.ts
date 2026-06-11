@@ -1,7 +1,8 @@
 import {
   CategoriaItinerario,
-  ItinerarioSistemaResumenDTO,
+  ItinerarioEnCursoDTO,
   ItinerarioSistemaDTO,
+  ItinerarioSistemaResumenDTO,
   Provincia,
 } from "../types/itinerario";
 import { apiClient } from "./api";
@@ -33,4 +34,16 @@ export async function obtenerItinerarioPorId(
   return apiClient
     .get<ItinerarioSistemaDTO>(`/itinerario/${id}`)
     .then((r) => r.data);
+}
+
+// Devuelve el itinerario activo del usuario (fecha_inicio <= hoy <= fecha_fin),
+// o null si no tiene ninguno en curso. Nunca lanza — los errores se tragan silenciosamente
+// para que la pantalla de inicio no rompa si el backend no responde.
+export async function getItinerarioEnCurso(
+  userId: number,
+): Promise<ItinerarioEnCursoDTO | null> {
+  return apiClient
+    .get<ItinerarioEnCursoDTO>(`/itinerario-usuario/activo/${userId}`)
+    .then((r) => r.data)
+    .catch(() => null);
 }
