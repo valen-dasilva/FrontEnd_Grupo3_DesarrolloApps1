@@ -3,7 +3,6 @@ import { icons } from '@/constants/icons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
-import TeatroColonIcon from '../../assets/images/Imagen-Teatro-Colon.svg';
 import { styles } from './Card-Itinerario-Info.styles';
 import { useTheme } from '@/hooks/use-color-scheme';
 import { postItinerario, deleteItinerario } from '@/src/services/favoritosService';
@@ -122,7 +121,7 @@ export function ItineraryInfoCard({
         {image ? (
           <Image source={{ uri: image }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
         ) : (
-          <TeatroColonIcon width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style={StyleSheet.absoluteFillObject} />
+          <View style={[StyleSheet.absoluteFillObject, { backgroundColor: isDark ? theme.surface : theme.border }]} />
         )}
 
         {/** Dark transparent overlay */}
@@ -134,7 +133,7 @@ export function ItineraryInfoCard({
               style={[
                 styles.circularContainer, 
                 { 
-                  backgroundColor: isDark ? '#11131A' : '#FFFFFF',
+                  backgroundColor: isDark ? theme.background : theme.surface,
                   borderColor: theme.border,
                   borderWidth: isDark ? 1 : 0
                 }
@@ -148,7 +147,7 @@ export function ItineraryInfoCard({
               style={[
                 styles.circularContainer, 
                 { 
-                  backgroundColor: isDark ? '#11131A' : '#FFFFFF',
+                  backgroundColor: isDark ? theme.background : theme.surface,
                   borderColor: theme.border,
                   borderWidth: isDark ? 1 : 0
                 }
@@ -169,7 +168,7 @@ export function ItineraryInfoCard({
             <View style={[
               styles.categoryBadge, 
               { 
-                backgroundColor: isDark ? '#11131A' : '#FFFFFF',
+                backgroundColor: isDark ? theme.background : theme.surface,
                 borderColor: theme.border,
                 borderWidth: isDark ? 1 : 0
               }

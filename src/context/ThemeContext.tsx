@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useColorScheme as useRNColorScheme } from 'react-native';
 import { colors } from '@/constants/colors';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useColorScheme as useRNColorScheme } from 'react-native';
 
 export type ColorScheme = 'light' | 'dark';
 
@@ -13,8 +13,8 @@ export interface ThemeContextType {
 
 export const ThemeContext = createContext<ThemeContextType>({
   colorScheme: 'light',
-  toggleColorScheme: () => {},
-  setColorScheme: () => {},
+  toggleColorScheme: () => { },
+  setColorScheme: () => { },
   theme: colors.light,
 });
 

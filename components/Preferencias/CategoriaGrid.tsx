@@ -3,25 +3,21 @@
 // renderiza una CategoriaCard por cada opción, manejando el estado activo/inactivo.
 // Se extrae de preferencias.tsx para dejar esa pantalla enfocada solo en el flujo de búsqueda.
 
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import AventuraIcon from '@/assets/images/Icono-Aventura.svg';
-import CultureIcon from '@/assets/images/Icono-Cultura.svg';
-import GastronomiaIcon from '@/assets/images/Icono-Gastronomia.svg';
-import NaturalezaIcon from '@/assets/images/Icono-Naturaleza.svg';
 import { colors } from '@/constants/colors';
+import { icons } from '@/constants/icons';
 import { useTheme } from '@/hooks/use-color-scheme';
 import { CategoriaItinerario } from '@/src/types/itinerario';
 import { CategoriaCard } from './CategoriaCard';
 
 // Mapeo de cada categoría a su ícono.
-// Las SVG no necesitan color (ya tienen su paleta), las de Ionicons/MaterialCommunity sí.
 const CATEGORIAS: { value: CategoriaItinerario; icon: (color: string) => React.ReactNode }[] = [
-  { value: CategoriaItinerario.NATURALEZA, icon: () => <NaturalezaIcon width={28} height={28} /> },
-  { value: CategoriaItinerario.GASTRONOMIA, icon: () => <GastronomiaIcon width={28} height={28} /> },
-  { value: CategoriaItinerario.AVENTURA, icon: () => <AventuraIcon width={28} height={28} /> },
-  { value: CategoriaItinerario.CULTURA, icon: () => <CultureIcon width={28} height={28} /> },
+  { value: CategoriaItinerario.NATURALEZA, icon: () => <MaterialIcons name={icons.Landscape} size={28} color="#1E63D6" /> },
+  { value: CategoriaItinerario.GASTRONOMIA, icon: () => <MaterialIcons name={icons.Restaurant} size={28} color="#FEC73C" /> },
+  { value: CategoriaItinerario.AVENTURA, icon: () => <MaterialIcons name={icons.Hiking} size={28} color="#B14800" /> },
+  { value: CategoriaItinerario.CULTURA, icon: () => <MaterialIcons name={icons.Museum} size={28} color="#0F3FA8" /> },
   {
     value: CategoriaItinerario.NOCHE,
     icon: (color) => <Ionicons name="moon-outline" size={28} color={color} />,
@@ -37,7 +33,7 @@ interface CategoriaGridProps {
   onToggle: (cat: CategoriaItinerario) => void;
 }
 
-export function CategoriaGrid({ seleccionadas, onToggle }: CategoriaGridProps) {
+export function CategoriaGrid({ seleccionadas, onToggle }: Readonly<CategoriaGridProps>) {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? colors.dark : colors.light;

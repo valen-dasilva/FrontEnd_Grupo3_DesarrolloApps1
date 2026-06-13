@@ -1,7 +1,6 @@
 import { colors } from '@/constants/colors';
 import { fonts } from '@/constants/fonts';
 import { paddings } from '@/constants/paddings';
-import { Colors } from '@/constants/theme';
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
@@ -55,7 +54,7 @@ export const styles = StyleSheet.create({
     gap: 6,
   },
   categoryText: {
-    color: Colors.light.text,
+    color: colors.light.text,
     fontSize: fonts.size.sm - 1,
     fontFamily: fonts.family.bodySemiBold,
   },
@@ -69,7 +68,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    color: Colors.light.text,
+    color: colors.light.text,
     fontSize: fonts.size.lg,
     fontFamily: fonts.family.headingBold,
   },
@@ -83,7 +82,7 @@ export const styles = StyleSheet.create({
     gap: 4,
   },
   ratingText: {
-    color: Colors.light.text,
+    color: colors.light.text,
     fontSize: fonts.size.sm - 1,
     fontFamily: fonts.family.bodySemiBold,
   },

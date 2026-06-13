@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import TeatroColonIcon from '../../assets/images/Imagen-Teatro-Colon.svg';
 import { icons } from '../../constants/icons';
 import { colors } from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
@@ -37,7 +36,7 @@ export function CardItinerarioInfoFav({
     description = "Visita guiada por el emblemático Teatro Colón, descubriendo su historia, arquitectura y secretos detrás del escenario.",
     onBackPress,
     onEditPress
-}: Props) {
+}: Readonly<Props>) {
     const [isFavorite, setIsFavorite] = useState(true);
 
     const categoryIcon = categoryIconMap[category || ''] || icons.Museum;
@@ -54,7 +53,7 @@ export function CardItinerarioInfoFav({
                 {imageUrl ? (
                     <Image source={{ uri: imageUrl }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
                 ) : (
-                    <TeatroColonIcon width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style={StyleSheet.absoluteFillObject} />
+                    <View style={[StyleSheet.absoluteFillObject, { backgroundColor: isDark ? theme.surface : theme.border }]} />
                 )}
 
                 {/** Capa superpuesta con filtro oscuro trasparente */}
@@ -68,7 +67,7 @@ export function CardItinerarioInfoFav({
                             style={[
                                 styles.contenedorCircular, 
                                 { 
-                                    backgroundColor: isDark ? '#11131A' : '#FFFFFF',
+                                    backgroundColor: isDark ? theme.background : theme.surface,
                                     borderColor: theme.border,
                                     borderWidth: isDark ? 1 : 0
                                 }
@@ -83,7 +82,7 @@ export function CardItinerarioInfoFav({
                             style={[
                                 styles.contenedorCircular, 
                                 { 
-                                    backgroundColor: isDark ? '#11131A' : '#FFFFFF',
+                                    backgroundColor: isDark ? theme.background : theme.surface,
                                     borderColor: theme.border,
                                     borderWidth: isDark ? 1 : 0
                                 }
@@ -105,7 +104,7 @@ export function CardItinerarioInfoFav({
                         <View style={[
                             styles.etiquetaCategoria, 
                             { 
-                                backgroundColor: isDark ? '#11131A' : '#FFFFFF',
+                                backgroundColor: isDark ? theme.background : theme.surface,
                                 borderColor: theme.border,
                                 borderWidth: isDark ? 1 : 0
                             }
