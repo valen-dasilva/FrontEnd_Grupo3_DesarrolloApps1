@@ -94,7 +94,7 @@ export default function FavoritosScreen() {
               isFavorite={true}
               isPinned={false}
               onPressDetail={() => router.push({
-                pathname: '/itinerarioInfoFav',
+                pathname: '/(tabs)/(favorite)/itinerarioInfoFav',
                 params: {
                   id: String(itinerary.id),
                   titulo: itinerary.titulo,

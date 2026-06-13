@@ -43,7 +43,7 @@ export default function HomeScreen() {
   }, [user]);
 
   const handlePreferenciasPress = () => {
-    router.push("/inicioApp/preferencias");
+    router.push("/(tabs)/inicioApp/preferencias");
   };
 
   return (

@@ -69,7 +69,7 @@ export default function ActiveItineraryCard({
 
   const handleEnCursoPress = () => {
     router.push({
-      pathname: "/explorarApp/itinerarioInfo",
+      pathname: "/(tabs)/explorarApp/itinerarioInfo",
       params: {
         idItinerario: itinerarioActivo.idItinerarioSistema.toString(),
         title: itinerarioActivo.titulo,

@@ -52,7 +52,7 @@ export function ExploreItineraryCard({
       style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
       activeOpacity={0.8}
       onPress={() => router.push({
-        pathname: '/explorarApp/itinerarioInfo',
+        pathname: '/(tabs)/explorarApp/itinerarioInfo',
         params: {
           idItinerario: String(idItinerario),
           title,

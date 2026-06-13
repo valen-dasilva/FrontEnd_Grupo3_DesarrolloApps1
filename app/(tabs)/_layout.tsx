@@ -12,6 +12,7 @@ function TabBarComponent({ state, navigation }: Readonly<BottomTabBarProps>) {
   if (currentRouteName === 'explorar' || currentRouteName === 'explorarApp') activeTab = 'Explorar';
   else if (currentRouteName === 'favoritos' || currentRouteName === '(favorite)') activeTab = 'Favoritos';
   else if (currentRouteName === 'perfil' || currentRouteName === 'perfilApp') activeTab = 'Perfil';
+  else if (currentRouteName === 'inicioApp') activeTab = 'Inicio';
 
   const handleTabPress = (tabName: TabName) => {
     let targetRoute = 'index';
@@ -65,30 +66,10 @@ export default function TabLayout() {
           title: 'Perfil',
         }}
       />
-      <Tabs.Screen
-        name="(favorite)"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="explorarApp"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="inicioApp"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="perfilApp"
-        options={{
-          href: null,
-        }}
-      />
+      <Tabs.Screen name="(favorite)" options={{ href: null }} />
+      <Tabs.Screen name="explorarApp" options={{ href: null }} />
+      <Tabs.Screen name="inicioApp" options={{ href: null }} />
+      <Tabs.Screen name="perfilApp" options={{ href: null }} />
     </Tabs>
   );
 }

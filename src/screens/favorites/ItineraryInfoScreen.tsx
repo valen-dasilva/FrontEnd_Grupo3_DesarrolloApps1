@@ -130,7 +130,7 @@ export default function FavoriteItineraryInfoScreen() {
                     dateRange={displayDateRange}
                     description={displayDescription}
                     onBackPress={() => router.back()} 
-                    onEditPress={() => router.push({ pathname: '/edicionItinerario', params: { id } })} 
+                    onEditPress={() => router.push({ pathname: '/(tabs)/(favorite)/edicionItinerario', params: { id } })} 
                 />
 
                 {renderContent()}

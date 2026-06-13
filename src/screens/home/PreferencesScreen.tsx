@@ -73,7 +73,7 @@ export default function PreferenciasScreen() {
         fechaFin,
       });
       router.push({
-        pathname: "/inicioApp/recomendaciones",
+        pathname: "/(tabs)/inicioApp/recomendaciones",
         params: {
           resultados: JSON.stringify(resultados),
           provincia: provincia ?? "",

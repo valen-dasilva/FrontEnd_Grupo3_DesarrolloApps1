@@ -80,7 +80,7 @@ export default function EdicionItinerarioScreen() {
 
   const handleEditActivity = (activity: ItemItinerarioUsuario) => {
     router.push({
-      pathname: '/editActivityFormulary',
+      pathname: '/(tabs)/(favorite)/editActivityFormulary',
       params: {
         idItinerario: id,
         idItem: String(activity.id),
@@ -109,7 +109,7 @@ export default function EdicionItinerarioScreen() {
 
   const handleAddActivity = (dayNum: number) => {
     router.push({
-      pathname: '/editActivityFormulary',
+      pathname: '/(tabs)/(favorite)/editActivityFormulary',
       params: {
         idItinerario: id,
         day: String(dayNum),

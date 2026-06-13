@@ -45,7 +45,7 @@ export default function PerfilScreen() {
 
         <TouchableOpacity
           style={[styles.optionRow, { backgroundColor: theme.card, borderColor: theme.border }]}
-          onPress={() => router.push('/perfilApp/editarUsuario')}
+          onPress={() => router.push('/(tabs)/perfilApp/editarUsuario')}
         >
           <Text style={[styles.optionText, { color: theme.text }]}>👤  Editar Usuario</Text>
           <Text style={[styles.chevron, { color: theme.gray }]}>›</Text>
@@ -53,7 +53,7 @@ export default function PerfilScreen() {
 
         <TouchableOpacity
           style={[styles.optionRow, { backgroundColor: theme.card, borderColor: theme.border }]}
-          onPress={() => router.push('/perfilApp/cambiarContrasena')}
+          onPress={() => router.push('/(tabs)/perfilApp/cambiarContrasena')}
         >
           <Text style={[styles.optionText, { color: theme.text }]}>🔒  Cambiar Contraseña</Text>
           <Text style={[styles.chevron, { color: theme.gray }]}>›</Text>

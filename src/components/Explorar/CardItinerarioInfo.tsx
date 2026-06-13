@@ -3,7 +3,6 @@ import { icons } from '@/constants/icons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
-import TeatroColonIcon from '../../../assets/images/Imagen-Teatro-Colon.svg';
 import { styles } from './CardItinerarioInfo.styles';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
@@ -63,7 +62,7 @@ export function ItineraryInfoCard({
         {image ? (
           <Image source={{ uri: image }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
         ) : (
-          <TeatroColonIcon width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style={StyleSheet.absoluteFillObject} />
+          <View style={[StyleSheet.absoluteFillObject, { backgroundColor: theme.card }]} />
         )}
 
         {/** Dark transparent overlay */}
