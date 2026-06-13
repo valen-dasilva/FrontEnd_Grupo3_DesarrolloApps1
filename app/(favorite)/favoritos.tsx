@@ -76,6 +76,58 @@ export default function FavoritosScreen() {
     }
   };
 
+  const renderContent = () => {
+    if (isLoading) {
+      return <ActivityIndicator size="large" color={theme.text} style={{ marginTop: 50 }} />;
+    }
+
+    if (listItinerarioResumen.length > 0) {
+      return (
+        <View style={styles.itinerariesContainer}>
+          {listItinerarioResumen.map(itinerary => (
+            <ItineraryCard
+              key={itinerary.id}
+              title={itinerary.titulo}
+              location={itinerary.provincia}
+              duration={`${itinerary.duracionDias} Días`}
+              imageUrl={itinerary.fotoPortada}
+              isOfflineAvailable={downloadedIds.includes(itinerary.id)}
+              isFavorite={true}
+              isPinned={false}
+              onPressDetail={() => router.push({
+                pathname: '/itinerarioInfoFav',
+                params: {
+                  id: String(itinerary.id),
+                  titulo: itinerary.titulo,
+                  provincia: itinerary.provincia,
+                  duracionDias: String(itinerary.duracionDias),
+                  fotoPortada: itinerary.fotoPortada,
+                  fechaInicio: itinerary.fechaInicio,
+                  fechaFin: itinerary.fechaFin,
+                  etiquetas: itinerary.etiquetas?.join(','),
+                }
+              })}
+              onFavoriteToggle={() => handleToggleFavorite(itinerary.id)}
+              onPinPress={() => handleTogglePin(itinerary.id)}
+              onDownloadPress={() => handleToggleDownload(itinerary.id)}
+            />
+          ))}
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.emptyStateContainer}>
+        <EmptyState
+          title="Aún no tienes favoritos"
+          description="Explora destinos increíbles y guarda los itinerarios que más te gusten para tenerlos siempre a mano."
+          actionLabel="Ir a Explorar"
+          onActionPress={() => router.push('/explorar')}
+        />
+      </View>
+    );
+  };
+
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -100,37 +152,7 @@ export default function FavoritosScreen() {
             </Text>
           </View>
 
-          {isLoading ? (
-            <ActivityIndicator size="large" color={theme.text} style={{ marginTop: 50 }} />
-          ) : listItinerarioResumen.length > 0 ? (
-            <View style={styles.itinerariesContainer}>
-              {listItinerarioResumen.map(itinerary => (
-                <ItineraryCard
-                  key={itinerary.id}
-                  title={itinerary.titulo}
-                  location={itinerary.provincia}
-                  duration={`${itinerary.duracionDias} Días`}
-                  imageUrl={itinerary.fotoPortada}
-                  isOfflineAvailable={downloadedIds.includes(itinerary.id)}
-                  isFavorite={true}
-                  isPinned={false}
-                  onPressDetail={() => router.push({ pathname: '/itinerarioInfoFav', params: { id: itinerary.id } })}
-                  onFavoriteToggle={() => handleToggleFavorite(itinerary.id)}
-                  onPinPress={() => handleTogglePin(itinerary.id)}
-                  onDownloadPress={() => handleToggleDownload(itinerary.id)}
-                />
-              ))}
-            </View>
-          ) : (
-            <View style={styles.emptyStateContainer}>
-              <EmptyState
-                title="Aún no tienes favoritos"
-                description="Explora destinos increíbles y guarda los itinerarios que más te gusten para tenerlos siempre a mano."
-                actionLabel="Ir a Explorar"
-                onActionPress={() => router.push('/explorar')}
-              />
-            </View>
-          )}
+          {renderContent()}
         </ScrollView>
       </View>
 

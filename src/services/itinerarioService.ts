@@ -1,9 +1,11 @@
 import {
   CategoriaItinerario,
-  ItinerarioSistemaResumenDTO,
+  ItinerarioEnCursoDTO,
   ItinerarioSistemaDTO,
+  ItinerarioSistemaResumenDTO,
   Provincia,
 } from "../types/itinerario";
+
 import { apiClient } from "./api";
 
 export interface BuscarParams {
@@ -33,4 +35,14 @@ export async function obtenerItinerarioPorId(
   return apiClient
     .get<ItinerarioSistemaDTO>(`/itinerario/${id}`)
     .then((r) => r.data);
+}
+
+// Devuelve el itinerario activo del usuario (fechaFin >= hoy, el más próximo),
+// o null si no tiene ninguno en curso o próximo.
+// El backend lo identifica por el JWT — no hace falta pasar el userId.
+export async function getItinerarioEnCurso(): Promise<ItinerarioEnCursoDTO | null> {
+  return apiClient
+    .get<ItinerarioEnCursoDTO>("/favoritos/activo")
+    .then((r) => r.data)
+    .catch(() => null);
 }

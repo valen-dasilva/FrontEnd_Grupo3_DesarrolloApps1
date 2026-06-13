@@ -110,3 +110,31 @@ export interface ItinerarioSistemaDTO {
   etiquetas: CategoriaItinerario[];
   items: ItemItinerarioSistemaDTO[];
 }
+
+// Actividad dentro del itinerario personalizado del usuario.
+// Devuelto como parte de ItinerarioEnCursoDTO.
+export interface ItemItinerarioUsuarioDTO {
+  id: number;
+  nombreActividad: string;
+  descripcion?: string;
+  localidad?: string;
+  direccion?: string;
+  dia: number;
+  hora?: string; // "HH:mm:ss" — puede ser null si no tiene hora cargada
+}
+
+// DTO del itinerario activo del usuario (aquel cuyas fechas contienen el día de hoy).
+// Devuelto por GET /favoritos/activo — usa JWT, no necesita userId en la ruta.
+export interface ItinerarioEnCursoDTO {
+  idItinerarioUsuario: number;
+  idItinerarioSistema: number;
+  titulo: string;
+  descripcion: string;
+  provincia: Provincia;
+  fechaInicio: string;
+  fechaFin: string;
+  fotoPortada?: string;
+  duracionDias: number;
+  etiquetas: CategoriaItinerario[];
+  items: ItemItinerarioUsuarioDTO[];
+}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import TeatroColonIcon from '../../assets/images/Imagen-Teatro-Colon.svg';
 import { icons } from '../../constants/icons';
@@ -10,6 +10,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 
 type Props = {
     title?: string;
+    imageUrl?: string;
     category?: string;
     dateRange?: string;
     description?: string;
@@ -30,6 +31,7 @@ const categoryIconMap: Record<string, string> = {
 
 export function CardItinerarioInfoFav({
     title = "Teatro Colón",
+    imageUrl,
     category = "Cultura",
     dateRange = "15 Oct - 22 Oct, 2024",
     description = "Visita guiada por el emblemático Teatro Colón, descubriendo su historia, arquitectura y secretos detrás del escenario.",
@@ -49,7 +51,11 @@ export function CardItinerarioInfoFav({
             {/** Contenedor de la imagen */}
             <View style={styles.contenedorImagen}>
                 {/** Imagen superpuesta con texto */}
-                <TeatroColonIcon width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style={StyleSheet.absoluteFillObject} />
+                {imageUrl ? (
+                    <Image source={{ uri: imageUrl }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
+                ) : (
+                    <TeatroColonIcon width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style={StyleSheet.absoluteFillObject} />
+                )}
 
                 {/** Capa superpuesta con filtro oscuro trasparente */}
                 <View style={styles.heroOverlay}>
