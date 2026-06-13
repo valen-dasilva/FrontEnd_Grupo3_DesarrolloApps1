@@ -136,7 +136,6 @@ export default function FavoritosScreen() {
         <Header
           title="Favoritos"
           onThemeTogglePress={toggleColorScheme}
-          onAvatarPress={() => console.log('Navigate to profile settings')}
         />
 
         <ScrollView

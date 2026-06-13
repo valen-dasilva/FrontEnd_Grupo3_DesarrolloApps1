@@ -79,7 +79,7 @@ export const LoginScreen: React.FC = () => {
       <AuthFooterLink
         text="¿No tenés cuenta? "
         linkText="Crear cuenta"
-        onPress={() => router.push('/register1')}
+        onPress={() => router.push('/register')}
       />
     </AuthLayout>
   );

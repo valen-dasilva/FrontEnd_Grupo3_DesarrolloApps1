@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useRouter } from 'expo-router';
 
 import { icons } from '@/constants/icons';
 import { styles } from './Header.styles';
@@ -30,10 +31,12 @@ export const Header: React.FC<HeaderProps> = ({
   onBackPress,
   showBackButton = false,
 }) => {
+  const router = useRouter();
   const { colorScheme, theme, toggleColorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
 
   const handleThemeToggle = onThemeTogglePress || toggleColorScheme;
+  const handleAvatarPress = onAvatarPress || (() => router.push('/(tabs)/perfil'));
 
   return (
     <View style={[
@@ -89,7 +92,7 @@ export const Header: React.FC<HeaderProps> = ({
         </Pressable>
 
         <Pressable 
-          onPress={onAvatarPress}
+          onPress={handleAvatarPress}
           style={({ pressed }) => [
             styles.avatarContainer,
             pressed && styles.pressedState

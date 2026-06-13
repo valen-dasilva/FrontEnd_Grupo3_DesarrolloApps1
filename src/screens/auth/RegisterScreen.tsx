@@ -1,32 +1,42 @@
 import React, { useState } from 'react';
 import Toast from 'react-native-toast-message';
-import { useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/CustomButton';
 import { AuthLayout } from '@/components/AuthLayout';
+import { AuthFooterLink } from '@/components/AuthFooterLink';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/services/api';
 
-// Debe coincidir con la validación del backend (RegisterRequest.contrasenia).
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
-export const RegisterStep2Screen: React.FC = () => {
-  const { name, lastName, email } = useLocalSearchParams<{
-    name: string;
-    lastName: string;
-    email: string;
-  }>();
+export const RegisterScreen: React.FC = () => {
+  const router = useRouter();
   const { register } = useAuth();
+  
+  const [name, setName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const handleRegister = async () => {
-    if (!password || !confirmPassword) {
+    if (!name || !lastName || !email || !password || !confirmPassword) {
       Toast.show({
         type: 'error',
         text1: 'Error',
         text2: 'Por favor completa todos los campos',
+      });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Ingresa un correo electrónico válido',
       });
       return;
     }
@@ -81,6 +91,29 @@ export const RegisterStep2Screen: React.FC = () => {
       sheetSubtitle="Ingresá para sincronizar tus itinerarios y descubrir lugares únicos."
     >
       <CustomInput
+        iconName="person-outline"
+        placeholder="Nombre"
+        value={name}
+        onChangeText={setName}
+      />
+
+      <CustomInput
+        iconName="person-outline"
+        placeholder="Apellido"
+        value={lastName}
+        onChangeText={setLastName}
+      />
+      
+      <CustomInput
+        iconName="mail-outline"
+        placeholder="Tu@correo.com"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        value={email}
+        onChangeText={setEmail}
+      />
+
+      <CustomInput
         iconName="key-outline"
         placeholder="Contraseña"
         secureTextEntry
@@ -95,13 +128,19 @@ export const RegisterStep2Screen: React.FC = () => {
         value={confirmPassword}
         onChangeText={setConfirmPassword}
       />
-      
+
       <CustomButton
-        title={submitting ? 'Creando cuenta...' : 'Ingresar'}
+        title={submitting ? 'Creando cuenta...' : 'Crear cuenta'}
         showArrow
         onPress={handleRegister}
         disabled={submitting}
         style={{ marginTop: 20 }}
+      />
+
+      <AuthFooterLink
+        text="¿Ya tenés cuenta? "
+        linkText="Iniciar sesión"
+        onPress={() => router.push('/login')}
       />
     </AuthLayout>
   );

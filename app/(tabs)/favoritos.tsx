@@ -1,1 +1,2 @@
-export { default } from '../(favorite)/favoritos';
+import FavoritesScreen from '@/screens/favorites/FavoritesScreen';
+export default FavoritesScreen;
