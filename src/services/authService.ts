@@ -7,6 +7,7 @@ export interface AuthResponse {
   idUsuario: number;
   nombre: string;
   email: string;
+  fotoPerfil?: string;
 }
 
 // Datos que el usuario completa en la pantalla de login.

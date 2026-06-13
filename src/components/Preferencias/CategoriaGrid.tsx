@@ -14,6 +14,8 @@ import NaturalezaIcon from '../../../assets/images/Icono-Naturaleza.svg';
 import { useTheme } from '@/hooks/useColorScheme';
 import { CategoriaItinerario } from '@/types/itinerario';
 import { CategoriaCard } from './CategoriaCard';
+import { icons } from '@/constants/icons';
+
 
 // Mapeo de cada categoría a su ícono.
 const CATEGORIAS: { value: CategoriaItinerario; icon: (color: string) => React.ReactNode }[] = [
