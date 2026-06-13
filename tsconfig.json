@@ -4,8 +4,11 @@
     "strict": true,
     "jsx": "react-native",
     "paths": {
+      "@/assets/*": [
+        "./assets/*"
+      ],
       "@/*": [
-        "./*"
+        "./src/*"
       ]
     }
   },

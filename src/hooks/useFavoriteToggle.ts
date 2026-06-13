@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { postItinerario, deleteItinerario } from '../services/favoritosService';
+import { postItinerario, deleteItinerario } from '@/services/favoritosService';
 
 export function useFavoriteToggle(
   idItinerario: number | undefined,

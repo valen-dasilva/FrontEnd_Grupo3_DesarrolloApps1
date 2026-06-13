@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Alert } from 'react-native';
-import { ApiError } from '../services/api';
+import { ApiError } from '@/services/api';
 import {
     deleteItem,
     deleteItinerario,
@@ -15,14 +15,14 @@ import {
     putItem,
     putItinerarioFechas,
     UpdateDatesRequest
-} from '../services/favoritosService';
+} from '@/services/favoritosService';
 import {
     getDownloadedIds,
     getOfflineItinerariesList,
     getOfflineItineraryDetails,
     saveItineraryOffline,
     removeItineraryOffline
-} from '../services/itineraryStorage';
+} from '@/services/itineraryStorage';
 
 export const useFavoritosHook = () => {
     const [listItinerarioResumen, setListItinerarioResumen] = useState<ItinerarioResumen[]>([]);

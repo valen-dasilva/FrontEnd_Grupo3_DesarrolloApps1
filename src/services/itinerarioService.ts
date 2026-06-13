@@ -4,7 +4,7 @@ import {
   ItinerarioSistemaDTO,
   ItinerarioSistemaResumenDTO,
   Provincia,
-} from "../types/itinerario";
+} from '@/types/itinerario';
 
 import { apiClient } from "./api";
 

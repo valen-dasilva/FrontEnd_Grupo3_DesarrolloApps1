@@ -9,14 +9,14 @@ import {
   isTokenExpired,
   setAuthToken,
   setUnauthorizedHandler,
-} from "../services/api";
+} from '@/services/api';
 import type {
   AuthResponse,
   LoginPayload,
   RegisterPayload,
-} from "../services/authService";
-import * as authService from "../services/authService";
-import * as storage from "../services/storage";
+} from '@/services/authService';
+import * as authService from '@/services/authService';
+import * as storage from '@/services/storage';
 
 // Forma del usuario que exponemos al resto de la app. Es un subconjunto de
 // AuthResponse: solo los datos que las pantallas necesitan mostrar (sin el token).

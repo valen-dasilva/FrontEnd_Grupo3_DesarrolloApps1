@@ -17,8 +17,8 @@ import {
 } from '@expo-google-fonts/plus-jakarta-sans';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
-import { ThemeProvider as CustomThemeProvider, useColorScheme } from '@/hooks/use-color-scheme';
-import { AuthProvider, useAuth } from '../src/context/AuthContext';
+import { ThemeProvider as CustomThemeProvider, useColorScheme } from '@/hooks/useColorScheme';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 
 // Evita que el splash se oculte solo antes de que terminen de cargar las fuentes.
 SplashScreen.preventAutoHideAsync();

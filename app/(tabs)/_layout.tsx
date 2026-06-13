@@ -1,7 +1,7 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { BottomNavBar, TabName } from '../../components/common/BottomNavBar/BottomNavBar';
+import { BottomNavBar, TabName } from '@/components/common/BottomNavBar/BottomNavBar';
 
 // Uses BottomTabBarProps so TabBarComponent can be passed directly as tabBar={TabBarComponent}
 // with no anonymous wrapper arrow function inside TabLayout.
