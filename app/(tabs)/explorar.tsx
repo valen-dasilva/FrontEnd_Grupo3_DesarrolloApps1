@@ -4,14 +4,14 @@ import { FiltrosDeBusqueda } from '@/components/Filtros-de-busqueda';
 import { Header } from '@/components/common/Header/Header';
 import { colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useFavoritosHook } from '@/src/hooks/favoritosHook';
 import { buscarPorPreferencias } from '@/src/services/itinerarioService';
 import { CATEGORIA_LABEL, CategoriaItinerario, ItinerarioSistemaResumenDTO, Provincia } from '@/src/types/itinerario';
-import React, { useEffect, useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './explorar.styles';
-import { useFavoritosHook } from '@/src/hooks/favoritosHook';
-import { useFocusEffect } from 'expo-router';
 
 function calculateDurationDays(startStr: string, endStr: string): number {
   try {

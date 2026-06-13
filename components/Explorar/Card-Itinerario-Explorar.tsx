@@ -101,6 +101,7 @@ export function ExploreItineraryCard({
 
         {/* Heart Button */}
         <TouchableOpacity 
+          testID="heart-button"
           style={[
             styles.heartButton, 
             { 

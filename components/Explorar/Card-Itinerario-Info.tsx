@@ -131,6 +131,7 @@ export function ItineraryInfoCard({
           <View style={styles.heroTopBar}>
             {/** Back button */}
             <TouchableOpacity 
+              testID="back-button"
               style={[
                 styles.circularContainer, 
                 { 
@@ -145,6 +146,7 @@ export function ItineraryInfoCard({
             </TouchableOpacity>
             {/** Heart button */}
             <TouchableOpacity 
+              testID="heart-button"
               style={[
                 styles.circularContainer, 
                 { 
