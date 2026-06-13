@@ -4,12 +4,12 @@ import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../../components/common/Header/Header';
-import { CardItinerarioInfoFav } from '../../components/favorites_components/Card-Itinerario-Info-Fav';
+import { CardItinerarioInfoFav } from '../../components/favorites_components/CardItinerarioInfoFav';
 import { ActivityCard } from '../../components/common/ActivityCard/ActivityCard';
 import { styles } from './itinerarioInfoFav.styles';
 import { useTheme } from '@/hooks/use-color-scheme';
-import { colors } from '../../constants/colors';
-import { useFavoritosDetailsHook } from '../../src/hooks/favoritosHook';
+
+import { useFavoritosDetailsHook } from '../../src/hooks/useFavoritos';
 import { ItemItinerarioUsuario } from '../../src/services/favoritosService';
 import { formatFecha } from '../../src/utils/dateUtils';
 
@@ -36,9 +36,7 @@ export default function FavoriteItineraryInfoScreen() {
     }>();
 
     const insets = useSafeAreaInsets();
-    const { colorScheme, toggleColorScheme } = useTheme();
-    const isDark = colorScheme === 'dark';
-    const theme = isDark ? colors.dark : colors.light;
+    const { theme, toggleColorScheme } = useTheme();
 
     const {
         loadItineraryInfo,

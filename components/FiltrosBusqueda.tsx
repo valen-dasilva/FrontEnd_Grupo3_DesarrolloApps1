@@ -6,7 +6,7 @@ import { Provincia, PROVINCIA_LABEL } from '@/src/types/itinerario';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '@/hooks/use-color-scheme';
 
 import { ProvinciaSelector } from '@/components/Preferencias/ProvinciaSelector';
 
@@ -18,9 +18,8 @@ interface FiltrosDeBusquedaProps {
 export function FiltrosDeBusqueda({ selectedProvincia, onProvinciaChange }: FiltrosDeBusquedaProps) {
   const [showProvincia, setShowProvincia] = useState(false);
   
-  const colorScheme = useColorScheme();
+  const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
 
   return (
     <View style={styles.seccion}>

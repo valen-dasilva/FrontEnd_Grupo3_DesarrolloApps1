@@ -5,8 +5,8 @@ import { CategoriaItinerario } from '@/src/types/itinerario';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { styles } from './Filtro-Categorias-Carrusel.styles';
+import { useTheme } from '@/hooks/use-color-scheme';
+import { styles } from './FiltroCategoriasCarrusel.styles';
 
 const CATEGORIES = [
   { id: 1, enumValue: CategoriaItinerario.NATURALEZA, name: "Naturaleza", image: <MaterialIcons name={icons.Landscape} size={fonts.size.xxl} color={colors.lightgreen} /> },
@@ -21,9 +21,7 @@ interface CategoriesCarouselProps {
 }
 
 export function CategoriesCarousel({ selectedCategory, onCategorySelect }: CategoriesCarouselProps) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
 
   return (
     <View style={styles.container}>

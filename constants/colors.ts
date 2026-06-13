@@ -45,6 +45,8 @@ const themeColors = {
     lightgreen: '#57A773',
     orange: '#ffa600',
     button_gray: '#646770',
+    avatarBg: '#D6E0F5',
+    categorySelected: '#EFF4FF',
   },
   dark: {
     primary: '#2563eb',
@@ -71,6 +73,8 @@ const themeColors = {
     lightgreen: '#74C390',
     orange: '#FFB833',
     button_gray: '#8C8F9E',
+    avatarBg: '#2A303D',
+    categorySelected: '#2A303D',
   }
 };
 

@@ -4,7 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { colors } from '../../../../constants/colors';
 import { icons } from '../../../../constants/icons';
 import { styles } from './EmptyState.styles';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '@/hooks/use-color-scheme';
 
 export interface EmptyStateProps {
   /** The main title for the empty state */
@@ -23,9 +23,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   actionLabel,
   onActionPress,
 }) => {
-  const colorScheme = useColorScheme();
+  const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
 
   return (
     <View style={[styles.container, { backgroundColor: theme.surface, borderColor: theme.border }]}>

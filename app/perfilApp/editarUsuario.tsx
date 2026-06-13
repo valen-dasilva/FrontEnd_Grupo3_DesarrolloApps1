@@ -1,7 +1,6 @@
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colors } from '@/constants/colors';
+import { useTheme } from '@/hooks/use-color-scheme';
 
 import {
   SafeAreaView,
@@ -24,71 +23,63 @@ const COLORS = {
   inputBg: '#F7F8FA',
 };
 
-export default function CambiarContrasenaScreen() {
+export default function EditarUsuarioScreen() {
   const router = useRouter();
-  const [actual, setActual] = useState('');
-  const [nueva, setNueva] = useState('');
-  const [confirmar, setConfirmar] = useState('');
+  const [nombre, setNombre] = useState('');
+  const [apellido, setApellido] = useState('');
+  const [correo, setCorreo] = useState('');
 
-  const colorScheme = useColorScheme();
+  const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={styles.scroll}>
-
-        <View style={[styles.lockCircle, isDark && { backgroundColor: '#2A303D' }]}>
-          <Text style={{ fontSize: 26 }}>🔒</Text>
+        <View style={[styles.avatarCircle, isDark && { backgroundColor: '#2A303D' }]}>
+          <Text style={[styles.avatarInitials, { color: theme.primary }]}>MR</Text>
         </View>
+        <Text style={[styles.changePhoto, { color: theme.primary }]}>Cambiar foto de perfil</Text>
 
-        <Text style={[styles.bigTitle, { color: theme.text }]}>Protege tu cuenta</Text>
-        <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-          Ingresa tu contraseña actual y elige una nueva para proteger tu
-          cuenta. Asegúrate de que sea única y difícil de adivinar.
-        </Text>
-
-        <Text style={[styles.label, { color: theme.text }]}>Contraseña actual</Text>
+        <Text style={[styles.label, { color: theme.text }]}>Nombre</Text>
         <TextInput
           style={[styles.input, { 
             backgroundColor: theme.surface, 
             borderColor: theme.border, 
             color: theme.text 
           }]}
-          secureTextEntry
-          placeholder="••••••••"
+          placeholder="Mateo"
           placeholderTextColor={theme.textSecondary}
-          value={actual}
-          onChangeText={setActual}
+          value={nombre}
+          onChangeText={setNombre}
         />
 
-        <Text style={[styles.label, { color: theme.text }]}>Nueva contraseña</Text>
+        <Text style={[styles.label, { color: theme.text }]}>Apellido</Text>
         <TextInput
           style={[styles.input, { 
             backgroundColor: theme.surface, 
             borderColor: theme.border, 
             color: theme.text 
           }]}
-          secureTextEntry
-          placeholder="••••••••"
+          placeholder="Rossi"
           placeholderTextColor={theme.textSecondary}
-          value={nueva}
-          onChangeText={setNueva}
+          value={apellido}
+          onChangeText={setApellido}
         />
 
-        <Text style={[styles.label, { color: theme.text }]}>Confirmar nueva contraseña</Text>
+        <Text style={[styles.label, { color: theme.text }]}>Correo Electrónico</Text>
         <TextInput
           style={[styles.input, { 
             backgroundColor: theme.surface, 
             borderColor: theme.border, 
             color: theme.text 
           }]}
-          secureTextEntry
-          placeholder="••••••••"
+          placeholder="tu@correo.com"
           placeholderTextColor={theme.textSecondary}
-          value={confirmar}
-          onChangeText={setConfirmar}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          value={correo}
+          onChangeText={setCorreo}
         />
 
         <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: theme.primary }]}>
@@ -109,29 +100,23 @@ export default function CambiarContrasenaScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   scroll: { padding: 20, paddingBottom: 40 },
-  lockCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  avatarCircle: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     backgroundColor: '#D6E0F5',
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
     marginVertical: 16,
   },
-  bigTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: COLORS.text,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
+  avatarInitials: { fontSize: 28, fontWeight: '700', color: COLORS.primary },
+  changePhoto: {
     fontSize: 13,
-    color: COLORS.gray,
+    color: COLORS.primary,
     textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 18,
+    marginVertical: 12,
+    fontWeight: '600',
   },
   label: {
     fontSize: 14,
@@ -164,4 +149,11 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   dangerBtnText: { color: '#FFF', fontWeight: '700', fontSize: 15 },
+  deleteAccount: {
+    color: COLORS.danger,
+    textAlign: 'center',
+    marginTop: 16,
+    fontSize: 13,
+    fontWeight: '600',
+  },
 });

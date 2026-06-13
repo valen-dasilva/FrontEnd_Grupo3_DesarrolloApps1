@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/hooks/use-color-scheme';
-import { colors } from '../../../constants/colors';
+
 import { styles } from './ConfirmAlert.styles';
 
 export interface ConfirmAlertProps {
@@ -23,9 +23,7 @@ export function ConfirmAlert({
   onCancel,
   onConfirm,
 }: ConfirmAlertProps) {
-  const { colorScheme } = useTheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
 
   return (
     <Modal

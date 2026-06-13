@@ -1,6 +1,6 @@
-import { colors } from '@/constants/colors';
+
 import { paddings } from '@/constants/paddings';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '@/hooks/use-color-scheme';
 import { useItinerarioDetalle } from '@/hooks/useItinerarioDetalle';
 import { ItemItinerarioSistemaDTO } from '@/src/types/itinerario';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -9,7 +9,7 @@ import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActivityCard } from '../../components/common/ActivityCard/ActivityCard';
 import { Header } from '../../components/common/Header/Header';
-import { ItineraryInfoCard } from '../../components/Explorar/Card-Itinerario-Info';
+import { ItineraryInfoCard } from '../../components/Explorar/CardItinerarioInfo';
 import { styles } from './itinerarioInfo.styles';
 
 /** Convierte "HH:mm:ss" → "HH:mm" */
@@ -18,10 +18,10 @@ function formatHora(hora: string): string {
   return hora.substring(0, 5);
 }
 
-export default function ItineraryInfoScreen() {
+export default function ItinerarioInfoScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
-    idItinerario?: string;
+    idItinerario: string;
     title?: string;
     image?: string;
     category?: string;
@@ -33,9 +33,8 @@ export default function ItineraryInfoScreen() {
   }>();
 
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
+
 
   const itinerarioId = params.idItinerario ? Number(params.idItinerario) : null;
   const { itinerario, loading, error } = useItinerarioDetalle(itinerarioId);

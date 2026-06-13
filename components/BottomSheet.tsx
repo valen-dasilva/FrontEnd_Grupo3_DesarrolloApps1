@@ -1,16 +1,14 @@
 import React from 'react';
 import { View, StyleSheet, ViewProps } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colors } from '@/constants/colors';
+import { useTheme } from '@/hooks/use-color-scheme';
+
 
 interface BottomSheetProps extends ViewProps {
   children: React.ReactNode;
 }
 
 export const BottomSheet: React.FC<BottomSheetProps> = ({ children, style, ...props }) => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
 
   return (
     <View style={[styles.container, { backgroundColor: theme.card }, style]} {...props}>

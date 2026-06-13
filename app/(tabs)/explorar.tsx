@@ -1,16 +1,16 @@
-import { ExploreItineraryCard } from '@/components/Explorar/Card-Itinerario-Explorar';
-import { CategoriesCarousel } from '@/components/Explorar/Filtro-Categorias-Carrusel';
-import { FiltrosDeBusqueda } from '@/components/Filtros-de-busqueda';
+import { ExploreItineraryCard } from '@/components/Explorar/CardItinerarioExplorar';
+import { CategoriesCarousel } from '@/components/Explorar/FiltroCategoriasCarrusel';
+import { FiltrosDeBusqueda } from '@/components/FiltrosBusqueda';
 import { Header } from '@/components/common/Header/Header';
-import { colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+
+import { useTheme } from '@/hooks/use-color-scheme';
 import { buscarPorPreferencias } from '@/src/services/itinerarioService';
 import { CATEGORIA_LABEL, CategoriaItinerario, ItinerarioSistemaResumenDTO, Provincia } from '@/src/types/itinerario';
 import React, { useEffect, useState, useCallback } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './explorar.styles';
-import { useFavoritosHook } from '@/src/hooks/favoritosHook';
+import { useFavoritosHook } from '@/src/hooks/useFavoritos';
 import { useFocusEffect } from 'expo-router';
 
 function calculateDurationDays(startStr: string, endStr: string): number {
@@ -30,9 +30,8 @@ function calculateDurationDays(startStr: string, endStr: string): number {
 
 export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
+
 
   const [provincia, setProvincia] = useState<Provincia | undefined>();
   const [categoria, setCategoria] = useState<CategoriaItinerario | undefined>();

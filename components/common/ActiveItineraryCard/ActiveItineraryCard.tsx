@@ -1,5 +1,5 @@
-import { colors } from "@/constants/colors";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+
+import { useTheme } from "@/hooks/use-color-scheme";
 import {
     CATEGORIA_LABEL,
     ItinerarioEnCursoDTO,
@@ -58,9 +58,8 @@ export default function ActiveItineraryCard({
 }: {
   itinerarioActivo: ItinerarioEnCursoDTO;
 }) {
-  const colorScheme = useColorScheme();
+  const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === "dark";
-  const theme = isDark ? colors.dark : colors.light;
 
   const imagenPortada = { uri: itinerarioActivo.fotoPortada };
   const proximaActividad = getProximaActividad(

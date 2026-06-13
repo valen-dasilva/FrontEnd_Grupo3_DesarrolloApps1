@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colors } from '@/constants/colors';
+import { useTheme } from '@/hooks/use-color-scheme';
+
 
 interface SheetHeaderProps {
   title?: string;
@@ -9,9 +9,7 @@ interface SheetHeaderProps {
 }
 
 export const SheetHeader: React.FC<SheetHeaderProps> = ({ title, subtitle }) => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
 
   return (
     <View style={styles.sheetHeader}>

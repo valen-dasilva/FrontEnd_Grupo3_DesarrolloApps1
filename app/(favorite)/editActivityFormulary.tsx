@@ -3,18 +3,17 @@ import React from 'react';
 import { ScrollView, StatusBar, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../../components/common/Header/Header';
-import { EditActivityFormulary } from '../../components/favorites_components/edit_actvity_formulary/EditActivityFormulary';
-import { colors } from '../../constants/colors';
-import { styles } from './edit_activity_formulary.style';
+import { EditActivityFormulary } from '../../components/favorites_components/editActivityFormulary/EditActivityFormulary';
+
+import { styles } from './editActivityFormulary.styles';
 import { useTheme } from '@/hooks/use-color-scheme';
-import { useFavoritosDetailsHook } from '../../src/hooks/favoritosHook';
+import { useFavoritosDetailsHook } from '../../src/hooks/useFavoritos';
 
 export default function EditActivityFormularyScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { colorScheme, toggleColorScheme } = useTheme();
+  const { colorScheme, theme, toggleColorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
 
   const params = useLocalSearchParams<{
     idItinerario: string;

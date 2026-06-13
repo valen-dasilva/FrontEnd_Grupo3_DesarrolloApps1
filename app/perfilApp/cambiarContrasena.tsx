@@ -1,7 +1,8 @@
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colors } from '@/constants/colors';
+import { useTheme } from '@/hooks/use-color-scheme';
+
+
 import {
   SafeAreaView,
   ScrollView,
@@ -23,64 +24,70 @@ const COLORS = {
   inputBg: '#F7F8FA',
 };
 
-export default function EditarUsuarioScreen() {
+export default function CambiarContrasenaScreen() {
   const router = useRouter();
-  const [nombre, setNombre] = useState('');
-  const [apellido, setApellido] = useState('');
-  const [correo, setCorreo] = useState('');
+  const [actual, setActual] = useState('');
+  const [nueva, setNueva] = useState('');
+  const [confirmar, setConfirmar] = useState('');
 
-  const colorScheme = useColorScheme();
+  const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={[styles.avatarCircle, isDark && { backgroundColor: '#2A303D' }]}>
-          <Text style={[styles.avatarInitials, { color: theme.primary }]}>MR</Text>
+
+        <View style={[styles.lockCircle, isDark && { backgroundColor: '#2A303D' }]}>
+          <Text style={{ fontSize: 26 }}>🔒</Text>
         </View>
-        <Text style={[styles.changePhoto, { color: theme.primary }]}>Cambiar foto de perfil</Text>
 
-        <Text style={[styles.label, { color: theme.text }]}>Nombre</Text>
+        <Text style={[styles.bigTitle, { color: theme.text }]}>Protege tu cuenta</Text>
+        <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+          Ingresa tu contraseña actual y elige una nueva para proteger tu
+          cuenta. Asegúrate de que sea única y difícil de adivinar.
+        </Text>
+
+        <Text style={[styles.label, { color: theme.text }]}>Contraseña actual</Text>
         <TextInput
           style={[styles.input, { 
             backgroundColor: theme.surface, 
             borderColor: theme.border, 
             color: theme.text 
           }]}
-          placeholder="Mateo"
+          secureTextEntry
+          placeholder="••••••••"
           placeholderTextColor={theme.textSecondary}
-          value={nombre}
-          onChangeText={setNombre}
+          value={actual}
+          onChangeText={setActual}
         />
 
-        <Text style={[styles.label, { color: theme.text }]}>Apellido</Text>
+        <Text style={[styles.label, { color: theme.text }]}>Nueva contraseña</Text>
         <TextInput
           style={[styles.input, { 
             backgroundColor: theme.surface, 
             borderColor: theme.border, 
             color: theme.text 
           }]}
-          placeholder="Rossi"
+          secureTextEntry
+          placeholder="••••••••"
           placeholderTextColor={theme.textSecondary}
-          value={apellido}
-          onChangeText={setApellido}
+          value={nueva}
+          onChangeText={setNueva}
         />
 
-        <Text style={[styles.label, { color: theme.text }]}>Correo Electrónico</Text>
+        <Text style={[styles.label, { color: theme.text }]}>Confirmar nueva contraseña</Text>
         <TextInput
           style={[styles.input, { 
             backgroundColor: theme.surface, 
             borderColor: theme.border, 
             color: theme.text 
           }]}
-          placeholder="tu@correo.com"
+          secureTextEntry
+          placeholder="••••••••"
           placeholderTextColor={theme.textSecondary}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          value={correo}
-          onChangeText={setCorreo}
+          value={confirmar}
+          onChangeText={setConfirmar}
         />
 
         <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: theme.primary }]}>
@@ -101,23 +108,29 @@ export default function EditarUsuarioScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.bg },
   scroll: { padding: 20, paddingBottom: 40 },
-  avatarCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+  lockCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#D6E0F5',
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
     marginVertical: 16,
   },
-  avatarInitials: { fontSize: 28, fontWeight: '700', color: COLORS.primary },
-  changePhoto: {
-    fontSize: 13,
-    color: COLORS.primary,
+  bigTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.text,
     textAlign: 'center',
-    marginVertical: 12,
-    fontWeight: '600',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: COLORS.gray,
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 18,
   },
   label: {
     fontSize: 14,
@@ -150,11 +163,4 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   dangerBtnText: { color: '#FFF', fontWeight: '700', fontSize: 15 },
-  deleteAccount: {
-    color: COLORS.danger,
-    textAlign: 'center',
-    marginTop: 16,
-    fontSize: 13,
-    fontWeight: '600',
-  },
 });

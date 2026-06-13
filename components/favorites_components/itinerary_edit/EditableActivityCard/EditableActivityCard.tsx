@@ -1,12 +1,12 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { colors } from '../../../../constants/colors';
-import { icons } from '../../../../constants/icons';
-import { styles } from './ActivityCard.styles';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
-export interface ActivityCardProps {
+import { icons } from '../../../../constants/icons';
+import { styles } from './EditableActivityCard.styles';
+import { useTheme } from '@/hooks/use-color-scheme';
+
+export interface EditableActivityCardProps {
   /** The time of the activity (e.g., '09:00') */
   time: string;
   /** The title of the activity */
@@ -21,7 +21,7 @@ export interface ActivityCardProps {
   onDeletePress?: () => void;
 }
 
-export const ActivityCard: React.FC<ActivityCardProps> = ({
+export const EditableActivityCard: React.FC<EditableActivityCardProps> = ({
   time,
   title,
   description,
@@ -29,9 +29,7 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
   onEditPress,
   onDeletePress,
 }) => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
 
   return (
     <View style={[styles.cardContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>

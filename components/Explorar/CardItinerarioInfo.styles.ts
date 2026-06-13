@@ -2,7 +2,6 @@ import { StyleSheet } from 'react-native';
 import { colors } from '@/constants/colors';
 import { fonts } from '@/constants/fonts';
 import { paddings } from '@/constants/paddings';
-import { Colors } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
   imageContainer: {
@@ -40,19 +39,7 @@ export const styles = StyleSheet.create({
     gap: paddings.spacing.sm,
   },
   categoryBadge: {
-    backgroundColor: colors.surface,
-    paddingHorizontal: paddings.spacing.md,
-    paddingVertical: 6,
-    borderRadius: paddings.radius.lg,
     alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  categoryText: {
-    color: Colors.light.text,
-    fontSize: fonts.size.sm - 1,
-    fontWeight: fonts.weight.bold,
-    marginLeft: 2,
   },
   title: {
     color: colors.textInverse,

@@ -5,7 +5,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { colors } from '@/constants/colors';
+
 import { useTheme } from '@/hooks/use-color-scheme';
 import { formatFecha } from '../../src/utils/dateUtils';
 
@@ -19,9 +19,7 @@ interface FechaRangeSelectorProps {
 }
 
 export function FechaRangeSelector({ fechaInicio, fechaFin, onPress, onClear }: FechaRangeSelectorProps) {
-  const { colorScheme } = useTheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
 
   const hayFechas = Boolean(fechaInicio || fechaFin);
 

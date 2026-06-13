@@ -7,17 +7,16 @@ import { Header } from '../../components/common/Header/Header';
 import { ItineraryCard } from '../../components/favorites_components/favorite_principal/ItineraryCard/ItineraryCard';
 import { EmptyState } from '../../components/favorites_components/favorite_principal/EmptyState/EmptyState';
 import { ConfirmAlert } from '../../components/common/ConfirmAlert/ConfirmAlert';
-import { colors } from '../../constants/colors';
+
 import { styles } from './favoritos.styles';
 import { useTheme } from '@/hooks/use-color-scheme';
-import { useFavoritosHook } from '../../src/hooks/favoritosHook';
+import { useFavoritosHook } from '../../src/hooks/useFavoritos';
 
 export default function FavoritosScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { colorScheme, toggleColorScheme } = useTheme();
+  const { colorScheme, theme, toggleColorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
 
   const {
     listItinerarioResumen,

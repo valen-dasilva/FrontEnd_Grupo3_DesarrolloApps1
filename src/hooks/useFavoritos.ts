@@ -42,7 +42,7 @@ export const useFavoritosHook = () => {
             const datos = await getItinerarios();
             setListItinerarioResumen(datos);
             setError(null);
-        } catch (err) {
+        } catch {
             const offlineList = await getOfflineItinerariesList();
             setListItinerarioResumen(offlineList);
             setError(null);

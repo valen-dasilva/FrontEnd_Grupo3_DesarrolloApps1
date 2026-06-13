@@ -46,18 +46,6 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     bottom: paddings.spacing.md,
     left: paddings.spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: paddings.radius.lg,
-    paddingHorizontal: paddings.spacing.md,
-    paddingVertical: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  categoryText: {
-    color: Colors.light.text,
-    fontSize: fonts.size.sm - 1,
-    fontFamily: fonts.family.bodySemiBold,
   },
   content: {
     padding: paddings.spacing.lg,

@@ -6,8 +6,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+
+import { useTheme } from '@/hooks/use-color-scheme';
 import { CATEGORIA_LABEL, CategoriaItinerario } from '@/src/types/itinerario';
 import { formatFechaCorta } from '../../src/utils/dateUtils';
 
@@ -30,9 +30,8 @@ export function ResultadosHeader({
   primeraResultadoDuracion,
   onBack,
 }: ResultadosHeaderProps) {
-  const colorScheme = useColorScheme();
+  const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
 
   // En dark mode el header usa el color de superficie en lugar del azul fuerte
   const headerBg = isDark ? theme.surface : '#2F65E3';

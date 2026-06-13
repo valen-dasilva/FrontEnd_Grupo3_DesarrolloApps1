@@ -2,8 +2,8 @@ import React from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colors } from '@/constants/colors';
+import { useTheme } from '@/hooks/use-color-scheme';
+
 import { HeaderLogo } from './HeaderLogo';
 import { BottomSheet } from './BottomSheet';
 import { SheetHeader } from './SheetHeader';
@@ -21,9 +21,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   sheetSubtitle,
   children,
 }) => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
 
   return (
     <LinearGradient colors={[theme.gradientStart, theme.gradientEnd]} style={styles.container}>

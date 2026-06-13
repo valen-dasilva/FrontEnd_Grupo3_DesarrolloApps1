@@ -1,16 +1,14 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colors } from '@/constants/colors';
+import { useTheme } from '@/hooks/use-color-scheme';
+
 import { HeaderLogo } from './HeaderLogo';
 
 // La navegación inicial (a /login o /(tabs)) la decide el guard del layout
 // según haya o no sesión guardada. Esta pantalla solo muestra el branding con el tema adecuado.
 export const SplashScreen: React.FC = () => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
 
   return (
     <LinearGradient

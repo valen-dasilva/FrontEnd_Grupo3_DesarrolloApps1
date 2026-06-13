@@ -2,7 +2,7 @@
 // El usuario elige destino, fechas y categorías antes de lanzar la búsqueda.
 // La lógica de UI de cada sección fue extraída a componentes propios en components/Preferencias/.
 
-import { colors } from "@/constants/colors";
+
 import { useTheme } from "@/hooks/use-color-scheme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -47,15 +47,17 @@ export default function PreferenciasScreen() {
   const [showProvincia, setShowProvincia] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { colorScheme, toggleColorScheme } = useTheme();
-  const isDark = colorScheme === "dark";
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme, toggleColorScheme } = useTheme();
 
   // Agrega o quita una categoría del Set de seleccionadas
   const toggleCategoria = (cat: CategoriaItinerario) => {
     setCategorias((prev) => {
       const next = new Set(prev);
-      next.has(cat) ? next.delete(cat) : next.add(cat);
+      if (next.has(cat)) {
+        next.delete(cat);
+      } else {
+        next.add(cat);
+      }
       return next;
     });
   };

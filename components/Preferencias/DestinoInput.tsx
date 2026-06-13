@@ -5,7 +5,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { colors } from '@/constants/colors';
+
 import { useTheme } from '@/hooks/use-color-scheme';
 
 interface DestinoInputProps {
@@ -18,9 +18,7 @@ interface DestinoInputProps {
 }
 
 export function DestinoInput({ value, placeholder, onPress, onClear }: DestinoInputProps) {
-  const { colorScheme } = useTheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
 
   return (
     <TouchableOpacity

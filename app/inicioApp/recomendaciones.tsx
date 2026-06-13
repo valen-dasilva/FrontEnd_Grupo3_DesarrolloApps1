@@ -2,7 +2,7 @@
 // Recibe los resultados como parámetro de ruta (JSON serializado desde preferencias.tsx)
 // y delega la presentación a los componentes de components/Recomendaciones/.
 
-import { ExploreItineraryCard } from '@/components/Explorar/Card-Itinerario-Explorar';
+import { ExploreItineraryCard } from '@/components/Explorar/CardItinerarioExplorar';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -14,17 +14,16 @@ import {
   Provincia,
   PROVINCIA_LABEL,
 } from '../../src/types/itinerario';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colors } from '@/constants/colors';
+import { useTheme } from '@/hooks/use-color-scheme';
+
 import { ResultadosHeader } from '../../components/Recomendaciones/ResultadosHeader';
 import { ResultadosEmptyState } from '../../components/Recomendaciones/ResultadosEmptyState';
 
 export default function RecomendacionesScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
+
 
   // Los datos vienen serializados como JSON desde preferencias.tsx vía router.push params
   const params = useLocalSearchParams<{

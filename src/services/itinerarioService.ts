@@ -46,3 +46,21 @@ export async function getItinerarioEnCurso(): Promise<ItinerarioEnCursoDTO | nul
     .then((r) => r.data)
     .catch(() => null);
 }
+
+export interface ItineraryCard {
+  id: number;
+  title: string;
+  description: string;
+  province: string;
+  startDate: string;
+  endDate: string;
+  photo: string;
+  durationDays: number;
+  tags: string[];
+}
+
+export async function getItineraryCards(): Promise<ItineraryCard[]> {
+  return apiClient
+    .get("/itinerario/explorar")
+    .then((r) => r.data);
+}

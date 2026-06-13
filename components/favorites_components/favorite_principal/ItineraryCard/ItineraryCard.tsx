@@ -1,12 +1,12 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useRef } from 'react';
 import { Animated, ImageBackground, Pressable, Text, View } from 'react-native';
-import { colors } from '../../../../constants/colors';
+
 import { icons } from '../../../../constants/icons';
 import { FavoriteButton } from '../../../common/FavoriteButton/FavoriteButton';
 import { OfflineBadge } from '../../../common/OfflineBadge/OfflineBadge';
 import { styles } from './ItineraryCard.styles';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '@/hooks/use-color-scheme';
 
 export interface ItineraryCardProps {
   /** The main title of the itinerary */
@@ -51,9 +51,7 @@ export const ItineraryCard: React.FC<ItineraryCardProps> = ({
   const downloadScale = useRef(new Animated.Value(1)).current;
   const pinScale = useRef(new Animated.Value(1)).current;
 
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
 
   // Animation Helper triggers
   const handlePressIn = (scaleRef: Animated.Value, targetScale: number = 0.92) => {

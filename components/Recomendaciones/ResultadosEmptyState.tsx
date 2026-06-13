@@ -6,8 +6,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+
+import { useTheme } from '@/hooks/use-color-scheme';
 
 interface ResultadosEmptyStateProps {
   /** Vuelve a la pantalla de preferencias para que el usuario ajuste los filtros */
@@ -15,9 +15,7 @@ interface ResultadosEmptyStateProps {
 }
 
 export function ResultadosEmptyState({ onBack }: ResultadosEmptyStateProps) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
 
   return (
     <View style={styles.contenedor}>

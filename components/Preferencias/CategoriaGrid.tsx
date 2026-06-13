@@ -10,7 +10,7 @@ import AventuraIcon from '@/assets/images/Icono-Aventura.svg';
 import CultureIcon from '@/assets/images/Icono-Cultura.svg';
 import GastronomiaIcon from '@/assets/images/Icono-Gastronomia.svg';
 import NaturalezaIcon from '@/assets/images/Icono-Naturaleza.svg';
-import { colors } from '@/constants/colors';
+
 import { useTheme } from '@/hooks/use-color-scheme';
 import { CategoriaItinerario } from '@/src/types/itinerario';
 import { CategoriaCard } from './CategoriaCard';
@@ -38,9 +38,7 @@ interface CategoriaGridProps {
 }
 
 export function CategoriaGrid({ seleccionadas, onToggle }: CategoriaGridProps) {
-  const { colorScheme } = useTheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
 
   return (
     <View style={styles.seccion}>

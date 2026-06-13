@@ -1,7 +1,7 @@
 import ActiveItineraryCard from "@/components/common/ActiveItineraryCard/ActiveItineraryCard";
 import { Header } from "@/components/common/Header/Header";
-import { colors } from "@/constants/colors";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+
+import { useTheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/src/context/AuthContext";
 import { getItinerarioEnCurso } from "@/src/services/itinerarioService";
 import { ItinerarioEnCursoDTO } from "@/src/types/itinerario";
@@ -21,9 +21,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
+  const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === "dark";
-  const theme = isDark ? colors.dark : colors.light;
   const { user } = useAuth();
 
   const [itinerarioActivo, setItinerarioActivo] =

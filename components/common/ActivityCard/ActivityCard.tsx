@@ -5,7 +5,7 @@ import { paddings } from '@/constants/paddings';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '@/hooks/use-color-scheme';
 
 type Props = {
   time: string;
@@ -16,9 +16,7 @@ type Props = {
 };
 
 export function ActivityCard({ time, title, subtitle, location, isLast = false }: Props) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
 
   return (
     <View style={[styles.activityItem, isLast && styles.activityItemLast]}>

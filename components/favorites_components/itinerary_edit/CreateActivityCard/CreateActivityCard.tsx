@@ -1,9 +1,9 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { styles } from './CreateActivityCard.styles';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colors } from '../../../../constants/colors';
+import { useTheme } from '@/hooks/use-color-scheme';
+
 
 export interface CreateActivityCardProps {
   /** Callback triggered when the card is pressed to create/add a new activity */
@@ -11,9 +11,7 @@ export interface CreateActivityCardProps {
 }
 
 export const CreateActivityCard: React.FC<CreateActivityCardProps> = ({ onPress }) => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
 
   return (
     <Pressable

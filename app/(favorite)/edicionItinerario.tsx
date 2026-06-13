@@ -4,14 +4,14 @@ import React, { useCallback, useState } from 'react';
 import { Alert, ScrollView, StatusBar, Text, View, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '../../components/common/Header/Header';
-import { ActivityCard } from '../../components/favorites_components/itinerary_edit/ActivityCard/ActivityCard';
-import { Button } from '../../components/favorites_components/itinerary_edit/Button/Button';
+import { EditableActivityCard } from '../../components/favorites_components/itinerary_edit/EditableActivityCard/EditableActivityCard';
+import { CustomButton } from '@/components/CustomButton';
 import { CreateActivityCard } from '../../components/favorites_components/itinerary_edit/CreateActivityCard/CreateActivityCard';
-import { InputTitulo } from '../../components/favorites_components/itinerary_edit/InputTittle/InputTitulo';
+import { CustomInput } from '@/components/CustomInput';
 import { colors } from '../../constants/colors';
 import { styles } from './edicionItinerario.styles';
 import { useTheme } from '@/hooks/use-color-scheme';
-import { useFavoritosDetailsHook } from '../../src/hooks/favoritosHook';
+import { useFavoritosDetailsHook } from '../../src/hooks/useFavoritos';
 import { ItemItinerarioUsuario } from '../../src/services/favoritosService';
 
 type DaySectionProps = Readonly<{
@@ -30,7 +30,7 @@ function DaySection({ dayNum, activities, onEdit, onDelete, onAdd, theme }: DayS
       <Text style={[styles.dayTitle, { color: theme.textSecondary }]}>{`Día ${dayNum}`}</Text>
       <View style={styles.activityList}>
         {dayActivities.map((activity) => (
-          <ActivityCard
+          <EditableActivityCard
             key={activity.id}
             time={activity.hora}
             title={activity.nombreActividad}
@@ -51,9 +51,8 @@ export default function EdicionItinerarioScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
-  const { colorScheme, toggleColorScheme } = useTheme();
+  const { colorScheme, theme, toggleColorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
 
   const {
       loadItineraryInfo,
@@ -81,7 +80,7 @@ export default function EdicionItinerarioScreen() {
 
   const handleEditActivity = (activity: ItemItinerarioUsuario) => {
     router.push({
-      pathname: '/edit_activity_formulary',
+      pathname: '/editActivityFormulary',
       params: {
         idItinerario: id,
         idItem: String(activity.id),
@@ -110,7 +109,7 @@ export default function EdicionItinerarioScreen() {
 
   const handleAddActivity = (dayNum: number) => {
     router.push({
-      pathname: '/edit_activity_formulary',
+      pathname: '/editActivityFormulary',
       params: {
         idItinerario: id,
         day: String(dayNum),
@@ -152,7 +151,7 @@ export default function EdicionItinerarioScreen() {
         ) : (
             <>
                 <View style={styles.titleInputWrapper}>
-                  <InputTitulo value={title} onChangeText={setTitle} />
+                  <CustomInput value={title} onChangeText={setTitle} label="Título del Itinerario" />
                 </View>
 
                 {days.map((dayNum) => (
@@ -177,7 +176,7 @@ export default function EdicionItinerarioScreen() {
                 )}
 
                 <View style={styles.buttonWrapper}>
-                  <Button label="Volver a Detalles" onPress={handleGoBack} />
+                  <CustomButton title="Volver a Detalles" onPress={handleGoBack} />
                 </View>
             </>
         )}

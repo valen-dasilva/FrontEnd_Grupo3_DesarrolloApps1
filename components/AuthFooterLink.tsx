@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colors } from '@/constants/colors';
+import { useTheme } from '@/hooks/use-color-scheme';
+
 
 interface AuthFooterLinkProps {
   text: string;
@@ -10,9 +10,7 @@ interface AuthFooterLinkProps {
 }
 
 export const AuthFooterLink: React.FC<AuthFooterLinkProps> = ({ text, linkText, onPress }) => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
 
   return (
     <View style={styles.registerContainer}>

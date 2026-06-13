@@ -4,7 +4,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { styles } from './BottomNavBar.styles';
 import { colors } from '../../../constants/colors';
 import { icons } from '../../../constants/icons';
-import { useColorScheme } from '../../../hooks/use-color-scheme';
+import { useTheme } from '../../../hooks/use-color-scheme';
 
 export type TabName = 'Inicio' | 'Explorar' | 'Favoritos' | 'Perfil';
 
@@ -55,8 +55,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
   activeTab = 'Favoritos',
   onTabPress,
 }) => {
-  const colorScheme = useColorScheme();
-  const theme = colors[colorScheme];
+  const { theme } = useTheme();
 
   return (
     <View style={[

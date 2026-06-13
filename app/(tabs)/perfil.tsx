@@ -3,16 +3,14 @@ import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from 'react-nati
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '@/components/common/Header/Header';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { colors } from '@/constants/colors';
+import { useTheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '../../src/context/AuthContext';
 
 export default function PerfilScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
+
   const { user, logout } = useAuth();
 
   const getInitials = (name?: string) => {
@@ -30,7 +28,7 @@ export default function PerfilScreen() {
 
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={[styles.avatarCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={[styles.avatarCircle, { backgroundColor: isDark ? '#2A303D' : '#D6E0F5' }]}>
+          <View style={[styles.avatarCircle, { backgroundColor: theme.avatarBg }]}>
             <Text style={[styles.avatarInitials, { color: theme.primary }]}>
               {user ? getInitials(user.nombre) : 'U'}
             </Text>
@@ -47,7 +45,7 @@ export default function PerfilScreen() {
 
         <TouchableOpacity
           style={[styles.optionRow, { backgroundColor: theme.card, borderColor: theme.border }]}
-          onPress={() => router.push('/perfilApp/editar-usuario')}
+          onPress={() => router.push('/perfilApp/editarUsuario')}
         >
           <Text style={[styles.optionText, { color: theme.text }]}>👤  Editar Usuario</Text>
           <Text style={[styles.chevron, { color: theme.gray }]}>›</Text>
@@ -55,7 +53,7 @@ export default function PerfilScreen() {
 
         <TouchableOpacity
           style={[styles.optionRow, { backgroundColor: theme.card, borderColor: theme.border }]}
-          onPress={() => router.push('/perfilApp/cambiar-contrasena')}
+          onPress={() => router.push('/perfilApp/cambiarContrasena')}
         >
           <Text style={[styles.optionText, { color: theme.text }]}>🔒  Cambiar Contraseña</Text>
           <Text style={[styles.chevron, { color: theme.gray }]}>›</Text>

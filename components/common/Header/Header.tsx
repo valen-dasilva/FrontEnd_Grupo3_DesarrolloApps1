@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { colors } from '../../../constants/colors';
+
 import { icons } from '../../../constants/icons';
 import { styles } from './Header.styles';
 import { useTheme } from '@/hooks/use-color-scheme';
@@ -30,9 +30,8 @@ export const Header: React.FC<HeaderProps> = ({
   onBackPress,
   showBackButton = false,
 }) => {
-  const { colorScheme, toggleColorScheme } = useTheme();
+  const { colorScheme, theme, toggleColorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
-  const activeColors = isDark ? colors.dark : colors.light;
 
   const handleThemeToggle = onThemeTogglePress || toggleColorScheme;
 
@@ -40,8 +39,8 @@ export const Header: React.FC<HeaderProps> = ({
     <View style={[
       styles.container,
       { 
-        backgroundColor: activeColors.background,
-        borderBottomColor: activeColors.border
+        backgroundColor: theme.background,
+        borderBottomColor: theme.border
       }
     ]}>
       <View style={styles.leftContainer}>
@@ -58,13 +57,13 @@ export const Header: React.FC<HeaderProps> = ({
             <MaterialIcons 
               name={icons.ArrowBack} 
               size={24} 
-              color={activeColors.primary} 
+              color={theme.primary} 
             />
           </Pressable>
         )}
         <Text style={[
           styles.title,
-          { color: isDark ? activeColors.text : '#2563eb' }
+          { color: isDark ? theme.text : '#2563eb' }
         ]}>{title}</Text>
       </View>
 
@@ -74,8 +73,8 @@ export const Header: React.FC<HeaderProps> = ({
           style={({ pressed }) => [
             styles.iconButton,
             {
-              backgroundColor: isDark ? activeColors.surface : '#FFFFFF',
-              borderColor: activeColors.border
+              backgroundColor: isDark ? theme.surface : '#FFFFFF',
+              borderColor: theme.border
             },
             pressed && styles.pressedState
           ]}
@@ -85,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({
           <MaterialIcons 
             name={icons.DarkMode}
             size={33}
-            color={activeColors.primary}
+            color={theme.primary}
           />
         </Pressable>
 
@@ -100,7 +99,7 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <Image 
             source={{ uri: userAvatarUrl || 'https://i.pravatar.cc/150' }} 
-            style={[styles.avatarImage, { backgroundColor: activeColors.borderDark }]} 
+            style={[styles.avatarImage, { backgroundColor: theme.borderDark }]} 
           />
         </Pressable>
       </View>

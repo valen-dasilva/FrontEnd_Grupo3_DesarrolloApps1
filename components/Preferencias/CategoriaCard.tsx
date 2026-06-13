@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { colors } from '@/constants/colors';
+
 import { useTheme } from '@/hooks/use-color-scheme';
 import { CategoriaItinerario, CATEGORIA_LABEL } from '@/src/types/itinerario';
 
@@ -17,12 +17,10 @@ interface CategoriaCardProps {
 }
 
 export function CategoriaCard({ value, icon, activa, onPress }: CategoriaCardProps) {
-  const { colorScheme } = useTheme();
-  const isDark = colorScheme === 'dark';
-  const theme = isDark ? colors.dark : colors.light;
+  const { theme } = useTheme();
 
   // Colores que cambian según si la categoría está seleccionada y el modo de color
-  const cardBg = activa ? (isDark ? '#2A303D' : '#EFF4FF') : theme.surface;
+  const cardBg = activa ? theme.categorySelected : theme.surface;
   const cardBorder = activa ? theme.primary : theme.border;
   const labelColor = activa ? theme.primary : theme.text;
   const iconColor = activa ? theme.primary : theme.textSecondary;
