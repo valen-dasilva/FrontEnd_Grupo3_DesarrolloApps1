@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useTheme } from '@/hooks/useColorScheme';
-import { categoryIconMap } from '@/constants/categories';
+import { categoryIconMap, categoryColorKey } from '@/constants/categories';
 import { icons } from '@/constants/icons';
 import { fonts } from '@/constants/fonts';
 import { paddings } from '@/constants/paddings';
@@ -18,6 +18,10 @@ export const CategoryBadge: React.FC<CategoryBadgeProps> = ({ category, style })
 
   const categoryIconName = categoryIconMap[category] || 'Museum';
   const iconName = icons[categoryIconName] || icons.Museum;
+
+  // Resuelve el color del icono según la categoría, respetando el tema
+  const colorKey = categoryColorKey[category] || 'primary';
+  const iconColor = theme[colorKey] || theme.primary;
 
   // Filter out style keys that could override our design system values
   const {
@@ -52,7 +56,7 @@ export const CategoryBadge: React.FC<CategoryBadgeProps> = ({ category, style })
       <MaterialIcons 
         name={iconName as any} 
         size={fonts.size.md + 1} 
-        color={theme.primary} 
+        color={iconColor} 
         style={styles.icon} 
       />
       <Text style={[styles.text, { color: theme.text }]}>
