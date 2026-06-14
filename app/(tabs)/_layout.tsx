@@ -8,6 +8,7 @@ import { BottomNavBar, TabName } from '@/components/common/BottomNavBar/BottomNa
 function TabBarComponent({ state, navigation }: Readonly<BottomTabBarProps>) {
   const currentRouteName = state.routes[state.index].name;
 
+
   let activeTab: TabName = 'Inicio';
   if (currentRouteName === 'explorar' || currentRouteName === 'explorarApp') activeTab = 'Explorar';
   else if (currentRouteName === 'favoritos' || currentRouteName === '(favorite)') activeTab = 'Favoritos';
@@ -36,36 +37,14 @@ function TabBarComponent({ state, navigation }: Readonly<BottomTabBarProps>) {
 
 export default function TabLayout() {
   return (
-    <Tabs
-      tabBar={TabBarComponent}
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Inicio',
-        }}
-      />
-      <Tabs.Screen
-        name="explorar"
-        options={{
-          title: 'Explorar',
-        }}
-      />
-      <Tabs.Screen
-        name="favoritos"
-        options={{
-          title: 'Favoritos',
-        }}
-      />
-      <Tabs.Screen
-        name="perfil"
-        options={{
-          title: 'Perfil',
-        }}
-      />
+    <Tabs tabBar={TabBarComponent} screenOptions={{ headerShown: false, }}>
+      {/* Pantallas principales */}
+      <Tabs.Screen name="index" options={{ title: 'Inicio',}} />
+      <Tabs.Screen name="explorar" options={{title: 'Explorar',}}/>
+      <Tabs.Screen name="favoritos" options={{ title: 'Favoritos',}}/>
+      <Tabs.Screen name="perfil" options={{title: 'Perfil',}}/>
+
+      {/* Navegacion por stacks */}
       <Tabs.Screen name="(favorite)" options={{ href: null }} />
       <Tabs.Screen name="explorarApp" options={{ href: null }} />
       <Tabs.Screen name="inicioApp" options={{ href: null }} />
