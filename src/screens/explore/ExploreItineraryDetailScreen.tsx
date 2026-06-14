@@ -1,16 +1,15 @@
-
 import { paddings } from '@/constants/paddings';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useItinerarioDetalle } from '@/hooks/useItinerarioDetalle';
 import { ItemItinerarioSistemaDTO } from '@/types/itinerario';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useMemo, useCallback } from 'react';
+import { ActivityIndicator, FlatList, Text, View, Platform } from 'react-native';
 import { ActivityCard } from '@/components/common/ActivityCard/ActivityCard';
 import { Header } from '@/components/common/Header/Header';
 import { ItineraryInfoCard } from '@/components/Explorar/CardItinerarioInfo';
 import { styles } from './ExploreItineraryDetailScreen.styles';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /** Convierte "HH:mm:ss" → "HH:mm" */
 function formatHora(hora: string): string {
@@ -35,7 +34,6 @@ export default function ItinerarioInfoScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
 
-
   const itinerarioId = params.idItinerario ? Number(params.idItinerario) : null;
   const { itinerario, loading, error } = useItinerarioDetalle(itinerarioId);
 
@@ -54,6 +52,81 @@ export default function ItinerarioInfoScreen() {
     .map(Number)
     .sort((a, b) => a - b);
 
+  const renderHeader = useCallback(() => (
+    <ItineraryInfoCard
+      idItinerario={params.idItinerario ? Number(params.idItinerario) : undefined}
+      title={params.title}
+      category={params.category}
+      startDate={params.startDate}
+      endDate={params.endDate}
+      description={params.description}
+      image={params.image}
+      isFavorite={params.isFavorite === 'true'}
+      idFavorito={params.idFavorito ? Number(params.idFavorito) : undefined}
+      onBackPress={() => router.back()}
+    />
+  ), [params, router]);
+
+  const renderEmptyComponent = () => {
+    if (loading) {
+      return (
+        <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={theme.primary} />
+          <Text style={{ color: theme.textSecondary, marginTop: 12 }}>
+            Cargando actividades...
+          </Text>
+        </View>
+      );
+    }
+
+    if (error) {
+      return (
+        <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+          <Text style={{ color: theme.danger, textAlign: 'center' }}>{error}</Text>
+        </View>
+      );
+    }
+
+    if (itinerario && dias.length === 0) {
+      return (
+        <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+          <Text style={{ color: theme.textSecondary }}>
+            Este itinerario no tiene actividades cargadas.
+          </Text>
+        </View>
+      );
+    }
+
+    return null;
+  };
+
+  const renderItem = useCallback(({ item: dia, index }: { item: number; index: number }) => {
+    const items = itemsPorDia[dia] || [];
+    const isLastDay = index === dias.length - 1;
+    return (
+      <View
+        style={[
+          styles.dayCard,
+          { backgroundColor: theme.surface },
+          isLastDay && { marginBottom: paddings.spacing.huge },
+        ]}
+      >
+        <Text style={[styles.dayTitle, { color: theme.text }]}>Día {dia}</Text>
+
+        {items.map((item, idx) => (
+          <ActivityCard
+            key={item.id}
+            time={formatHora(item.hora)}
+            title={item.actividad.nombre}
+            subtitle={item.actividad.localidad}
+            location={item.actividad.direccion}
+            isLast={idx === items.length - 1}
+          />
+        ))}
+      </View>
+    );
+  }, [itemsPorDia, dias, theme]);
+
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.surfaceNeutral }]}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -61,77 +134,20 @@ export default function ItinerarioInfoScreen() {
       {/* Header */}
       <Header title="Explorar" />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-
-        {/* Card de la Imagen Principal */}
-        <ItineraryInfoCard
-          idItinerario={params.idItinerario ? Number(params.idItinerario) : undefined}
-          title={params.title}
-          category={params.category}
-          startDate={params.startDate}
-          endDate={params.endDate}
-          description={params.description}
-          image={params.image}
-          isFavorite={params.isFavorite === 'true'}
-          idFavorito={params.idFavorito ? Number(params.idFavorito) : undefined}
-          onBackPress={() => router.back()}
-        />
-
-        {/* Estado de carga / error */}
-        {loading && (
-          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-            <ActivityIndicator size="large" color={theme.primary} />
-            <Text style={{ color: theme.textSecondary, marginTop: 12 }}>
-              Cargando actividades...
-            </Text>
-          </View>
-        )}
-
-        {!loading && error && (
-          <View style={{ paddingVertical: 24, alignItems: 'center' }}>
-            <Text style={{ color: theme.danger, textAlign: 'center' }}>{error}</Text>
-          </View>
-        )}
-
-        {/* Cards de actividades por día */}
-        {!loading && !error && dias.map((dia, diaIdx) => {
-          const items = itemsPorDia[dia];
-          const isLastDay = diaIdx === dias.length - 1;
-          return (
-            <View
-              key={dia}
-              style={[
-                styles.dayCard,
-                { backgroundColor: theme.surface },
-                isLastDay && { marginBottom: paddings.spacing.huge },
-              ]}
-            >
-              <Text style={[styles.dayTitle, { color: theme.text }]}>Día {dia}</Text>
-
-              {items.map((item, idx) => (
-                <ActivityCard
-                  key={item.id}
-                  time={formatHora(item.hora)}
-                  title={item.actividad.nombre}
-                  subtitle={item.actividad.localidad}
-                  location={item.actividad.direccion}
-                  isLast={idx === items.length - 1}
-                />
-              ))}
-            </View>
-          );
-        })}
-
-        {/* Mensaje cuando no hay actividades y la carga terminó */}
-        {!loading && !error && itinerario && dias.length === 0 && (
-          <View style={{ paddingVertical: 24, alignItems: 'center' }}>
-            <Text style={{ color: theme.textSecondary }}>
-              Este itinerario no tiene actividades cargadas.
-            </Text>
-          </View>
-        )}
-
-      </ScrollView>
+      <FlatList
+        data={loading || error ? [] : dias}
+        renderItem={renderItem}
+        keyExtractor={(dia) => `day-${dia}`}
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={renderEmptyComponent}
+        style={{ backgroundColor: theme.surfaceNeutral }}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={2}
+        maxToRenderPerBatch={3}
+        windowSize={3}
+        removeClippedSubviews={Platform.OS === 'android'}
+      />
     </View>
   );
 }

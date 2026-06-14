@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '@/services/api';
 import {
     deleteItem,
@@ -25,132 +26,160 @@ import {
     removeItineraryOffline
 } from '@/services/itineraryStorage';
 
+// Fetch favorites with local offline fallback
+const fetchFavoritesWithOfflineFallback = async () => {
+    try {
+        return await getItinerarios();
+    } catch {
+        return await getOfflineItinerariesList();
+    }
+};
+
 export const useFavoritosHook = () => {
-    const [listItinerarioResumen, setListItinerarioResumen] = useState<ItinerarioResumen[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [isMutating, setIsMutating] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
-    const [activeItinerary, setActiveItinerary] = useState<ItinerarioUsuario | null>(null);
-    const [downloadedIds, setDownloadedIds] = useState<number[]>([]);
+    const queryClient = useQueryClient();
 
-    //cargar lista de itinerarios
-    const loadItinerarios = useCallback(async () => {
-        try {
-            setIsLoading(true);
-            const offlineIds = await getDownloadedIds();
-            setDownloadedIds(offlineIds);
+    // Query for favorites list
+    const {
+        data: listItinerarioResumen = [],
+        isLoading,
+        error,
+        refetch: loadItinerarios,
+    } = useQuery({
+        queryKey: ['favorites'],
+        queryFn: fetchFavoritesWithOfflineFallback,
+    });
 
-            const datos = await getItinerarios();
-            setListItinerarioResumen(datos);
-            setError(null);
-        } catch {
-            const offlineList = await getOfflineItinerariesList();
-            setListItinerarioResumen(offlineList);
-            setError(null);
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
-    useEffect(() => { loadItinerarios() }, [loadItinerarios])
-
-
-
-
-    //agregar un itinerario a favoritos
-    const addItineraryToFavs = async (idItinerary: number) => {
-        try {
-            setIsMutating(true);
-            const data = await postItinerario(idItinerary);
-            setListItinerarioResumen((prev) => [...prev, data]);
-        } catch (err) {
-            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo guardar en favoritos.")
-        } finally {
-            setIsMutating(false);
-        }
-    }
-
-    //eliminar un itinerario de favoritos
-    const quitItineraryFromFavs = async (idItinerario: number) => {
-        try {
-            setIsMutating(true);
-            await deleteItinerario(idItinerario);
-            setListItinerarioResumen((prev) => prev.filter((o) => o.id !== idItinerario));
-            setIsLoading(false)
-        } catch (err) {
-            Alert.alert("Error", err instanceof ApiError ? err.message : 'No se pudo eliminar el itinerario de favoritos.');
-        } finally {
-            setIsMutating(false)
-        }
-    }
-
-    //fijar/desfijar un itinerario como activo (tachuela)
-    const togglePin = async (id: number) => {
-        try {
-            setIsMutating(true);
-            await patchPin(id);
-            // Replicamos la regla del backend en el estado local (sin recargar,
-            // para evitar el parpadeo del spinner): el tocado togglea su estado
-            // y el resto queda en false, porque solo puede haber uno fijado.
-            setListItinerarioResumen((prev) =>
-                prev.map((it) => ({
-                    ...it,
-                    esPinned: it.id === id ? !it.esPinned : false,
-                }))
-            );
-        } catch (err) {
-            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo fijar el itinerario.");
-        } finally {
-            setIsMutating(false);
-        }
-    }
-
-    //obtener itinerario activo
-    const getActive = async () => {
-        try {
-            setIsLoading(true);
-            const data = await getActiveItinerario();
-            setActiveItinerary(data);
-        } catch (err) {
-            if (err instanceof ApiError && err.status === 404) {
-                setActiveItinerary(null);
-            } else {
-                Alert.alert("Error", err instanceof ApiError ? err.message : "Error al obtener itinerario activo.");
+    // Query for active itinerary (pin / home)
+    const { data: activeItinerary = null } = useQuery({
+        queryKey: ['activeItinerary'],
+        queryFn: async () => {
+            try {
+                return await getActiveItinerario();
+            } catch (err) {
+                if (err instanceof ApiError && err.status === 404) {
+                    return null;
+                }
+                throw err;
             }
-        } finally {
-            setIsLoading(false);
-        }
-    }
+        },
+    });
 
-    // Descargar itinerario para offline
-    const downloadItinerary = async (summary: ItinerarioResumen) => {
-        try {
-            setIsMutating(true);
+    // Query for downloaded offline IDs
+    const { data: downloadedIds = [] } = useQuery({
+        queryKey: ['downloadedIds'],
+        queryFn: getDownloadedIds,
+        initialData: [],
+    });
+
+    // Mutation: add to favorites
+    const addMutation = useMutation({
+        mutationFn: postItinerario,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['favorites'] });
+        },
+        onError: (err) => {
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo guardar en favoritos.");
+        }
+    });
+
+    const addItineraryToFavs = async (idItinerary: number) => {
+        await addMutation.mutateAsync(idItinerary);
+    };
+
+    // Mutation: remove from favorites
+    const deleteMutation = useMutation({
+        mutationFn: deleteItinerario,
+        onSuccess: (data, idItinerario) => {
+            queryClient.invalidateQueries({ queryKey: ['favorites'] });
+            // Cleanup offline download if it exists
+            removeItineraryOffline(idItinerario).catch(console.error);
+            queryClient.invalidateQueries({ queryKey: ['downloadedIds'] });
+        },
+        onError: (err) => {
+            Alert.alert("Error", err instanceof ApiError ? err.message : 'No se pudo eliminar el itinerario de favoritos.');
+        }
+    });
+
+    const quitItineraryFromFavs = async (idItinerario: number) => {
+        await deleteMutation.mutateAsync(idItinerario);
+    };
+
+    // Mutation: toggle pin with Optimistic Updates
+    const pinMutation = useMutation({
+        mutationFn: patchPin,
+        onMutate: async (id) => {
+            await queryClient.cancelQueries({ queryKey: ['favorites'] });
+            const previousFavorites = queryClient.getQueryData<ItinerarioResumen[]>(['favorites']);
+
+            if (previousFavorites) {
+                queryClient.setQueryData<ItinerarioResumen[]>(
+                    ['favorites'],
+                    previousFavorites.map((it) => ({
+                        ...it,
+                        esPinned: it.id === id ? !it.esPinned : false,
+                    }))
+                );
+            }
+
+            return { previousFavorites };
+        },
+        onError: (err, id, context) => {
+            if (context?.previousFavorites) {
+                queryClient.setQueryData(['favorites'], context.previousFavorites);
+            }
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo fijar el itinerario.");
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['favorites'] });
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+        }
+    });
+
+    const togglePin = async (id: number) => {
+        await pinMutation.mutateAsync(id);
+    };
+
+    // Mutation: download offline
+    const downloadMutation = useMutation({
+        mutationFn: async (summary: ItinerarioResumen) => {
             const details = await getItinerarioDetalles(summary.id);
             await saveItineraryOffline(summary, details);
-            const offlineIds = await getDownloadedIds();
-            setDownloadedIds(offlineIds);
-        } catch (err) {
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['downloadedIds'] });
+        },
+        onError: (err) => {
             Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo descargar el itinerario.");
-        } finally {
-            setIsMutating(false);
         }
+    });
+
+    const downloadItinerary = async (summary: ItinerarioResumen) => {
+        await downloadMutation.mutateAsync(summary);
     };
 
-    // Eliminar descarga offline
-    const removeDownload = async (id: number) => {
-        try {
-            setIsMutating(true);
+    // Mutation: remove offline download
+    const removeDownloadMutation = useMutation({
+        mutationFn: async (id: number) => {
             await removeItineraryOffline(id);
-            const offlineIds = await getDownloadedIds();
-            setDownloadedIds(offlineIds);
-        } catch (err) {
-            setError(err instanceof ApiError ? err.message : "No se pudo encontrar el itinerario.");
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['downloadedIds'] });
+        },
+        onError: () => {
             Alert.alert("Error", "No se pudo eliminar la descarga local.");
-        } finally {
-            setIsMutating(false);
         }
+    });
+
+    const removeDownload = async (id: number) => {
+        await removeDownloadMutation.mutateAsync(id);
     };
+
+    const getActive = async () => {
+        // Handled by activeItinerary query. Exposed as no-op or refetch wrapper if needed.
+        await queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+    };
+
+    const errorString = error instanceof Error ? error.message : (error ? String(error) : null);
 
     return {
         loadItinerarios,
@@ -160,114 +189,136 @@ export const useFavoritosHook = () => {
         listItinerarioResumen,
         getActive,
         isLoading,
-        isMutating,
-        error,
+        isMutating: addMutation.isPending || deleteMutation.isPending || pinMutation.isPending || downloadMutation.isPending || removeDownloadMutation.isPending,
+        error: errorString,
         activeItinerary,
         downloadedIds,
         downloadItinerary,
         removeDownload,
-    }
-
-}
+    };
+};
 
 export const useFavoritosDetailsHook = () => {
-    const [itineraryDetails, setItineraryDetails] = useState<ItinerarioUsuario>();
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [isMutating, setIsMutating] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
+    const queryClient = useQueryClient();
+    const [activeId, setActiveId] = useState<number | null>(null);
 
-    const loadItineraryInfo = useCallback(async (idItinerary: number) => {
-        try {
-            setIsLoading(true);
-            const data = await getItinerarioDetalles(idItinerary);
-            setItineraryDetails(data);
-            setError(null);
-        } catch (err) {
-            const offlineDetails = await getOfflineItineraryDetails(idItinerary);
-            if (offlineDetails) {
-                setItineraryDetails(offlineDetails);
-                setError(null);
-            } else {
-                setError(err instanceof ApiError ? err.message : "No se pudo encontrar el itinerario.");
-            }
-        } finally {
-            setIsLoading(false);
-        }
+    const loadItineraryInfo = useCallback((idItinerary: number) => {
+        setActiveId(idItinerary);
     }, []);
 
-    //modificar fechas del itinerario
-    const putItineraryDates = async (idItinerary: number, dates: UpdateDatesRequest) => {
-        try {
-            setIsMutating(true);
-            const updatedItinerary = await putItinerarioFechas(idItinerary, dates);
-            setItineraryDetails(updatedItinerary);
-        } catch (err) {
+    // Query for specific itinerary details
+    const {
+        data: itineraryDetails,
+        isLoading,
+        error,
+    } = useQuery({
+        queryKey: ['itineraryDetails', activeId],
+        queryFn: async () => {
+            if (!activeId) return undefined;
+            try {
+                return await getItinerarioDetalles(activeId);
+            } catch (err) {
+                const offlineDetails = await getOfflineItineraryDetails(activeId);
+                if (offlineDetails) {
+                    return offlineDetails;
+                }
+                throw err;
+            }
+        },
+        enabled: activeId !== null,
+    });
+
+    // Mutation: put dates
+    const putDatesMutation = useMutation({
+        mutationFn: ({ idItinerary, dates }: { idItinerary: number; dates: UpdateDatesRequest }) =>
+            putItinerarioFechas(idItinerary, dates),
+        onSuccess: (updatedItinerary, variables) => {
+            queryClient.setQueryData(['itineraryDetails', variables.idItinerary], updatedItinerary);
+            queryClient.invalidateQueries({ queryKey: ['favorites'] });
+        },
+        onError: (err) => {
             Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo modificar las fechas.");
-        } finally {
-            setIsMutating(false);
         }
+    });
+
+    const putItineraryDates = async (idItinerary: number, dates: UpdateDatesRequest) => {
+        await putDatesMutation.mutateAsync({ idItinerary, dates });
     };
 
-    //agregar actividad
-    const newItem = async (idItinerary: number, itemData: Omit<ItemItinerarioUsuario, 'id'>) => {
-        try {
-            setIsMutating(true);
-            const createdItem = await postItem(idItinerary, itemData);
-            setItineraryDetails((prev) => {
+    // Mutation: create item
+    const newItemMutation = useMutation({
+        mutationFn: ({ idItinerary, itemData }: { idItinerary: number; itemData: Omit<ItemItinerarioUsuario, 'id'> }) =>
+            postItem(idItinerary, itemData),
+        onSuccess: (createdItem, variables) => {
+            queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary], (prev) => {
                 if (!prev) return prev;
                 return {
                     ...prev,
                     items: [...prev.items, createdItem]
                 };
             });
-        } catch (err) {
+            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+        },
+        onError: (err) => {
             Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo crear la actividad");
-        } finally {
-            setIsMutating(false);
         }
+    });
+
+    const newItem = async (idItinerary: number, itemData: Omit<ItemItinerarioUsuario, 'id'>) => {
+        await newItemMutation.mutateAsync({ idItinerary, itemData });
     };
 
-    //modificar actividad
-    const editItem = async (idItinerary: number, idItem: number, itemData: Omit<ItemItinerarioUsuario, 'id'>) => {
-        try {
-            setIsMutating(true);
-            const updatedItem = await putItem(idItinerary, idItem, itemData);
-            setItineraryDetails((prev) => {
+    // Mutation: edit item
+    const editItemMutation = useMutation({
+        mutationFn: ({ idItinerary, idItem, itemData }: { idItinerary: number; idItem: number; itemData: Omit<ItemItinerarioUsuario, 'id'> }) =>
+            putItem(idItinerary, idItem, itemData),
+        onSuccess: (updatedItem, variables) => {
+            queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary], (prev) => {
                 if (!prev) return prev;
                 return {
                     ...prev,
-                    items: prev.items.map((item) => item.id === idItem ? updatedItem : item)
+                    items: prev.items.map((item) => item.id === variables.idItem ? updatedItem : item)
                 };
             });
-        } catch (err) {
+            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+        },
+        onError: (err) => {
             Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo modificar la actividad");
-        } finally {
-            setIsMutating(false);
         }
+    });
+
+    const editItem = async (idItinerary: number, idItem: number, itemData: Omit<ItemItinerarioUsuario, 'id'>) => {
+        await editItemMutation.mutateAsync({ idItinerary, idItem, itemData });
     };
 
-    //quitar actividad
-    const quitItem = async (idItinerary: number, idItem: number) => {
-        try {
-            setIsMutating(true);
-            await deleteItem(idItinerary, idItem);
-            setItineraryDetails((prev) => {
+    // Mutation: delete item
+    const quitItemMutation = useMutation({
+        mutationFn: ({ idItinerary, idItem }: { idItinerary: number; idItem: number }) =>
+            deleteItem(idItinerary, idItem),
+        onSuccess: (data, variables) => {
+            queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary], (prev) => {
                 if (!prev) return prev;
                 return {
                     ...prev,
-                    items: prev.items.filter((item) => item.id !== idItem)
+                    items: prev.items.filter((item) => item.id !== variables.idItem)
                 };
             });
-        } catch (err) {
+            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+        },
+        onError: (err) => {
             Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo eliminar la actividad");
-        } finally {
-            setIsMutating(false);
         }
+    });
+
+    const quitItem = async (idItinerary: number, idItem: number) => {
+        await quitItemMutation.mutateAsync({ idItinerary, idItem });
     };
+
+    const errorString = error instanceof Error ? error.message : (error ? String(error) : null);
 
     return {
-        error,
-        isMutating,
+        error: errorString,
+        isMutating: putDatesMutation.isPending || newItemMutation.isPending || editItemMutation.isPending || quitItemMutation.isPending,
         isLoading,
         itineraryDetails,
         quitItem,
