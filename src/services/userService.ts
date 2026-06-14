@@ -54,3 +54,17 @@ export function getUserProfile(idUsuario: number): Promise<UserProfile> {
 export function updateUserProfile(idUsuario: number, payload: UpdatePerfilRequest): Promise<UserProfile> {
   return apiClient.put<UserProfile>(`/users/${idUsuario}`, payload).then((r) => r.data);
 }
+
+export interface ChangePasswordRequest {
+  contraseniaActual: string;
+  contraseniaNueva: string;
+}
+
+export function changePassword(
+  idUsuario: number,
+  payload: ChangePasswordRequest
+): Promise<void> {
+  return apiClient
+    .put(`/users/${idUsuario}/password`, payload)
+    .then(() => undefined);
+}

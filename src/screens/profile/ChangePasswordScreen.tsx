@@ -1,7 +1,8 @@
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTheme } from '@/hooks/useColorScheme';
-
+import { useAuth } from '@/context/AuthContext';
+import { changePassword } from '@/services/userService';
 
 import {
   SafeAreaView,
@@ -11,6 +12,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Alert,
 } from 'react-native';
 
 const COLORS = {
@@ -26,12 +28,53 @@ const COLORS = {
 
 export default function CambiarContrasenaScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+
   const [actual, setActual] = useState('');
   const [nueva, setNueva] = useState('');
   const [confirmar, setConfirmar] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === 'dark';
+
+  const handleSave = async () => {
+    if (!actual.trim() || !nueva.trim() || !confirmar.trim()) {
+      Alert.alert('Campos incompletos', 'Por favor completá todos los campos.');
+      return;
+    }
+
+    if (nueva.length < 6) {
+      Alert.alert(
+        'Contraseña muy corta',
+        'La nueva contraseña debe tener al menos 6 caracteres.'
+      );
+      return;
+    }
+
+    if (nueva !== confirmar) {
+      Alert.alert('No coinciden', 'Las contraseñas nuevas no coinciden.');
+      return;
+    }
+
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      await changePassword(user.idUsuario, {
+        contraseniaActual: actual,
+        contraseniaNueva: nueva,
+      });
+      Alert.alert('Éxito', 'Tu contraseña fue actualizada correctamente.', [
+        { text: 'OK', onPress: () => router.back() },
+      ]);
+    } catch (err: any) {
+      console.error('Error al cambiar contraseña:', err);
+      Alert.alert('Error', err.message || 'No se pudo cambiar la contraseña.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
@@ -50,10 +93,10 @@ export default function CambiarContrasenaScreen() {
 
         <Text style={[styles.label, { color: theme.text }]}>Contraseña actual</Text>
         <TextInput
-          style={[styles.input, { 
-            backgroundColor: theme.surface, 
-            borderColor: theme.border, 
-            color: theme.text 
+          style={[styles.input, {
+            backgroundColor: theme.surface,
+            borderColor: theme.border,
+            color: theme.text
           }]}
           secureTextEntry
           placeholder="••••••••"
@@ -64,10 +107,10 @@ export default function CambiarContrasenaScreen() {
 
         <Text style={[styles.label, { color: theme.text }]}>Nueva contraseña</Text>
         <TextInput
-          style={[styles.input, { 
-            backgroundColor: theme.surface, 
-            borderColor: theme.border, 
-            color: theme.text 
+          style={[styles.input, {
+            backgroundColor: theme.surface,
+            borderColor: theme.border,
+            color: theme.text
           }]}
           secureTextEntry
           placeholder="••••••••"
@@ -78,10 +121,10 @@ export default function CambiarContrasenaScreen() {
 
         <Text style={[styles.label, { color: theme.text }]}>Confirmar nueva contraseña</Text>
         <TextInput
-          style={[styles.input, { 
-            backgroundColor: theme.surface, 
-            borderColor: theme.border, 
-            color: theme.text 
+          style={[styles.input, {
+            backgroundColor: theme.surface,
+            borderColor: theme.border,
+            color: theme.text
           }]}
           secureTextEntry
           placeholder="••••••••"
@@ -90,13 +133,20 @@ export default function CambiarContrasenaScreen() {
           onChangeText={setConfirmar}
         />
 
-        <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: theme.primary }]}>
-          <Text style={styles.primaryBtnText}>✓  Guardar Cambios</Text>
+        <TouchableOpacity
+          style={[styles.primaryBtn, { backgroundColor: theme.primary }]}
+          onPress={handleSave}
+          disabled={loading}
+        >
+          <Text style={styles.primaryBtnText}>
+            {loading ? 'Guardando...' : '✓  Guardar Cambios'}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.dangerBtn, { backgroundColor: theme.danger }]}
           onPress={() => router.back()}
+          disabled={loading}
         >
           <Text style={styles.dangerBtnText}>Cancelar</Text>
         </TouchableOpacity>
