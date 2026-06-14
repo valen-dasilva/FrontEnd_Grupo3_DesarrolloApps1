@@ -17,8 +17,8 @@ import {
 } from '@expo-google-fonts/plus-jakarta-sans';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
-import { ThemeProvider as CustomThemeProvider, useColorScheme } from '@/hooks/use-color-scheme';
-import { AuthProvider, useAuth } from '../src/context/AuthContext';
+import { ThemeProvider as CustomThemeProvider, useColorScheme } from '@/hooks/useColorScheme';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 
 // Evita que el splash se oculte solo antes de que terminen de cargar las fuentes.
 SplashScreen.preventAutoHideAsync();
@@ -44,8 +44,7 @@ function useProtectedRoute() {
     // ¿Está parado en una pantalla pública de auth?
     const onAuthScreen =
       segments[0] === 'login' ||
-      segments[0] === 'register1' ||
-      segments[0] === 'register2';
+      segments[0] === 'register';
     // El splash (index) no tiene segmento: segments[0] === undefined.
     const onSplash = !segments[0];
 
@@ -69,8 +68,7 @@ function RootNavigator() {
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="login" options={{ headerShown: false }} />
-      <Stack.Screen name="register1" options={{ headerShown: false }} />
-      <Stack.Screen name="register2" options={{ headerShown: false }} />
+      <Stack.Screen name="register" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
   );

@@ -1,1 +1,0 @@
-export const BACK_URL = 'https://turistear-back.onrender.com'

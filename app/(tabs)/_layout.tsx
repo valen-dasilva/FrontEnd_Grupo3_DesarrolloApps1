@@ -1,7 +1,7 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { BottomNavBar, TabName } from '../../components/common/BottomNavBar/BottomNavBar';
+import { BottomNavBar, TabName } from '@/components/common/BottomNavBar/BottomNavBar';
 
 // Uses BottomTabBarProps so TabBarComponent can be passed directly as tabBar={TabBarComponent}
 // with no anonymous wrapper arrow function inside TabLayout.
@@ -9,9 +9,10 @@ function TabBarComponent({ state, navigation }: Readonly<BottomTabBarProps>) {
   const currentRouteName = state.routes[state.index].name;
 
   let activeTab: TabName = 'Inicio';
-  if (currentRouteName === 'explorar') activeTab = 'Explorar';
-  else if (currentRouteName === 'favoritos') activeTab = 'Favoritos';
-  else if (currentRouteName === 'perfil') activeTab = 'Perfil';
+  if (currentRouteName === 'explorar' || currentRouteName === 'explorarApp') activeTab = 'Explorar';
+  else if (currentRouteName === 'favoritos' || currentRouteName === '(favorite)') activeTab = 'Favoritos';
+  else if (currentRouteName === 'perfil' || currentRouteName === 'perfilApp') activeTab = 'Perfil';
+  else if (currentRouteName === 'inicioApp') activeTab = 'Inicio';
 
   const handleTabPress = (tabName: TabName) => {
     let targetRoute = 'index';
@@ -65,6 +66,10 @@ export default function TabLayout() {
           title: 'Perfil',
         }}
       />
+      <Tabs.Screen name="(favorite)" options={{ href: null }} />
+      <Tabs.Screen name="explorarApp" options={{ href: null }} />
+      <Tabs.Screen name="inicioApp" options={{ href: null }} />
+      <Tabs.Screen name="perfilApp" options={{ href: null }} />
     </Tabs>
   );
 }
