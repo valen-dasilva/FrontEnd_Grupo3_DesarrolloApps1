@@ -80,7 +80,7 @@ export const getItinerarios = async (): Promise<ItinerarioResumen[]> => {
       duracionDias: data.duracionDias,
       etiquetas: data.etiquetas,
       esPinned: data.esPinned,
-    }));
+    })); 
 }
 
 //devuelve el itinerario activo o proximo a iniciar

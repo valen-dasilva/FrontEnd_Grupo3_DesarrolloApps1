@@ -3,6 +3,9 @@ import React, { useState } from 'react';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useAuth } from '@/context/AuthContext';
 import { changePassword } from '@/services/userService';
+import { MaterialIcons } from '@expo/vector-icons';
+import { icons } from '@/constants/icons';
+import { validatePasswordChange } from './passwordValidation';
 
 import {
   SafeAreaView,
@@ -39,21 +42,9 @@ export default function CambiarContrasenaScreen() {
   const isDark = colorScheme === 'dark';
 
   const handleSave = async () => {
-    if (!actual.trim() || !nueva.trim() || !confirmar.trim()) {
-      Alert.alert('Campos incompletos', 'Por favor completá todos los campos.');
-      return;
-    }
-
-    if (nueva.length < 6) {
-      Alert.alert(
-        'Contraseña muy corta',
-        'La nueva contraseña debe tener al menos 6 caracteres.'
-      );
-      return;
-    }
-
-    if (nueva !== confirmar) {
-      Alert.alert('No coinciden', 'Las contraseñas nuevas no coinciden.');
+    const validation = validatePasswordChange(actual, nueva, confirmar);
+    if (!validation.valid) {
+      Alert.alert(validation.errorTitle!, validation.errorMessage!);
       return;
     }
 
@@ -82,7 +73,7 @@ export default function CambiarContrasenaScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
 
         <View style={[styles.lockCircle, isDark && { backgroundColor: '#2A303D' }]}>
-          <Text style={{ fontSize: 26 }}>🔒</Text>
+          <MaterialIcons name={icons.Lock} size={26} color={theme.primary} />
         </View>
 
         <Text style={[styles.bigTitle, { color: theme.text }]}>Protege tu cuenta</Text>

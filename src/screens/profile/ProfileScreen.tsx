@@ -9,6 +9,8 @@ import { useAuth } from '@/context/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
 import { uploadProfilePicture, getUserProfile, updateUserProfile } from '@/services/userService';
 import { CustomButton } from '@/components/CustomButton';
+import { MaterialIcons } from '@expo/vector-icons';
+import { icons } from '@/constants/icons';
 
 export default function PerfilScreen() {
   const router = useRouter();
@@ -143,23 +145,30 @@ export default function PerfilScreen() {
           style={[styles.optionRow, { backgroundColor: theme.card, borderColor: theme.border }]}
           onPress={() => router.push('/(tabs)/perfilApp/editarUsuario')}
         >
-          <Text style={[styles.optionText, { color: theme.text }]}>👤  Editar Usuario</Text>
-          <Text style={[styles.chevron, { color: theme.gray }]}>›</Text>
+          <View style={styles.optionLeft}>
+            <MaterialIcons name={icons.Person} size={20} color={theme.text} />
+            <Text style={[styles.optionText, { color: theme.text }]}>Editar Usuario</Text>
+          </View>
+          <MaterialIcons name={icons['chevron.right']} size={22} color={theme.gray} />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.optionRow, { backgroundColor: theme.card, borderColor: theme.border }]}
           onPress={() => router.push('/(tabs)/perfilApp/cambiarContrasena')}
         >
-          <Text style={[styles.optionText, { color: theme.text }]}>🔒  Cambiar Contraseña</Text>
-          <Text style={[styles.chevron, { color: theme.gray }]}>›</Text>
+          <View style={styles.optionLeft}>
+            <MaterialIcons name={icons.Lock} size={20} color={theme.text} />
+            <Text style={[styles.optionText, { color: theme.text }]}>Cambiar Contraseña</Text>
+          </View>
+          <MaterialIcons name={icons['chevron.right']} size={22} color={theme.gray} />
         </TouchableOpacity>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.logoutBtn, { borderColor: theme.danger }]}
           onPress={logout}
         >
-          <Text style={[styles.logoutText, { color: theme.danger }]}>⏻  Cerrar Sesión</Text>
+          <MaterialIcons name={icons.Logout} size={18} color={theme.danger} />
+          <Text style={[styles.logoutText, { color: theme.danger }]}>Cerrar Sesión</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -236,15 +245,23 @@ const styles = StyleSheet.create({
   chevron: {
     fontSize: 22,
   },
+  logoutText: {
+    fontWeight: '700',
+    fontSize: 15,
+  },
+  optionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
   logoutBtn: {
     borderWidth: 1.5,
     borderRadius: 12,
     padding: 14,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     marginTop: 12,
-  },
-  logoutText: {
-    fontWeight: '700',
-    fontSize: 15,
   },
 });
