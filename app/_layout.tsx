@@ -19,6 +19,9 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { ThemeProvider as CustomThemeProvider, useColorScheme } from '@/hooks/useColorScheme';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/services/queryClient';
+
 
 // Evita que el splash se oculte solo antes de que terminen de cargar las fuentes.
 SplashScreen.preventAutoHideAsync();
@@ -116,10 +119,12 @@ function RootLayoutNav() {
 // - AuthProvider envuelve la navegación para que useProtectedRoute lea la sesión.
 export default function RootLayout() {
   return (
-    <CustomThemeProvider>
-      <AuthProvider>
-        <RootLayoutNav />
-      </AuthProvider>
-    </CustomThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <CustomThemeProvider>
+        <AuthProvider>
+          <RootLayoutNav />
+        </AuthProvider>
+      </CustomThemeProvider>
+    </QueryClientProvider>
   );
 }

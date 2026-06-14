@@ -3,11 +3,12 @@ import { Header } from "@/components/common/Header/Header";
 
 import { useTheme } from "@/hooks/useColorScheme";
 import { useAuth } from "@/context/AuthContext";
-import { getItinerarioEnCurso } from "@/services/itinerarioService";
-import { ItinerarioEnCursoDTO } from "@/types/itinerario";
+import { getItinerarioEnCurso, buscarPorPreferencias } from "@/services/itinerarioService";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/services/queryClient";
 import {
   ActivityIndicator,
   ScrollView,
@@ -25,22 +26,19 @@ export default function HomeScreen() {
   const isDark = colorScheme === "dark";
   const { user } = useAuth();
 
-  const [itinerarioActivo, setItinerarioActivo] =
-    useState<ItinerarioEnCursoDTO | null>(null);
-  const [loadingItinerario, setLoadingItinerario] = useState(true);
+  const { data: itinerarioActivo = null, isLoading: loadingItinerario } = useQuery({
+    queryKey: ['activeItinerary'],
+    queryFn: getItinerarioEnCurso,
+    enabled: !!user,
+  });
 
-  // Al montar, intenta cargar el itinerario en curso del usuario
-  useEffect(() => {
-    if (!user) {
-      setLoadingItinerario(false);
-      return;
-    }
-    setLoadingItinerario(true);
-    getItinerarioEnCurso().then((data) => {
-      setItinerarioActivo(data);
-      setLoadingItinerario(false);
+  // Prefecth inicial en background de la pestaña Explorar
+  React.useEffect(() => {
+    queryClient.prefetchQuery({
+      queryKey: ['exploreSearch', { provincia: undefined, categoria: undefined }],
+      queryFn: () => buscarPorPreferencias({ provincia: undefined, tags: undefined }),
     });
-  }, [user]);
+  }, []);
 
   const handlePreferenciasPress = () => {
     router.push("/(tabs)/inicioApp/preferencias");

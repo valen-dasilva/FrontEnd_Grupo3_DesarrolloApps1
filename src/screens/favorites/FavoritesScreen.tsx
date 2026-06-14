@@ -1,6 +1,6 @@
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import React, { useState, useCallback } from 'react';
-import { ScrollView, StatusBar, Text, View, ActivityIndicator } from 'react-native';
+import { FlatList, StatusBar, Text, View, ActivityIndicator, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { Header } from '@/components/common/Header/Header';
@@ -11,6 +11,7 @@ import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
 import { styles } from './FavoritesScreen.styles';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useFavoritosHook } from '@/hooks/useFavoritos';
+import { ItinerarioResumen } from '@/services/favoritosService';
 
 export default function FavoritosScreen() {
   const insets = useSafeAreaInsets();
@@ -37,9 +38,9 @@ export default function FavoritosScreen() {
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
-  const handleToggleFavorite = (id: number) => {
+  const handleToggleFavorite = useCallback((id: number) => {
     setConfirmDeleteId(id);
-  };
+  }, []);
 
   const confirmDelete = () => {
     if (confirmDeleteId !== null) {
@@ -48,11 +49,11 @@ export default function FavoritosScreen() {
     }
   };
 
-  const handleTogglePin = (id: number) => {
+  const handleTogglePin = useCallback((id: number) => {
     togglePin(id);
-  };
+  }, [togglePin]);
 
-  const handleToggleDownload = (id: number) => {
+  const handleToggleDownload = useCallback((id: number) => {
     const isDownloaded = downloadedIds.includes(id);
     const itinerary = listItinerarioResumen.find(i => i.id === id);
     if (!itinerary) return;
@@ -74,48 +75,21 @@ export default function FavoritosScreen() {
         });
       });
     }
-  };
+  }, [downloadedIds, listItinerarioResumen, downloadItinerary, removeDownload]);
 
-  const renderContent = () => {
+  const renderHeader = useCallback(() => (
+    <View style={styles.pageHeader}>
+      <Text style={[styles.pageTitle, { color: theme.text }]}>Mis Favoritos</Text>
+      <Text style={[styles.pageSubtitle, { color: theme.textSecondary }]}>
+        Tus itinerarios guardados para futuras aventuras.
+      </Text>
+    </View>
+  ), [theme]);
+
+  const renderEmptyComponent = () => {
     if (isLoading) {
       return <ActivityIndicator size="large" color={theme.text} style={{ marginTop: 50 }} />;
     }
-
-    if (listItinerarioResumen.length > 0) {
-      return (
-        <View style={styles.itinerariesContainer}>
-          {listItinerarioResumen.map(itinerary => (
-            <ItineraryCard
-              key={itinerary.id}
-              title={itinerary.titulo}
-              location={itinerary.provincia}
-              duration={`${itinerary.duracionDias} Días`}
-              imageUrl={itinerary.fotoPortada}
-              isOfflineAvailable={downloadedIds.includes(itinerary.id)}
-              isFavorite={true}
-              isPinned={itinerary.esPinned}
-              onPressDetail={() => router.push({
-                pathname: '/(tabs)/(favorite)/itinerarioInfoFav',
-                params: {
-                  id: String(itinerary.id),
-                  titulo: itinerary.titulo,
-                  provincia: itinerary.provincia,
-                  duracionDias: String(itinerary.duracionDias),
-                  fotoPortada: itinerary.fotoPortada,
-                  fechaInicio: itinerary.fechaInicio,
-                  fechaFin: itinerary.fechaFin,
-                  etiquetas: itinerary.etiquetas?.join(','),
-                }
-              })}
-              onFavoriteToggle={() => handleToggleFavorite(itinerary.id)}
-              onPinPress={() => handleTogglePin(itinerary.id)}
-              onDownloadPress={() => handleToggleDownload(itinerary.id)}
-            />
-          ))}
-        </View>
-      );
-    }
-
     return (
       <View style={styles.emptyStateContainer}>
         <EmptyState
@@ -128,6 +102,34 @@ export default function FavoritosScreen() {
     );
   };
 
+  const renderItem = useCallback(({ item: itinerary }: { item: ItinerarioResumen }) => (
+    <ItineraryCard
+      title={itinerary.titulo}
+      location={itinerary.provincia}
+      duration={`${itinerary.duracionDias} Días`}
+      imageUrl={itinerary.fotoPortada}
+      isOfflineAvailable={downloadedIds.includes(itinerary.id)}
+      isFavorite={true}
+      isPinned={itinerary.esPinned}
+      onPressDetail={() => router.push({
+        pathname: '/(tabs)/(favorite)/itinerarioInfoFav',
+        params: {
+          id: String(itinerary.id),
+          titulo: itinerary.titulo,
+          provincia: itinerary.provincia,
+          duracionDias: String(itinerary.duracionDias),
+          fotoPortada: itinerary.fotoPortada,
+          fechaInicio: itinerary.fechaInicio,
+          fechaFin: itinerary.fechaFin,
+          etiquetas: itinerary.etiquetas?.join(','),
+        }
+      })}
+      onFavoriteToggle={() => handleToggleFavorite(itinerary.id)}
+      onPinPress={() => handleTogglePin(itinerary.id)}
+      onDownloadPress={() => handleToggleDownload(itinerary.id)}
+    />
+  ), [downloadedIds, router, handleToggleFavorite, handleTogglePin, handleToggleDownload]);
+
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -139,20 +141,20 @@ export default function FavoritosScreen() {
           onThemeTogglePress={toggleColorScheme}
         />
 
-        <ScrollView
+        <FlatList
+          data={isLoading ? [] : listItinerarioResumen}
+          renderItem={renderItem}
+          keyExtractor={(item) => String(item.id)}
+          ListHeaderComponent={renderHeader}
+          ListEmptyComponent={renderEmptyComponent}
           style={[styles.scrollView, { backgroundColor: theme.background }]}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.pageHeader}>
-            <Text style={[styles.pageTitle, { color: theme.text }]}>Mis Favoritos</Text>
-            <Text style={[styles.pageSubtitle, { color: theme.textSecondary }]}>
-              Tus itinerarios guardados para futuras aventuras.
-            </Text>
-          </View>
-
-          {renderContent()}
-        </ScrollView>
+          initialNumToRender={5}
+          maxToRenderPerBatch={5}
+          windowSize={3}
+          removeClippedSubviews={Platform.OS === 'android'}
+        />
       </View>
 
       <ConfirmAlert
