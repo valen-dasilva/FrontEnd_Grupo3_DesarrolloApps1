@@ -7,6 +7,7 @@ import {
     getActiveItinerario,
     getItinerarioDetalles,
     getItinerarios,
+    patchPin,
     ItemItinerarioUsuario,
     ItinerarioResumen,
     ItinerarioUsuario,
@@ -83,6 +84,27 @@ export const useFavoritosHook = () => {
         }
     }
 
+    //fijar/desfijar un itinerario como activo (tachuela)
+    const togglePin = async (id: number) => {
+        try {
+            setIsMutating(true);
+            await patchPin(id);
+            // Replicamos la regla del backend en el estado local (sin recargar,
+            // para evitar el parpadeo del spinner): el tocado togglea su estado
+            // y el resto queda en false, porque solo puede haber uno fijado.
+            setListItinerarioResumen((prev) =>
+                prev.map((it) => ({
+                    ...it,
+                    esPinned: it.id === id ? !it.esPinned : false,
+                }))
+            );
+        } catch (err) {
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo fijar el itinerario.");
+        } finally {
+            setIsMutating(false);
+        }
+    }
+
     //obtener itinerario activo
     const getActive = async () => {
         try {
@@ -134,6 +156,7 @@ export const useFavoritosHook = () => {
         loadItinerarios,
         addItineraryToFavs,
         quitItineraryFromFavs,
+        togglePin,
         listItinerarioResumen,
         getActive,
         isLoading,

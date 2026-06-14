@@ -17,6 +17,7 @@ export interface ItinerarioResumen {
   fotoPortada: string;
   duracionDias: number;
   etiquetas: string[];
+  esPinned: boolean; // true si es el itinerario fijado como activo (tachuela)
 }
 
 
@@ -60,8 +61,9 @@ export const postItinerario = async (idItinerario: number): Promise<ItinerarioRe
       fotoPortada: data.fotoPortada,
       duracionDias: data.duracionDias,
       etiquetas: data.etiquetas,
+      esPinned: data.esPinned,
     };
-} 
+}
 
 //obtener todos los itinerarios de favoritos
 export const getItinerarios = async (): Promise<ItinerarioResumen[]> => {
@@ -77,6 +79,7 @@ export const getItinerarios = async (): Promise<ItinerarioResumen[]> => {
       fotoPortada: data.fotoPortada,
       duracionDias: data.duracionDias,
       etiquetas: data.etiquetas,
+      esPinned: data.esPinned,
     }));
 }
 
@@ -105,6 +108,11 @@ export const putItinerarioFechas = async (
 export const deleteItinerario = async (id: number): Promise<void> => {
     const response = await apiClient.delete<void>(`${FAVS_PATH}/${id}`);
     return response.data;
+}
+
+//fijar/desfijar un itinerario como el activo del Home (tachuela)
+export const patchPin = async (id: number): Promise<void> => {
+    await apiClient.patch<void>(`${FAVS_PATH}/${id}/pin`);
 }
 
 //------endpoints a items
