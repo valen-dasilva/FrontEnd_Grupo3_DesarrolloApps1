@@ -22,6 +22,7 @@ export default function FavoritosScreen() {
     listItinerarioResumen,
     isLoading,
     quitItineraryFromFavs,
+    togglePin,
     downloadedIds,
     downloadItinerary,
     removeDownload,
@@ -47,8 +48,8 @@ export default function FavoritosScreen() {
     }
   };
 
-  const handleTogglePin = (_id: number) => {
-    // por ahora no implementado
+  const handleTogglePin = (id: number) => {
+    togglePin(id);
   };
 
   const handleToggleDownload = (id: number) => {
@@ -92,7 +93,7 @@ export default function FavoritosScreen() {
               imageUrl={itinerary.fotoPortada}
               isOfflineAvailable={downloadedIds.includes(itinerary.id)}
               isFavorite={true}
-              isPinned={false}
+              isPinned={itinerary.esPinned}
               onPressDetail={() => router.push({
                 pathname: '/(tabs)/(favorite)/itinerarioInfoFav',
                 params: {
