@@ -6,14 +6,10 @@
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import AventuraIcon from '../../../assets/images/Icono-Aventura.svg';
-import CultureIcon from '../../../assets/images/Icono-Cultura.svg';
-import GastronomiaIcon from '../../../assets/images/Icono-Gastronomia.svg';
-import NaturalezaIcon from '../../../assets/images/Icono-Naturaleza.svg';
-
 import { useTheme } from '@/hooks/useColorScheme';
 import { CategoriaItinerario } from '@/types/itinerario';
 import { CategoriaCard } from './CategoriaCard';
+import { icons } from '@/constants/icons';
 
 // Mapeo de cada categoría a su ícono.
 const CATEGORIAS: { value: CategoriaItinerario; icon: (color: string) => React.ReactNode }[] = [

@@ -97,4 +97,29 @@ export const styles = StyleSheet.create({
     opacity: 0.9,
     transform: [{ scale: 0.98 }],
   },
+  daysContainer: {
+    flexDirection: 'row',
+    gap: paddings.spacing.sm,
+    paddingVertical: paddings.spacing.xs,
+  },
+  dayButton: {
+    paddingHorizontal: paddings.spacing.md + 2,
+    paddingVertical: paddings.spacing.sm,
+    borderRadius: paddings.radius.round,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 70,
+  },
+  dayButtonText: {
+    fontFamily: fonts.family.bodySemiBold,
+    fontSize: fonts.size.xs + 1,
+    fontWeight: fonts.weight.semibold,
+  },
+  errorText: {
+    fontFamily: fonts.family.bodyRegular,
+    fontSize: fonts.size.xs,
+    marginTop: paddings.spacing.xs,
+    paddingLeft: paddings.spacing.xs,
+  },
 });

@@ -47,3 +47,25 @@ export function formatDateRange(startStr?: string, endStr?: string): string {
   }
   return `${start.day} de ${startMonthStr} al ${end.day} de ${endMonthStr} ${start.year}`;
 }
+
+/**
+ * Convierte un string de hora (ej. "09:00:00", "9:0", "9:00") al formato fijo: "09:00".
+ * Si el formato es totalmente inválido o vacío, retorna el string original.
+ */
+export function formatHora(timeStr: string): string {
+  if (!timeStr) return '';
+  const parts = timeStr.trim().split(':');
+  if (parts.length === 0) return timeStr;
+
+  let hour = Number.parseInt(parts[0], 10);
+  let minute = parts[1] ? Number.parseInt(parts[1], 10) : 0;
+
+  if (Number.isNaN(hour)) return timeStr;
+  if (Number.isNaN(minute)) minute = 0;
+
+  const paddedHour = hour.toString().padStart(2, '0');
+  const paddedMinute = minute.toString().padStart(2, '0');
+
+  return `${paddedHour}:${paddedMinute}`;
+}
+

@@ -23,6 +23,7 @@ export default function EditActivityFormularyScreen() {
     title: string;
     description: string;
     location: string;
+    duracionDias?: string;
   }>();
 
   const { editItem, newItem } = useFavoritosDetailsHook();
@@ -32,6 +33,7 @@ export default function EditActivityFormularyScreen() {
     description: params.description || '',
     time: params.time || '',
     location: params.location || '',
+    day: Number(params.day || '1'),
   };
 
   const handleSave = async (updatedValues: typeof initialValues) => {
@@ -40,7 +42,7 @@ export default function EditActivityFormularyScreen() {
         descripcion: updatedValues.description,
         localidad: updatedValues.location,
         direccion: updatedValues.location,
-        dia: Number(params.day || '1'),
+        dia: updatedValues.day,
         hora: updatedValues.time,
     };
 
@@ -72,6 +74,7 @@ export default function EditActivityFormularyScreen() {
       >
         <EditActivityFormulary
           initialValues={initialValues}
+          duracionDias={Number(params.duracionDias || '1')}
           onSave={handleSave}
           onCancel={() => router.back()}
         />

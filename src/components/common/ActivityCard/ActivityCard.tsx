@@ -6,6 +6,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/hooks/useColorScheme';
+import { formatHora } from '@/utils/dateUtils';
 
 type Props = {
   time: string;
@@ -20,7 +21,7 @@ export function ActivityCard({ time, title, subtitle, location, isLast = false }
 
   return (
     <View style={[styles.activityItem, isLast && styles.activityItemLast]}>
-      <Text style={[styles.activityTime, { color: theme.primary }]}>{time}</Text>
+      <Text style={[styles.activityTime, { color: theme.primary }]}>{formatHora(time)}</Text>
       <Text style={[styles.activityTitle, { color: theme.text }]}>{title}</Text>
       <Text style={[styles.activitySubtitle, { color: theme.textSecondary }]}>{subtitle}</Text>
       <View style={styles.locationRow}>

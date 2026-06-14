@@ -5,6 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import { icons } from '@/constants/icons';
 import { styles } from './EditableActivityCard.styles';
 import { useTheme } from '@/hooks/useColorScheme';
+import { formatHora } from '@/utils/dateUtils';
 
 export interface EditableActivityCardProps {
   /** The time of the activity (e.g., '09:00') */
@@ -33,7 +34,7 @@ export const EditableActivityCard: React.FC<EditableActivityCardProps> = ({
 
   return (
     <View style={[styles.cardContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-      <Text style={[styles.timeText, { color: theme.primary }]}>{time}</Text>
+      <Text style={[styles.timeText, { color: theme.primary }]}>{formatHora(time)}</Text>
 
       <View style={styles.bottomInfoRow}>
         <View style={styles.detailsColumn}>

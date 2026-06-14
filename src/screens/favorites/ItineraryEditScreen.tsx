@@ -1,7 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
-import { Alert, ScrollView, StatusBar, Text, View, ActivityIndicator } from 'react-native';
+import { ScrollView, StatusBar, Text, View, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '@/components/common/Header/Header';
 import { EditableActivityCard } from '@/components/favorites/itinerary_edit/EditableActivityCard/EditableActivityCard';
@@ -13,6 +13,7 @@ import { styles } from './ItineraryEditScreen.styles';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useFavoritosDetailsHook } from '@/hooks/useFavoritos';
 import { ItemItinerarioUsuario } from '@/services/favoritosService';
+import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
 
 type DaySectionProps = Readonly<{
   dayNum: number;
@@ -71,6 +72,7 @@ export default function EdicionItinerarioScreen() {
 
   const activities = itineraryDetails?.items || [];
   const [title, setTitle] = useState(itineraryDetails?.titulo || 'Cargando...');
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; title: string } | null>(null);
 
   React.useEffect(() => {
       if (itineraryDetails) {
@@ -89,22 +91,13 @@ export default function EdicionItinerarioScreen() {
         title: activity.nombreActividad,
         description: activity.descripcion,
         location: activity.direccion || activity.localidad,
+        duracionDias: String(itineraryDetails?.duracionDias || 1),
       },
     });
   };
 
   const handleDeleteActivity = (idItem: number, activityTitle: string) => {
-    const doDelete = () => {
-        quitItem(Number(id), idItem);
-    };
-    Alert.alert(
-      'Eliminar Actividad',
-      `¿Estás seguro de que deseas eliminar la actividad "${activityTitle}"?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Eliminar', style: 'destructive', onPress: doDelete },
-      ]
-    );
+    setDeleteTarget({ id: idItem, title: activityTitle });
   };
 
   const handleAddActivity = (dayNum: number) => {
@@ -117,6 +110,7 @@ export default function EdicionItinerarioScreen() {
         title: '',
         description: '',
         location: '',
+        duracionDias: String(itineraryDetails?.duracionDias || 1),
       },
     });
   };
@@ -181,6 +175,20 @@ export default function EdicionItinerarioScreen() {
             </>
         )}
       </ScrollView>
+
+      <ConfirmAlert
+        visible={deleteTarget !== null}
+        title="Eliminar Actividad"
+        message={`¿Estás seguro de que deseas eliminar la actividad "${deleteTarget?.title}"?`}
+        confirmText="Eliminar"
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={async () => {
+          if (deleteTarget) {
+            await quitItem(Number(id), deleteTarget.id);
+            setDeleteTarget(null);
+          }
+        }}
+      />
     </View>
   );
 }
