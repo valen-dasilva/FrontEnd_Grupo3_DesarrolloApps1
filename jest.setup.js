@@ -62,3 +62,22 @@ jest.mock('@expo/vector-icons/MaterialIcons', () => {
   Component.displayName = 'MaterialIcons';
   return Component;
 });
+
+// Mock the main @expo/vector-icons package
+jest.mock('@expo/vector-icons', () => {
+  const React = require('react');
+
+  const createMockIcon = (name) => {
+    const Component = React.forwardRef((props, ref) => {
+      return React.createElement(name, { ...props, ref }, props.children);
+    });
+    Component.displayName = name;
+    return Component;
+  };
+
+  return {
+    Ionicons: createMockIcon('Ionicons'),
+    MaterialCommunityIcons: createMockIcon('MaterialCommunityIcons'),
+    MaterialIcons: createMockIcon('MaterialIcons'),
+  };
+});
