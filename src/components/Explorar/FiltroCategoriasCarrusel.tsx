@@ -13,6 +13,8 @@ const CATEGORIES = [
   { id: 2, enumValue: CategoriaItinerario.GASTRONOMIA, name: "Gastronomia", image: <MaterialIcons name={icons.Restaurant} size={fonts.size.xxl} color={colors.orange || colors.warning} /> },
   { id: 3, enumValue: CategoriaItinerario.CULTURA, name: "Cultura", image: <MaterialIcons name={icons.Museum} size={fonts.size.xxl} color={colors.primary} /> },
   { id: 4, enumValue: CategoriaItinerario.AVENTURA, name: "Aventura", image: <MaterialIcons name={icons.Hiking} size={fonts.size.xxl} color={colors.brownlight} /> },
+  { id: 5, enumValue: CategoriaItinerario.NOCHE, name: "Noche", image: <MaterialIcons name={icons.Nightlife} size={fonts.size.xxl} color={colors.gray} /> },
+  { id: 6, enumValue: CategoriaItinerario.COMPRA, name: "Compra", image: <MaterialIcons name={icons.ShoppingBag} size={fonts.size.xxl} color={colors.orange} /> },
 ];
 
 interface CategoriesCarouselProps {
@@ -31,16 +33,16 @@ export function CategoriesCarousel({ selectedCategory, onCategorySelect }: Categ
         {CATEGORIES.map((category) => {
           const isSelected = selectedCategory === category.enumValue;
           return (
-            <TouchableOpacity 
-              key={category.id} 
+            <TouchableOpacity
+              key={category.id}
               onPress={() => {
                 onCategorySelect(isSelected ? undefined : category.enumValue);
               }}
               style={[
-                styles.card, 
-                { 
-                  backgroundColor: isSelected ? theme.primary + '1A' : theme.surface, 
-                  borderColor: isSelected ? theme.primary : theme.border 
+                styles.card,
+                {
+                  backgroundColor: isSelected ? theme.primary + '1A' : theme.surface,
+                  borderColor: isSelected ? theme.primary : theme.border
                 }
               ]}
             >

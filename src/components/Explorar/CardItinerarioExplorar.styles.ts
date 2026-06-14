@@ -59,6 +59,8 @@ export const styles = StyleSheet.create({
     color: colors.light.text,
     fontSize: fonts.size.lg,
     fontFamily: fonts.family.headingBold,
+    flex: 1,
+    marginRight: paddings.spacing.sm,
   },
   ratingBadge: {
     flexDirection: 'row',
