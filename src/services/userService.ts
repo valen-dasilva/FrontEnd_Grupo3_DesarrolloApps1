@@ -11,6 +11,7 @@ export interface UserProfile {
 export interface UpdatePerfilRequest {
   nombre: string;
   apellido: string;
+  email: string;
   fotoPerfil?: string;
 }
 

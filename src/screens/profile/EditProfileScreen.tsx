@@ -11,11 +11,11 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Image,
   Alert,
   ActivityIndicator,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 
 export default function EditarUsuarioScreen() {
   const router = useRouter();
@@ -66,6 +66,7 @@ export default function EditarUsuarioScreen() {
       const updatedProfile = await updateUserProfile(user!.idUsuario, {
         nombre: nombre.trim(),
         apellido: apellido.trim(),
+        email: correo,
         fotoPerfil: fotoPerfil,
       });
 
@@ -85,6 +86,22 @@ export default function EditarUsuarioScreen() {
     }
   };
 
+  const getInitials = (n: string, a: string) => {
+    // Si tenemos ambos, usamos la primera letra de cada uno
+    if (n.trim() && a.trim()) {
+      return (n.trim()[0] + a.trim()[0]).toUpperCase();
+    }
+    // Si solo hay nombre, tratamos de dividir por espacios como en ProfileScreen
+    if (n.trim()) {
+      const parts = n.trim().split(/\s+/);
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+      }
+      return parts[0].substring(0, 2).toUpperCase();
+    }
+    return 'U';
+  };
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -93,10 +110,15 @@ export default function EditarUsuarioScreen() {
           style={[styles.avatarCircle, { backgroundColor: theme.avatarBg, overflow: "hidden" }]}
         >
           {fotoPerfil ? (
-            <Image source={{ uri: fotoPerfil }} style={styles.avatarImage} />
+            <Image 
+              source={{ uri: fotoPerfil }} 
+              style={styles.avatarImage} 
+              cachePolicy="memory-disk"
+              transition={200}
+            />
           ) : (
             <Text style={[styles.avatarInitials, { color: theme.primary }]}>
-              {nombre ? (nombre[0] + (apellido ? apellido[0] : "")).toUpperCase() : "U"}
+              {getInitials(nombre, apellido)}
             </Text>
           )}
         </View>

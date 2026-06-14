@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '@/components/common/Header/Header';
@@ -42,13 +43,29 @@ export default function PerfilScreen() {
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.5,
+      quality: 0.5, // Optimizes and limits the file size
     });
 
     if (!result.canceled && result.assets && result.assets[0].uri) {
-      const pickedUri = result.assets[0].uri;
+      const asset = result.assets[0];
+      const pickedUri = asset.uri;
+
+      // Limitar peso de la imagen a ~3MB por eficiencia, aunque con quality: 0.5 ya debería ser ligera
+      if (asset.fileSize && asset.fileSize > 3 * 1024 * 1024) {
+        Alert.alert('Imagen muy pesada', 'Por favor selecciona una imagen de menor tamaño (máximo 3MB).');
+        return;
+      }
+
+      // Limitar a JPG/JPEG. En Expo quality < 1 frecuentemente devuelve JPEG
+      const isJpg = pickedUri.toLowerCase().endsWith('.jpg') || pickedUri.toLowerCase().endsWith('.jpeg') || (asset.mimeType && asset.mimeType.includes('jpeg'));
+      if (!isJpg) {
+        // Mostramos un aviso pero procedemos, ya que el mimeType a veces no se detecta correctamente en el simulador
+        console.log("Aviso: El formato podría no ser JPG puro, pero intentaremos subirlo optimizado.");
+      }
+
       try {
         setLoadingImage(true);
+        // El uploadProfilePicture va a generar una URL única con Date.now() en supabase
         const uploadedUrl = await uploadProfilePicture(user.idUsuario, pickedUri);
         
         // Fetch full profile from backend to ensure we have name and surname
@@ -58,17 +75,19 @@ export default function PerfilScreen() {
         await updateUserProfile(user.idUsuario, {
           nombre: profile.nombre,
           apellido: profile.apellido || '',
+          email: profile.email,
           fotoPerfil: uploadedUrl,
         });
 
-        // Update the global authentication state
+        // Update the global authentication state.
+        // Como la URL es distinta por el Date.now(), Image de expo-image se recargará automáticamente.
         await updateUser({
           fotoPerfil: uploadedUrl,
         });
 
       } catch (err: any) {
         console.error('Error al subir imagen de perfil:', err);
-        Alert.alert('Error', 'No se pudo subir la imagen de perfil.');
+        Alert.alert('Error', 'No se pudo subir la imagen de perfil. Verifica tu conexión.');
       } finally {
         setLoadingImage(false);
       }
@@ -90,7 +109,12 @@ export default function PerfilScreen() {
             {loadingImage ? (
               <ActivityIndicator size="small" color={theme.primary} />
             ) : user?.fotoPerfil ? (
-              <Image source={{ uri: user.fotoPerfil }} style={styles.avatarImage} />
+              <Image 
+                source={{ uri: user.fotoPerfil }} 
+                style={styles.avatarImage} 
+                cachePolicy="memory-disk"
+                transition={200}
+              />
             ) : (
               <Text style={[styles.avatarInitials, { color: theme.primary }]}>
                 {user ? getInitials(user.nombre) : 'U'}
