@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { icons } from '@/constants/icons';
 import { styles } from './Header.styles';
 import { useTheme } from '@/hooks/useColorScheme';
+import { useAuth } from '@/context/AuthContext';
 
 export interface HeaderProps {
   /** The main title displayed on the left side of the header */
@@ -32,11 +33,23 @@ export const Header: React.FC<HeaderProps> = ({
   showBackButton = false,
 }) => {
   const router = useRouter();
+  const { user } = useAuth();
   const { colorScheme, theme, toggleColorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
 
   const handleThemeToggle = onThemeTogglePress || toggleColorScheme;
   const handleAvatarPress = onAvatarPress || (() => router.push('/(tabs)/perfil'));
+
+  const getInitials = (name?: string) => {
+    if (!name) return 'U';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return parts[0].substring(0, 2).toUpperCase();
+  };
+
+  const activeAvatarUrl = userAvatarUrl || user?.fotoPerfil;
 
   return (
     <View style={[
@@ -100,10 +113,18 @@ export const Header: React.FC<HeaderProps> = ({
           accessibilityRole="button"
           accessibilityLabel="User Profile"
         >
-          <Image 
-            source={{ uri: userAvatarUrl || 'https://i.pravatar.cc/150' }} 
-            style={[styles.avatarImage, { backgroundColor: theme.borderDark }]} 
-          />
+          {activeAvatarUrl ? (
+            <Image 
+              source={{ uri: activeAvatarUrl }} 
+              style={[styles.avatarImage, { backgroundColor: theme.borderDark }]} 
+            />
+          ) : (
+            <View style={[styles.avatarImage, { backgroundColor: theme.avatarBg || theme.borderDark, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }]}>
+              <Text style={{ color: theme.primary, fontWeight: '700', fontSize: 16 }}>
+                {user ? getInitials(user.nombre) : 'U'}
+              </Text>
+            </View>
+          )}
         </Pressable>
       </View>
     </View>
