@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/hooks/useColorScheme';
@@ -27,22 +27,29 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
     <LinearGradient colors={[theme.gradientStart, theme.gradientEnd]} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
         >
-          <View style={styles.topSection}>
-            <HeaderLogo
-              title="TuristeAR"
-              subtitle={headerSubtitle}
-            />
-          </View>
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            bounces={false}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.topSection}>
+              <HeaderLogo
+                title="TuristeAR"
+                subtitle={headerSubtitle}
+              />
+            </View>
 
-          <BottomSheet>
-            {(sheetTitle || sheetSubtitle) && (
-              <SheetHeader title={sheetTitle} subtitle={sheetSubtitle} />
-            )}
-            {children}
-          </BottomSheet>
+            <BottomSheet>
+              {(sheetTitle || sheetSubtitle) && (
+                <SheetHeader title={sheetTitle} subtitle={sheetSubtitle} />
+              )}
+              {children}
+            </BottomSheet>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
@@ -58,6 +65,9 @@ const styles = StyleSheet.create({
   },
   keyboardView: {
     flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
   },
   topSection: {
     flex: 1,

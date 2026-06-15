@@ -16,6 +16,8 @@ import {
   TouchableOpacity,
   View,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 
 const COLORS = {
@@ -71,7 +73,11 @@ export default function CambiarContrasenaScreen() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
         <View style={[styles.lockCircle, isDark && { backgroundColor: '#2A303D' }]}>
           <MaterialIcons name={icons.Lock} size={26} color={theme.primary} />
@@ -127,7 +133,8 @@ export default function CambiarContrasenaScreen() {
         >
           <Text style={styles.dangerBtnText}>Cancelar</Text>
         </TouchableOpacity>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
