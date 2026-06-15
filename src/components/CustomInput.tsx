@@ -7,12 +7,26 @@ import { icons } from '@/constants/icons';
 interface CustomInputProps extends TextInputProps {
   iconName?: keyof typeof Ionicons.glyphMap;
   label?: string;
+  showEyeButton?: boolean;
+  onEyePress?: () => void;
 }
 
-export const CustomInput: React.FC<CustomInputProps> = ({ iconName, label, style, onFocus, onBlur, secureTextEntry, ...props }) => {
+export const CustomInput: React.FC<CustomInputProps> = ({ 
+  iconName, 
+  label, 
+  style, 
+  onFocus, 
+  onBlur, 
+  secureTextEntry, 
+  showEyeButton = true,
+  onEyePress,
+  ...props 
+}) => {
   const { theme } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
-  const [isSecure, setIsSecure] = useState(secureTextEntry);
+  const [isSecureInternal, setIsSecureInternal] = useState(secureTextEntry);
+
+  const isSecure = onEyePress ? secureTextEntry : isSecureInternal;
 
   const handleFocus = (e: any) => {
     setIsFocused(true);
@@ -25,7 +39,11 @@ export const CustomInput: React.FC<CustomInputProps> = ({ iconName, label, style
   };
 
   const toggleSecureEntry = () => {
-    setIsSecure(!isSecure);
+    if (onEyePress) {
+      onEyePress();
+    } else {
+      setIsSecureInternal(!isSecureInternal);
+    }
   };
 
   return (
@@ -48,7 +66,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({ iconName, label, style
           style={[
             styles.input, 
             iconName ? styles.inputWithIcon : undefined, 
-            secureTextEntry !== undefined ? styles.inputWithRightButton : undefined,
+            (secureTextEntry !== undefined && showEyeButton) ? styles.inputWithRightButton : undefined,
             { color: theme.text }, 
             props.multiline && { textAlignVertical: 'top', paddingVertical: 12 },
             style
@@ -60,7 +78,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({ iconName, label, style
           underlineColorAndroid="transparent"
           {...props}
         />
-        {secureTextEntry !== undefined && (
+        {secureTextEntry !== undefined && showEyeButton && (
           <Pressable onPress={toggleSecureEntry} style={styles.eyeButton} accessibilityRole="button" accessibilityLabel={isSecure ? "Mostrar contraseña" : "Ocultar contraseña"}>
             <MaterialIcons
               name={isSecure ? (icons.VisibilityOff as any) : (icons.Visibility as any)}

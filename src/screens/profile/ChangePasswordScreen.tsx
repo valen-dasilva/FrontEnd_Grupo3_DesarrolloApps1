@@ -37,6 +37,7 @@ export default function CambiarContrasenaScreen() {
   const [nueva, setNueva] = useState('');
   const [confirmar, setConfirmar] = useState('');
   const [loading, setLoading] = useState(false);
+  const [hideNewPassword, setHideNewPassword] = useState(true);
 
   const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === 'dark';
@@ -92,7 +93,8 @@ export default function CambiarContrasenaScreen() {
 
         <CustomInput
           label="Nueva contraseña"
-          secureTextEntry
+          secureTextEntry={hideNewPassword}
+          onEyePress={() => setHideNewPassword(!hideNewPassword)}
           placeholder="••••••••"
           value={nueva}
           onChangeText={setNueva}
@@ -100,7 +102,9 @@ export default function CambiarContrasenaScreen() {
 
         <CustomInput
           label="Confirmar nueva contraseña"
-          secureTextEntry
+          secureTextEntry={hideNewPassword}
+          showEyeButton={false}
+          onEyePress={() => setHideNewPassword(!hideNewPassword)}
           placeholder="••••••••"
           value={confirmar}
           onChangeText={setConfirmar}

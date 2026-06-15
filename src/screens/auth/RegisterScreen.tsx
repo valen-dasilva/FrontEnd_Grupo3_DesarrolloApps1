@@ -20,6 +20,7 @@ export const RegisterScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [hidePassword, setHidePassword] = useState(true);
 
   const handleRegister = async () => {
     if (!name || !lastName || !email || !password || !confirmPassword) {
@@ -116,7 +117,8 @@ export const RegisterScreen: React.FC = () => {
       <CustomInput
         iconName="key-outline"
         placeholder="Contraseña"
-        secureTextEntry
+        secureTextEntry={hidePassword}
+        onEyePress={() => setHidePassword(!hidePassword)}
         value={password}
         onChangeText={setPassword}
       />
@@ -124,7 +126,9 @@ export const RegisterScreen: React.FC = () => {
       <CustomInput
         iconName="key-outline"
         placeholder="Confirmar contraseña"
-        secureTextEntry
+        secureTextEntry={hidePassword}
+        showEyeButton={false}
+        onEyePress={() => setHidePassword(!hidePassword)}
         value={confirmPassword}
         onChangeText={setConfirmPassword}
       />
