@@ -76,6 +76,7 @@ export default function RecomendacionesScreen() {
               title={item.titulo}
               description={item.descripcion}
               category={item.etiquetas?.length > 0 ? CATEGORIA_LABEL[item.etiquetas[0]] : 'General'}
+              categories={item.etiquetas}
               image={item.fotoPortada}
               rating={item.likes.toString()}
               duration={`${item.duracionDias} ${item.duracionDias === 1 ? 'día' : 'días'}`}

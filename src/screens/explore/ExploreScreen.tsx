@@ -114,6 +114,7 @@ export default function ExploreScreen() {
             ? CATEGORIA_LABEL[item.etiquetas[0]]
             : 'General'
         }
+        categories={item.etiquetas}
         image={item.fotoPortada}
         rating={item.likes.toString()}
         duration={durationText}

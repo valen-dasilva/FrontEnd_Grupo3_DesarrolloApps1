@@ -6,7 +6,7 @@ import { useTheme } from "@/hooks/useColorScheme";
 import { useAuth } from "@/context/AuthContext";
 import { getItinerarioEnCurso, buscarPorPreferencias } from "@/services/itinerarioService";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/services/queryClient";
@@ -27,13 +27,21 @@ export default function HomeScreen() {
   const isDark = colorScheme === "dark";
   const { user } = useAuth();
 
-  const { data: itinerarioActivo = null, isLoading: loadingItinerario } = useQuery({
+  const { data: itinerarioActivo = null, isLoading: loadingItinerario, refetch: refetchActiveItinerary } = useQuery({
     queryKey: ['activeItinerary'],
     queryFn: async () => {
       return getItinerarioEnCurso();
     },
     enabled: !!user,
   });
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user) {
+        refetchActiveItinerary();
+      }
+    }, [user, refetchActiveItinerary])
+  );
 
   // Prefecth inicial en background de la pestaña Explorar
   React.useEffect(() => {

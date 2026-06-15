@@ -19,6 +19,7 @@ import {
     UpdateDatesRequest
 } from '@/services/favoritosService';
 import { ItinerarioEnCursoDTO, Provincia, CategoriaItinerario } from '@/types/itinerario';
+import { getItinerarioEnCurso } from '@/services/itinerarioService';
 import {
     getDownloadedIds,
     getOfflineItinerariesList,
@@ -54,14 +55,7 @@ export const useFavoritosHook = () => {
     const { data: activeItinerary = null } = useQuery({
         queryKey: ['activeItinerary'],
         queryFn: async () => {
-            try {
-                return await getActiveItinerario();
-            } catch (err) {
-                if (err instanceof ApiError && err.status === 404) {
-                    return null;
-                }
-                throw err;
-            }
+            return getItinerarioEnCurso();
         },
     });
 
@@ -92,6 +86,7 @@ export const useFavoritosHook = () => {
         mutationFn: deleteItinerario,
         onSuccess: (data, idItinerario) => {
             queryClient.invalidateQueries({ queryKey: ['favorites'] });
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
             // Cleanup offline download if it exists
             removeItineraryOffline(idItinerario).catch(console.error);
             queryClient.invalidateQueries({ queryKey: ['downloadedIds'] });
@@ -271,6 +266,7 @@ export const useFavoritosDetailsHook = () => {
         onSuccess: (updatedItinerary, variables) => {
             queryClient.setQueryData(['itineraryDetails', variables.idItinerary], updatedItinerary);
             queryClient.invalidateQueries({ queryKey: ['favorites'] });
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
         },
         onError: (err) => {
             Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo modificar las fechas.");
@@ -294,6 +290,7 @@ export const useFavoritosDetailsHook = () => {
                 };
             });
             queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
         },
         onError: (err) => {
             Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo crear la actividad");
@@ -317,6 +314,7 @@ export const useFavoritosDetailsHook = () => {
                 };
             });
             queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
         },
         onError: (err) => {
             Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo modificar la actividad");
@@ -340,6 +338,7 @@ export const useFavoritosDetailsHook = () => {
                 };
             });
             queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
         },
         onError: (err) => {
             Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo eliminar la actividad");

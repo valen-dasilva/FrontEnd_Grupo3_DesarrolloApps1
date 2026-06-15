@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { fonts } from '@/constants/fonts';
 import { icons } from '@/constants/icons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -9,12 +9,14 @@ import { styles } from './CardItinerarioExplorar.styles';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
 import { FavoriteButton } from '../common/FavoriteButton/FavoriteButton';
 import { CategoryBadge } from '../common/CategoryBadge/CategoryBadge';
+import { CATEGORIA_LABEL } from '@/types/itinerario';
 
 type Props = {
   idItinerario: number;
   title: string;
   description: string;
   category: string;
+  categories?: string[];
   image: string;
   rating?: string;
   duration?: string;
@@ -29,6 +31,7 @@ export function ExploreItineraryCard({
   title,
   description,
   category,
+  categories,
   image,
   rating = "0",
   duration,
@@ -88,11 +91,32 @@ export function ExploreItineraryCard({
           ]}
         />
 
-        {/* Category */}
-        <CategoryBadge
-          category={category}
-          style={styles.categoryBadge}
-        />
+        {/* Category Badge or Carousel */}
+        {categories && categories.length > 0 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.categoriesCarousel}
+            contentContainerStyle={styles.categoriesCarouselContent}
+            pointerEvents="box-none"
+          >
+            {categories.map((catId) => {
+              const label = CATEGORIA_LABEL[catId as any] || catId;
+              return (
+                <CategoryBadge
+                  key={catId}
+                  category={label}
+                  style={styles.carouselCategoryBadge}
+                />
+              );
+            })}
+          </ScrollView>
+        ) : (
+          <CategoryBadge
+            category={category}
+            style={styles.categoryBadge}
+          />
+        )}
       </View>
 
       {/* Content */}

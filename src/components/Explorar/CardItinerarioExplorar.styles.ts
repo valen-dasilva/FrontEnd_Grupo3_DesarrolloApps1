@@ -93,4 +93,19 @@ export const styles = StyleSheet.create({
     fontSize: fonts.size.sm,
     fontFamily: fonts.family.bodyRegular,
   },
+  categoriesCarousel: {
+    position: 'absolute',
+    bottom: paddings.spacing.md,
+    left: paddings.spacing.md,
+    right: paddings.spacing.md,
+    flexDirection: 'row',
+  },
+  categoriesCarouselContent: {
+    gap: paddings.spacing.xs,
+  },
+  carouselCategoryBadge: {
+    position: 'relative',
+    bottom: undefined,
+    left: undefined,
+  },
 });

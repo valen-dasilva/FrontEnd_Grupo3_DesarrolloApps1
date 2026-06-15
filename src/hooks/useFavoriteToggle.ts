@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { postItinerario, deleteItinerario } from '@/services/favoritosService';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useFavoriteToggle(
   idItinerario: number | undefined,
   initialIsFavorite: boolean,
   initialFavId: number | undefined
 ) {
+  const queryClient = useQueryClient();
   const [isFav, setIsFav] = useState(initialIsFavorite);
   const [favId, setFavId] = useState<number | undefined>(initialFavId);
 
@@ -36,6 +38,9 @@ export function useFavoriteToggle(
           console.warn("Cannot delete favorite: favId is undefined");
         }
       }
+      // Invalidate query caches to sync state across screens
+      queryClient.invalidateQueries({ queryKey: ['favorites'] });
+      queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
     } catch (error) {
       setIsFav(!nextFav);
       console.error("Error toggling favorite:", error);

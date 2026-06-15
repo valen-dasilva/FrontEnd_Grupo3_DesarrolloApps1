@@ -6,13 +6,13 @@ import { changePassword } from '@/services/userService';
 import { MaterialIcons } from '@expo/vector-icons';
 import { icons } from '@/constants/icons';
 import { validatePasswordChange } from './passwordValidation';
+import { CustomInput } from '@/components/CustomInput';
 
 import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
   Alert,
@@ -82,44 +82,26 @@ export default function CambiarContrasenaScreen() {
           cuenta. Asegúrate de que sea única y difícil de adivinar.
         </Text>
 
-        <Text style={[styles.label, { color: theme.text }]}>Contraseña actual</Text>
-        <TextInput
-          style={[styles.input, {
-            backgroundColor: theme.surface,
-            borderColor: theme.border,
-            color: theme.text
-          }]}
+        <CustomInput
+          label="Contraseña actual"
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor={theme.textSecondary}
           value={actual}
           onChangeText={setActual}
         />
 
-        <Text style={[styles.label, { color: theme.text }]}>Nueva contraseña</Text>
-        <TextInput
-          style={[styles.input, {
-            backgroundColor: theme.surface,
-            borderColor: theme.border,
-            color: theme.text
-          }]}
+        <CustomInput
+          label="Nueva contraseña"
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor={theme.textSecondary}
           value={nueva}
           onChangeText={setNueva}
         />
 
-        <Text style={[styles.label, { color: theme.text }]}>Confirmar nueva contraseña</Text>
-        <TextInput
-          style={[styles.input, {
-            backgroundColor: theme.surface,
-            borderColor: theme.border,
-            color: theme.text
-          }]}
+        <CustomInput
+          label="Confirmar nueva contraseña"
           secureTextEntry
           placeholder="••••••••"
-          placeholderTextColor={theme.textSecondary}
           value={confirmar}
           onChangeText={setConfirmar}
         />
