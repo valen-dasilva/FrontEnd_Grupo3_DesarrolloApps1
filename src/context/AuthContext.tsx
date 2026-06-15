@@ -17,6 +17,7 @@ import type {
 } from '@/services/authService';
 import * as authService from '@/services/authService';
 import * as storage from '@/services/storage';
+import { getUserProfile } from '@/services/userService';
 
 // Forma del usuario que exponemos al resto de la app. Es un subconjunto de
 // AuthResponse: solo los datos que las pantallas necesitan mostrar (sin el token).
@@ -24,6 +25,7 @@ export interface AuthUser {
   idUsuario: number;
   nombre: string;
   email: string;
+  fotoPerfil?: string;
 }
 
 // Contrato del contexto: todo lo que cualquier componente puede leer o pedirle
@@ -35,6 +37,7 @@ interface AuthContextValue {
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (updatedFields: Partial<AuthUser>) => Promise<void>;
 }
 
 // createContext arranca en undefined a propósito: si algún componente usa el
@@ -43,10 +46,11 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 // Convierte la respuesta del backend (que incluye el token) en el AuthUser
 // "limpio" que guardamos en estado. Descarta el token y cualquier campo extra.
-const toUser = ({ idUsuario, nombre, email }: AuthResponse): AuthUser => ({
+const toUser = ({ idUsuario, nombre, email, fotoPerfil }: AuthResponse): AuthUser => ({
   idUsuario,
   nombre,
   email,
+  fotoPerfil,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -76,6 +80,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setAuthToken(storedToken);
           setToken(storedToken);
           setUser(storedUser);
+
+          // Hidratamos el perfil desde el backend para asegurar que campos como
+          // fotoPerfil estén actualizados (AsyncStorage puede tener datos viejos
+          // de una versión anterior que no los incluía).
+          if (storedUser?.idUsuario) {
+            getUserProfile(storedUser.idUsuario)
+              .then((profile) => {
+                const freshUser: AuthUser = {
+                  idUsuario: profile.idUsuario,
+                  nombre: profile.nombre,
+                  email: profile.email,
+                  fotoPerfil: profile.fotoPerfil,
+                };
+                setUser(freshUser);
+                storage.saveUser(freshUser).catch(console.error);
+              })
+              .catch(console.error); // Si falla, usamos los datos del storage
+          }
         } else if (storedToken) {
           // Había token pero está vencido: limpiamos para no dejar basura.
           await storage.clearSession();
@@ -132,6 +154,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await storage.clearSession();
   }, []);
 
+  // updateUser actualiza el usuario en estado y en AsyncStorage sin cerrar sesión
+  const updateUser = useCallback(
+    async (updatedFields: Partial<AuthUser>) => {
+      setUser((current) => {
+        if (!current) return null;
+        const nextUser = { ...current, ...updatedFields };
+        storage.saveUser(nextUser).catch(console.error);
+        return nextUser;
+      });
+    },
+    [],
+  );
+
   // Le inyectamos logout al módulo api para romper la dependencia circular:
   // api.ts no puede importar este contexto, así que recibe la función por acá.
   useEffect(() => {
@@ -140,7 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, token, isLoading, login, register, logout }}
+      value={{ user, token, isLoading, login, register, logout, updateUser }}
     >
       {children}
     </AuthContext.Provider>

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { Image } from 'expo-image';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '@/components/common/Header/Header';
@@ -11,6 +10,7 @@ import { uploadProfilePicture, getUserProfile, updateUserProfile } from '@/servi
 import { CustomButton } from '@/components/CustomButton';
 import { MaterialIcons } from '@expo/vector-icons';
 import { icons } from '@/constants/icons';
+import { UserAvatar } from '@/components/common/UserAvatar/UserAvatar';
 
 export default function PerfilScreen() {
   const router = useRouter();
@@ -20,14 +20,7 @@ export default function PerfilScreen() {
   
   const [loadingImage, setLoadingImage] = useState(false);
 
-  const getInitials = (name?: string) => {
-    if (!name) return 'U';
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return parts[0].substring(0, 2).toUpperCase();
-  };
+
 
   const handlePickImage = async () => {
     if (!user) return;
@@ -103,25 +96,17 @@ export default function PerfilScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={[styles.avatarCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <TouchableOpacity 
-            style={[styles.avatarCircle, { backgroundColor: theme.avatarBg, overflow: 'hidden' }]}
             onPress={handlePickImage}
             disabled={loadingImage}
             activeOpacity={0.8}
+            style={styles.avatarTouch}
           >
-            {loadingImage ? (
-              <ActivityIndicator size="small" color={theme.primary} />
-            ) : user?.fotoPerfil ? (
-              <Image 
-                source={{ uri: user.fotoPerfil }} 
-                style={styles.avatarImage} 
-                cachePolicy="memory-disk"
-                transition={200}
-              />
-            ) : (
-              <Text style={[styles.avatarInitials, { color: theme.primary }]}>
-                {user ? getInitials(user.nombre) : 'U'}
-              </Text>
-            )}
+            <UserAvatar
+              uri={user?.fotoPerfil}
+              nombre={user?.nombre}
+              loading={loadingImage}
+              size={90}
+            />
           </TouchableOpacity>
           <Text style={[styles.nombre, { color: theme.text }]}>
             {user ? user.nombre : 'Usuario'}
@@ -190,22 +175,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderWidth: 1,
   },
-  avatarCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    alignItems: 'center',
-    justifyContent: 'center',
+  avatarTouch: {
     marginBottom: 12,
-  },
-  avatarImage: {
-    width: 90,
-    height: 90,
     borderRadius: 45,
-  },
-  avatarInitials: {
-    fontSize: 28,
-    fontWeight: '700',
+    overflow: 'hidden',
   },
   nombre: {
     fontSize: 18,
