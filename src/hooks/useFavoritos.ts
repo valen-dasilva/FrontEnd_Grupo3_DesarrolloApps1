@@ -18,6 +18,7 @@ import {
     putItinerarioFechas,
     UpdateDatesRequest
 } from '@/services/favoritosService';
+import { ItinerarioEnCursoDTO, Provincia, CategoriaItinerario } from '@/types/itinerario';
 import {
     getDownloadedIds,
     getOfflineItinerariesList,
@@ -53,6 +54,14 @@ export const useFavoritosHook = () => {
     const { data: activeItinerary = null } = useQuery({
         queryKey: ['activeItinerary'],
         queryFn: async () => {
+            // Si hay una mutación de pin en curso, no hacemos la llamada al backend y usamos lo que está en caché (optimista)
+            const isPinning = queryClient.isMutating({ mutationKey: ['pinItinerary'] }) > 0;
+            if (isPinning) {
+                const cached = queryClient.getQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary']);
+                if (cached !== undefined) {
+                    return cached;
+                }
+            }
             try {
                 return await getActiveItinerario();
             } catch (err) {
@@ -106,11 +115,16 @@ export const useFavoritosHook = () => {
 
     // Mutation: toggle pin with Optimistic Updates
     const pinMutation = useMutation({
+        mutationKey: ['pinItinerary'],
         mutationFn: patchPin,
         onMutate: async (id) => {
             await queryClient.cancelQueries({ queryKey: ['favorites'] });
-            const previousFavorites = queryClient.getQueryData<ItinerarioResumen[]>(['favorites']);
+            await queryClient.cancelQueries({ queryKey: ['activeItinerary'] });
 
+            const previousFavorites = queryClient.getQueryData<ItinerarioResumen[]>(['favorites']);
+            const previousActiveItinerary = queryClient.getQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary']);
+
+            // 1. Optimistically update favorites list
             if (previousFavorites) {
                 queryClient.setQueryData<ItinerarioResumen[]>(
                     ['favorites'],
@@ -121,11 +135,40 @@ export const useFavoritosHook = () => {
                 );
             }
 
-            return { previousFavorites };
+            // 2. Optimistically update activeItinerary
+            const targetItinerary = previousFavorites?.find(it => it.id === id);
+            if (targetItinerary) {
+                const wasPinned = targetItinerary.esPinned;
+                if (!wasPinned) {
+                    // Pinned: set as active itinerary
+                    const optimisticActive: ItinerarioEnCursoDTO = {
+                        idItinerarioUsuario: targetItinerary.id,
+                        idItinerarioSistema: targetItinerary.idItinerarioSistema,
+                        titulo: targetItinerary.titulo,
+                        descripcion: "", // blank
+                        provincia: targetItinerary.provincia as Provincia,
+                        fechaInicio: targetItinerary.fechaInicio,
+                        fechaFin: targetItinerary.fechaFin,
+                        fotoPortada: targetItinerary.fotoPortada,
+                        duracionDias: targetItinerary.duracionDias,
+                        etiquetas: targetItinerary.etiquetas as CategoriaItinerario[],
+                        items: [], // blank
+                    };
+                    queryClient.setQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary'], optimisticActive);
+                } else {
+                    // Unpinned: set to null
+                    queryClient.setQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary'], null);
+                }
+            }
+
+            return { previousFavorites, previousActiveItinerary };
         },
         onError: (err, id, context) => {
             if (context?.previousFavorites) {
                 queryClient.setQueryData(['favorites'], context.previousFavorites);
+            }
+            if (context?.previousActiveItinerary !== undefined) {
+                queryClient.setQueryData(['activeItinerary'], context.previousActiveItinerary);
             }
             Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo fijar el itinerario.");
         },

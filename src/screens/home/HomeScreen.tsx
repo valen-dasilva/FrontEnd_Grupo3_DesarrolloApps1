@@ -1,3 +1,4 @@
+import { ItinerarioEnCursoDTO } from "@/types/itinerario";
 import ActiveItineraryCard from "@/components/common/ActiveItineraryCard/ActiveItineraryCard";
 import { Header } from "@/components/common/Header/Header";
 
@@ -28,7 +29,17 @@ export default function HomeScreen() {
 
   const { data: itinerarioActivo = null, isLoading: loadingItinerario } = useQuery({
     queryKey: ['activeItinerary'],
-    queryFn: getItinerarioEnCurso,
+    queryFn: async () => {
+      // Si hay una mutación de pin en curso, no hacemos la llamada al backend y usamos lo que está en caché (optimista)
+      const isPinning = queryClient.isMutating({ mutationKey: ['pinItinerary'] }) > 0;
+      if (isPinning) {
+        const cached = queryClient.getQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary']);
+        if (cached !== undefined) {
+          return cached;
+        }
+      }
+      return getItinerarioEnCurso();
+    },
     enabled: !!user,
   });
 
