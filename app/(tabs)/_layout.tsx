@@ -10,10 +10,10 @@ function TabBarComponent({ state, navigation }: Readonly<BottomTabBarProps>) {
 
 
   let activeTab: TabName = 'Inicio';
-  if (currentRouteName === 'explorar' || currentRouteName === 'explorarApp') activeTab = 'Explorar';
-  else if (currentRouteName === 'favoritos' || currentRouteName === '(favorite)') activeTab = 'Favoritos';
-  else if (currentRouteName === 'perfil' || currentRouteName === 'perfilApp') activeTab = 'Perfil';
-  else if (currentRouteName === 'inicioApp') activeTab = 'Inicio';
+  if (currentRouteName.startsWith('explorar') || currentRouteName.startsWith('explorarApp')) activeTab = 'Explorar';
+  else if (currentRouteName.startsWith('favoritos') || currentRouteName.startsWith('(favorite)')) activeTab = 'Favoritos';
+  else if (currentRouteName.startsWith('perfil') || currentRouteName.startsWith('perfilApp')) activeTab = 'Perfil';
+  else if (currentRouteName.startsWith('inicioApp')) activeTab = 'Inicio';
 
   const handleTabPress = (tabName: TabName) => {
     let targetRoute = 'index';

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useTheme } from "@/hooks/useColorScheme";
 import { useAuth } from "@/context/AuthContext";
 import { getUserProfile, updateUserProfile } from "@/services/userService";
+import { UserAvatar } from "@/components/common/UserAvatar/UserAvatar";
 
 import {
   SafeAreaView,
@@ -15,7 +16,6 @@ import {
   ActivityIndicator,
   View,
 } from "react-native";
-import { Image } from "expo-image";
 
 export default function EditarUsuarioScreen() {
   const router = useRouter();
@@ -86,41 +86,19 @@ export default function EditarUsuarioScreen() {
     }
   };
 
-  const getInitials = (n: string, a: string) => {
-    // Si tenemos ambos, usamos la primera letra de cada uno
-    if (n.trim() && a.trim()) {
-      return (n.trim()[0] + a.trim()[0]).toUpperCase();
-    }
-    // Si solo hay nombre, tratamos de dividir por espacios como en ProfileScreen
-    if (n.trim()) {
-      const parts = n.trim().split(/\s+/);
-      if (parts.length >= 2) {
-        return (parts[0][0] + parts[1][0]).toUpperCase();
-      }
-      return parts[0].substring(0, 2).toUpperCase();
-    }
-    return 'U';
-  };
+
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View
-          style={[styles.avatarCircle, { backgroundColor: theme.avatarBg, overflow: "hidden" }]}
-        >
-          {fotoPerfil ? (
-            <Image 
-              source={{ uri: fotoPerfil }} 
-              style={styles.avatarImage} 
-              cachePolicy="memory-disk"
-              transition={200}
-            />
-          ) : (
-            <Text style={[styles.avatarInitials, { color: theme.primary }]}>
-              {getInitials(nombre, apellido)}
-            </Text>
-          )}
+        <View style={styles.avatarContainer}>
+          <UserAvatar
+            uri={fotoPerfil}
+            nombre={nombre}
+            apellido={apellido}
+            size={90}
+          />
         </View>
 
         {loading && <ActivityIndicator size="small" color={theme.primary} style={{ marginVertical: 10 }} />}
@@ -197,21 +175,10 @@ export default function EditarUsuarioScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   scroll: { padding: 20, paddingBottom: 40 },
-  avatarCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    alignItems: "center",
-    justifyContent: "center",
+  avatarContainer: {
     alignSelf: "center",
     marginVertical: 16,
   },
-  avatarImage: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-  },
-  avatarInitials: { fontSize: 28, fontWeight: "700" },
   label: {
     fontSize: 14,
     fontWeight: "600",
