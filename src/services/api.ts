@@ -2,6 +2,7 @@ import axios from "axios";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
 
+
 // El backend corre en el puerto 8080, pero "localhost" significa cosas distintas
 // según dónde se ejecute la app. Esta función resuelve el host correcto:
 // - en web, localhost apunta bien a la PC
@@ -15,7 +16,7 @@ const getHost = (): string => {
   return Platform.OS === "android" ? "10.0.2.2" : "localhost";
 };
 
-const BASE_URL = `http://${getHost()}:8080`;
+const BASE_URL = `https://turistear-back.onrender.com`;
 
 // Guardamos el token y el handler de "no autorizado" como variables de módulo
 // (no como estado de React) porque el interceptor de abajo no es un componente:
@@ -90,8 +91,19 @@ apiClient.interceptors.response.use(
       unauthorizedHandler();
     }
     const data = error.response?.data;
-    const message: string =
+    let message: string =
       data?.message || data?.error || error.message || `HTTP ${status}`;
+
+    // Si es un error de red o timeout, mostramos un mensaje amigable en español
+    if (
+      message === "Network Error" ||
+      error.code === "ERR_NETWORK" ||
+      error.code === "ECONNABORTED" ||
+      message.toLowerCase().includes("timeout")
+    ) {
+      message = "No hay conexión con el servidor. Por favor, verifica tu conexión a internet e inténtalo de nuevo.";
+    }
+
     throw new ApiError(status, message);
   },
 );

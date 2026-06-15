@@ -30,14 +30,6 @@ export default function HomeScreen() {
   const { data: itinerarioActivo = null, isLoading: loadingItinerario } = useQuery({
     queryKey: ['activeItinerary'],
     queryFn: async () => {
-      // Si hay una mutación de pin en curso, no hacemos la llamada al backend y usamos lo que está en caché (optimista)
-      const isPinning = queryClient.isMutating({ mutationKey: ['pinItinerary'] }) > 0;
-      if (isPinning) {
-        const cached = queryClient.getQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary']);
-        if (cached !== undefined) {
-          return cached;
-        }
-      }
       return getItinerarioEnCurso();
     },
     enabled: !!user,

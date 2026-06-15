@@ -165,8 +165,8 @@ export default function ActiveItineraryCard({
         </View>
       </View>
 
-      {/* Sub-tarjeta de Próxima Actividad — calculada desde items */}
-      {proximaActividad && (
+      {/* Sub-tarjeta de Próxima Actividad — calculada desde items o en estado de carga optimista */}
+      {(proximaActividad || itinerarioActivo.isOptimistic) && (
         <View
           style={[
             styles.actividadCard,
@@ -182,12 +182,16 @@ export default function ActiveItineraryCard({
               style={[styles.actividadTitle, { color: theme.text }]}
               numberOfLines={1}
             >
-              {proximaActividad.nombreActividad}
+              {itinerarioActivo.isOptimistic ? "..." : proximaActividad?.nombreActividad}
             </Text>
-            {proximaActividad.hora && (
-              <Text style={styles.actividadTime}>
-                {proximaActividad.hora.substring(0, 5)}
-              </Text>
+            {itinerarioActivo.isOptimistic ? (
+              <Text style={styles.actividadTime}>...</Text>
+            ) : (
+              proximaActividad?.hora && (
+                <Text style={styles.actividadTime}>
+                  {proximaActividad.hora.substring(0, 5)}
+                </Text>
+              )
             )}
           </View>
         </View>

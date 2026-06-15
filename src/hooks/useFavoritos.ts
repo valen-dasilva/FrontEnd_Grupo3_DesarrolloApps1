@@ -54,14 +54,6 @@ export const useFavoritosHook = () => {
     const { data: activeItinerary = null } = useQuery({
         queryKey: ['activeItinerary'],
         queryFn: async () => {
-            // Si hay una mutación de pin en curso, no hacemos la llamada al backend y usamos lo que está en caché (optimista)
-            const isPinning = queryClient.isMutating({ mutationKey: ['pinItinerary'] }) > 0;
-            if (isPinning) {
-                const cached = queryClient.getQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary']);
-                if (cached !== undefined) {
-                    return cached;
-                }
-            }
             try {
                 return await getActiveItinerario();
             } catch (err) {
@@ -153,6 +145,7 @@ export const useFavoritosHook = () => {
                         duracionDias: targetItinerary.duracionDias,
                         etiquetas: targetItinerary.etiquetas as CategoriaItinerario[],
                         items: [], // blank
+                        isOptimistic: true,
                     };
                     queryClient.setQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary'], optimisticActive);
                 } else {
