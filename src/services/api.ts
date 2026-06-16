@@ -96,12 +96,7 @@ apiClient.interceptors.response.use(
       data?.message || `HTTP ${status}`;
 
     // Si es un error de red o timeout, mostramos un mensaje amigable en español
-    if (
-      message === "Network Error" ||
-      error.code === "ERR_NETWORK" ||
-      error.code === "ECONNABORTED" ||
-      message.toLowerCase().includes("timeout")
-    ) {
+    if (error.code === "ERR_NETWORK" || error.code === "ECONNABORTED") {
       message = "No hay conexión con el servidor. Por favor, verifica tu conexión a internet e inténtalo de nuevo.";
     }
 
