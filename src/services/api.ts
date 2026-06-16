@@ -1,20 +1,4 @@
 import axios from "axios";
-import Constants from "expo-constants";
-import { Platform } from "react-native";
-
-
-// El backend corre en el puerto 8080, pero "localhost" significa cosas distintas
-// según dónde se ejecute la app. Esta función resuelve el host correcto:
-// - en web, localhost apunta bien a la PC
-// - en un dispositivo/emulador real necesitamos la IP de la máquina que sirve
-//   Expo (la tomamos de expoConfig.hostUri)
-// - el emulador de Android usa 10.0.2.2 como alias del localhost de la PC
-const getHost = (): string => {
-  if (Platform.OS === "web") return "localhost";
-  const expoHost = Constants.expoConfig?.hostUri?.split(":")[0];
-  if (expoHost) return expoHost;
-  return Platform.OS === "android" ? "10.0.2.2" : "localhost";
-};
 
 const BASE_URL = `https://turistear-back.onrender.com`;
 
