@@ -55,6 +55,57 @@ export default function HomeScreen() {
     router.push("/(tabs)/inicioApp/preferencias");
   };
 
+  const renderActiveItineraryContent = () => {
+    if (loadingItinerario) {
+      return (
+        <View style={styles.loadingCard}>
+          <ActivityIndicator size="large" color={theme.primary} />
+          <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
+            Cargando tu viaje...
+          </Text>
+        </View>
+      );
+    }
+
+    if (itinerarioActivo) {
+      return <ActiveItineraryCard itinerarioActivo={itinerarioActivo} />;
+    }
+
+    return (
+      <View
+        style={[
+          styles.sinViajeCard,
+          {
+            backgroundColor: theme.card,
+            borderColor: theme.border,
+            borderWidth: isDark ? 1 : 0,
+          },
+        ]}
+      >
+        <Ionicons
+          name="map-outline"
+          size={36}
+          color={theme.textSecondary}
+        />
+        <Text style={[styles.sinViajeTitle, { color: theme.text }]}>
+          No tenés viajes en curso
+        </Text>
+        <Text
+          style={[styles.sinViajeSubtitle, { color: theme.textSecondary }]}
+        >
+          Buscá un itinerario y armá tu próxima aventura.
+        </Text>
+        <TouchableOpacity
+          style={[styles.sinViajeCTA, { backgroundColor: theme.primary }]}
+          onPress={handlePreferenciasPress}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.sinViajeCTAText}>Explorar itinerarios</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
     <View
       style={[
@@ -82,50 +133,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Sección Viaje en Curso */}
-        {loadingItinerario ? (
-          <View style={styles.loadingCard}>
-            <ActivityIndicator size="large" color={theme.primary} />
-            <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
-              Cargando tu viaje...
-            </Text>
-          </View>
-        ) : itinerarioActivo ? (
-          /* Card con datos reales del itinerario activo */
-          <ActiveItineraryCard itinerarioActivo={itinerarioActivo} />
-        ) : (
-          /* Estado vacío: no hay viaje en curso */
-          <View
-            style={[
-              styles.sinViajeCard,
-              {
-                backgroundColor: theme.card,
-                borderColor: theme.border,
-                borderWidth: isDark ? 1 : 0,
-              },
-            ]}
-          >
-            <Ionicons
-              name="map-outline"
-              size={36}
-              color={theme.textSecondary}
-            />
-            <Text style={[styles.sinViajeTitle, { color: theme.text }]}>
-              No tenés viajes en curso
-            </Text>
-            <Text
-              style={[styles.sinViajeSubtitle, { color: theme.textSecondary }]}
-            >
-              Buscá un itinerario y armá tu próxima aventura.
-            </Text>
-            <TouchableOpacity
-              style={[styles.sinViajeCTA, { backgroundColor: theme.primary }]}
-              onPress={handlePreferenciasPress}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.sinViajeCTAText}>Explorar itinerarios</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        {renderActiveItineraryContent()}
 
         {/* Sección Buscar por Preferencias */}
         <TouchableOpacity

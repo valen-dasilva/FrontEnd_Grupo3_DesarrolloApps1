@@ -18,9 +18,9 @@ module.exports = (() => {
 
   // Exclude dotfiles and temporary folders inside node_modules from being watched/resolved
   config.resolver.blockList = [
-    /node_modules\/.*\/\..*/,
-    /node_modules\/\..*/,
-    /.*\.git\/.*/
+    /node_modules[/\\][^\/\\]+(?:[/\\][^\/\\]+)*[/\\]\.[^\/\\]+/,
+    /node_modules[/\\]\.[^\/\\]+/,
+    /[/\\]\.git[/\\]/
   ];
 
   return config;

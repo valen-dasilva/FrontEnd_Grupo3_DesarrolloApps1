@@ -22,8 +22,9 @@ export async function buscarPorPreferencias( params: BuscarParams ): Promise<Iti
   if (params.fechaInicio) query.append("fechaInicio", params.fechaInicio);
   if (params.fechaFin) query.append("fechaFin", params.fechaFin);
   const qs = query.toString();
+  const url = qs ? `/itinerario/buscar?${qs}` : '/itinerario/buscar';
   return apiClient
-    .get<ItinerarioSistemaResumenDTO[]>(`/itinerario/buscar${qs ? `?${qs}` : ""}`)
+    .get<ItinerarioSistemaResumenDTO[]>(url)
     .then((r) => r.data);
 }
 

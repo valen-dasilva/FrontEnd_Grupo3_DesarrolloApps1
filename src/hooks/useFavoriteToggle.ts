@@ -30,13 +30,11 @@ export function useFavoriteToggle(
       if (nextFav) {
         const res = await postItinerario(idItinerario);
         setFavId(res.id);
+      } else if (favId !== undefined) {
+        await deleteItinerario(favId);
+        setFavId(undefined);
       } else {
-        if (favId !== undefined) {
-          await deleteItinerario(favId);
-          setFavId(undefined);
-        } else {
-          console.warn("Cannot delete favorite: favId is undefined");
-        }
+        console.warn("Cannot delete favorite: favId is undefined");
       }
       // Invalidate query caches to sync state across screens
       queryClient.invalidateQueries({ queryKey: ['favorites'] });

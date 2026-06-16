@@ -21,7 +21,6 @@ jest.mock('@/hooks/useColorScheme', () => ({
 
 // Mock ProvinciaSelector to isolate FiltrosDeBusqueda and check state interactions
 jest.mock('@/components/Preferencias/ProvinciaSelector', () => {
-  const React = require('react');
   const { View, Button, Text } = require('react-native');
   return {
     ProvinciaSelector: ({ visible, onClose, onSelect, selected }: any) => {

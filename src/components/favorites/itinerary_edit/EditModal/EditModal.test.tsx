@@ -48,7 +48,7 @@ describe('EditModal', () => {
     // Note: Modal component behavior in React Native Testing Library can vary depending on standard mock.
     // In React Native, Modal might still render its children depending on the environment,
     // but the visible prop is passed down.
-    const { queryByText } = render(<EditModal {...defaultProps} visible={false} />);
+    render(<EditModal {...defaultProps} visible={false} />);
     // Since jest-expo mocks Modal, it might check whether it is visible or not.
     // Let's make sure it handles visibility.
   });

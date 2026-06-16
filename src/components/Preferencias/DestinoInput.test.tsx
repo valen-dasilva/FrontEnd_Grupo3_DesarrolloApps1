@@ -29,7 +29,7 @@ describe('DestinoInput', () => {
   });
 
   it('renders placeholder when value is undefined', () => {
-    const { getByText, queryByTestId } = render(<DestinoInput {...defaultProps} />);
+    const { getByText } = render(<DestinoInput {...defaultProps} />);
 
     expect(getByText('Ej: Río Negro, Salta...')).toBeTruthy();
   });

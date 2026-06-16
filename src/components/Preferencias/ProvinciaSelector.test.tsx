@@ -75,7 +75,7 @@ describe('ProvinciaSelector', () => {
 
   it('highlights the selected province and shows a checkmark', () => {
     // Let's pass CABA as selected
-    const { getByText, UNSAFE_getAllByType } = render(
+    const { UNSAFE_getAllByType } = render(
       <ProvinciaSelector {...defaultProps} selected={Provincia.CABA} />
     );
 

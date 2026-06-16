@@ -38,7 +38,7 @@ export default function PerfilScreen() {
       quality: 0.5,
     });
 
-    if (!result.canceled && result.assets && result.assets[0].uri) {
+    if (!result.canceled && result.assets?.[0]?.uri) {
       const asset = result.assets[0];
       const pickedUri = asset.uri;
 

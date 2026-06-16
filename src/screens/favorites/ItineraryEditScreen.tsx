@@ -59,7 +59,8 @@ export default function EdicionItinerarioScreen() {
       loadItineraryInfo,
       itineraryDetails,
       isLoading,
-      quitItem
+      quitItem,
+      putItineraryTitle
   } = useFavoritosDetailsHook();
 
   useFocusEffect(
@@ -145,7 +146,16 @@ export default function EdicionItinerarioScreen() {
         ) : (
             <>
                 <View style={styles.titleInputWrapper}>
-                  <CustomInput value={title} onChangeText={setTitle} label="Título del Itinerario" />
+                  <CustomInput 
+                    value={title} 
+                    onChangeText={setTitle} 
+                    label="Título del Itinerario" 
+                    onBlur={() => {
+                        if (itineraryDetails && title !== itineraryDetails.titulo) {
+                            putItineraryTitle(Number(id), title);
+                        }
+                    }}
+                  />
                 </View>
 
                 {days.map((dayNum) => (

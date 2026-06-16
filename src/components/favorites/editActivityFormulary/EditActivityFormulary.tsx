@@ -32,6 +32,7 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
   const [location, setLocation] = useState(initialValues.location);
   const [day, setDay] = useState(initialValues.day || 1);
   const [timeError, setTimeError] = useState<string | null>(null);
+  const [localDuracionDias, setLocalDuracionDias] = useState(duracionDias);
 
   const { theme } = useTheme();
 
@@ -40,60 +41,51 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
     return regex.test(t);
   };
 
-  const handleTimeChange = (text: string) => {
-    // Si el usuario borra específicamente los dos puntos
-    if (time.endsWith(':') && text.length === time.length - 1) {
-      const newTime = text.slice(0, -1);
-      setTime(newTime);
-      if (newTime.length > 0 && !isTimeValid(newTime)) {
-        setTimeError('Formato inválido (HH:mm)');
-      } else {
-        setTimeError(null);
-      }
-      return;
+  const formatCleanedDigits = (cleaned: string): string => {
+    if (cleaned.length === 0) return '';
+    if (cleaned.length === 1) return cleaned;
+
+    if (cleaned.length === 2) {
+      const valHH = Number.parseInt(cleaned, 10);
+      return valHH > 23 ? '23' : cleaned;
     }
 
-    const cleaned = text.replace(/[^0-9]/g, '');
-    let formatted = cleaned;
+    const hh = cleaned.slice(0, 2);
+    const mm = cleaned.slice(2, 4);
 
-    if (cleaned.length >= 3) {
-      const hh = cleaned.slice(0, 2);
-      const mm = cleaned.slice(2, 4);
+    const valHH = Number.parseInt(hh, 10);
+    const formattedHH = (valHH > 23 ? 23 : valHH).toString().padStart(2, '0');
 
-      let valHH = parseInt(hh, 10);
-      if (valHH > 23) valHH = 23;
-      const formattedHH = valHH.toString().padStart(2, '0');
-
-      let formattedMM = mm;
-      if (mm.length > 0) {
-        let valMM = parseInt(mm, 10);
-        if (valMM > 59) {
-          formattedMM = '59';
-        } else {
-          formattedMM = mm;
-        }
-      }
-
-      formatted = `${formattedHH}:${formattedMM}`;
-    } else if (cleaned.length === 2) {
-      let valHH = parseInt(cleaned, 10);
-      if (valHH > 23) {
-        formatted = '23';
-      } else {
-        formatted = cleaned;
-      }
-    } else if (cleaned.length === 1) {
-      formatted = cleaned;
+    if (mm.length === 0) {
+      return formattedHH;
     }
 
+    const valMM = Number.parseInt(mm, 10);
+    const formattedMM = valMM > 59 ? '59' : mm;
+
+    return `${formattedHH}:${formattedMM}`;
+  };
+
+  const updateTimeAndValidate = (formatted: string) => {
     setTime(formatted);
-
-    // Validar en tiempo real
     if (formatted.length > 0 && !isTimeValid(formatted)) {
       setTimeError('Formato inválido (HH:mm)');
     } else {
       setTimeError(null);
     }
+  };
+
+  const handleTimeChange = (text: string) => {
+    // Si el usuario borra específicamente los dos puntos
+    if (time.endsWith(':') && text.length === time.length - 1) {
+      const newTime = text.slice(0, -1);
+      updateTimeAndValidate(newTime);
+      return;
+    }
+
+    const cleaned = text.replace(/[^0-9]/g, '');
+    const formatted = formatCleanedDigits(cleaned);
+    updateTimeAndValidate(formatted);
   };
 
   const handleSave = () => {
@@ -135,7 +127,7 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.daysContainer}
             >
-              {Array.from({ length: duracionDias }, (_, i) => i + 1).map((d) => {
+              {Array.from({ length: localDuracionDias }, (_, i) => i + 1).map((d) => {
                 const isSelected = day === d;
                 return (
                   <Pressable
@@ -162,6 +154,18 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
                   </Pressable>
                 );
               })}
+              <Pressable
+                onPress={() => setLocalDuracionDias(prev => prev + 1)}
+                style={({ pressed }) => [
+                  styles.dayButton,
+                  { backgroundColor: theme.surfaceNeutral, borderColor: theme.border },
+                  pressed && styles.pressedState
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Añadir día"
+              >
+                <Text style={[styles.dayButtonText, { color: theme.text }]}>+</Text>
+              </Pressable>
             </ScrollView>
           </View>
 

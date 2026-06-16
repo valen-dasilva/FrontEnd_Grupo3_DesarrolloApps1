@@ -55,7 +55,7 @@ describe('ResultadosHeader', () => {
   });
 
   it('renders duration chip instead of date range if provided', () => {
-    const { getByText, queryByText } = render(
+    const { getByText } = render(
       <ResultadosHeader {...defaultProps} primeraResultadoDuracion={5} />
     );
 

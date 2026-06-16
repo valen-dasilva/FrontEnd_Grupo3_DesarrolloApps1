@@ -16,6 +16,7 @@ import {
     postItinerario,
     putItem,
     putItinerarioFechas,
+    putItinerarioTitulo,
     UpdateDatesRequest
 } from '@/services/favoritosService';
 import { ItinerarioEnCursoDTO, Provincia, CategoriaItinerario } from '@/types/itinerario';
@@ -210,7 +211,12 @@ export const useFavoritosHook = () => {
         await queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
     };
 
-    const errorString = error instanceof Error ? error.message : (error ? String(error) : null);
+    let errorString: string | null = null;
+    if (error instanceof Error) {
+        errorString = error.message;
+    } else if (error) {
+        errorString = String(error);
+    }
 
     return {
         loadItinerarios,
@@ -277,6 +283,58 @@ export const useFavoritosDetailsHook = () => {
         await putDatesMutation.mutateAsync({ idItinerary, dates });
     };
 
+    // Mutation: put title
+    const putTitleMutation = useMutation({
+        mutationFn: ({ idItinerary, titulo }: { idItinerary: number; titulo: string }) =>
+            putItinerarioTitulo(idItinerary, titulo),
+        onMutate: async ({ idItinerary, titulo }) => {
+            await queryClient.cancelQueries({ queryKey: ['itineraryDetails', idItinerary] });
+            await queryClient.cancelQueries({ queryKey: ['favorites'] });
+            await queryClient.cancelQueries({ queryKey: ['activeItinerary'] });
+
+            const prevDetails = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary]);
+            if (prevDetails) {
+                queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary], {
+                    ...prevDetails,
+                    titulo
+                });
+            }
+
+            const prevFavorites = queryClient.getQueryData<ItinerarioResumen[]>(['favorites']);
+            if (prevFavorites) {
+                queryClient.setQueryData<ItinerarioResumen[]>(['favorites'], prevFavorites.map(it => it.id === idItinerary ? { ...it, titulo } : it));
+            }
+
+            const prevActive = queryClient.getQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary']);
+            if (prevActive && prevActive.idItinerarioUsuario === idItinerary) {
+                queryClient.setQueryData<ItinerarioEnCursoDTO>(['activeItinerary'], { ...prevActive, titulo });
+            }
+
+            return { prevDetails, prevFavorites, prevActive };
+        },
+        onError: (err, variables, context) => {
+            if (context?.prevDetails) {
+                queryClient.setQueryData(['itineraryDetails', variables.idItinerary], context.prevDetails);
+            }
+            if (context?.prevFavorites) {
+                queryClient.setQueryData(['favorites'], context.prevFavorites);
+            }
+            if (context?.prevActive !== undefined) {
+                queryClient.setQueryData(['activeItinerary'], context.prevActive);
+            }
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo modificar el título.");
+        },
+        onSettled: (data, error, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+            queryClient.invalidateQueries({ queryKey: ['favorites'] });
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+        }
+    });
+
+    const putItineraryTitle = async (idItinerary: number, titulo: string) => {
+        await putTitleMutation.mutateAsync({ idItinerary, titulo });
+    };
+
     // Mutation: create item
     const newItemMutation = useMutation({
         mutationFn: ({ idItinerary, itemData }: { idItinerary: number; itemData: Omit<ItemItinerarioUsuario, 'id'> }) =>
@@ -332,12 +390,31 @@ export const useFavoritosDetailsHook = () => {
         onSuccess: (data, variables) => {
             queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary], (prev) => {
                 if (!prev) return prev;
+                
+                let newItems = prev.items.filter((item) => item.id !== variables.idItem);
+                
+                // Re-mapear días para que no queden huecos (ej: Día 1, Día 3 -> Día 1, Día 2)
+                const daysPresent = Array.from(new Set(newItems.map(item => item.dia))).sort((a,b) => a - b);
+                const dayMap = new Map<number, number>();
+                daysPresent.forEach((oldDay, index) => {
+                    dayMap.set(oldDay, index + 1);
+                });
+                
+                newItems = newItems.map(item => ({
+                    ...item,
+                    dia: dayMap.get(item.dia) || item.dia
+                }));
+
+                const newDuracion = daysPresent.length > 0 ? daysPresent.length : 1;
+
                 return {
                     ...prev,
-                    items: prev.items.filter((item) => item.id !== variables.idItem)
+                    items: newItems,
+                    duracionDias: newDuracion
                 };
             });
             queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+            queryClient.invalidateQueries({ queryKey: ['favorites'] });
             queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
         },
         onError: (err) => {
@@ -349,17 +426,23 @@ export const useFavoritosDetailsHook = () => {
         await quitItemMutation.mutateAsync({ idItinerary, idItem });
     };
 
-    const errorString = error instanceof Error ? error.message : (error ? String(error) : null);
+    let errorString: string | null = null;
+    if (error instanceof Error) {
+        errorString = error.message;
+    } else if (error) {
+        errorString = String(error);
+    }
 
     return {
         error: errorString,
-        isMutating: putDatesMutation.isPending || newItemMutation.isPending || editItemMutation.isPending || quitItemMutation.isPending,
+        isMutating: putDatesMutation.isPending || putTitleMutation.isPending || newItemMutation.isPending || editItemMutation.isPending || quitItemMutation.isPending,
         isLoading,
         itineraryDetails,
         quitItem,
         editItem,
         newItem,
         putItineraryDates,
+        putItineraryTitle,
         loadItineraryInfo,
     };
 };

@@ -71,7 +71,7 @@ describe('ItineraryInfoCard', () => {
   });
 
   it('renders fallback card container when image is not provided', () => {
-    const { queryByType, UNSAFE_getAllByType } = render(
+    const { UNSAFE_getAllByType } = render(
       <ItineraryInfoCard
         {...defaultProps}
         image={undefined}

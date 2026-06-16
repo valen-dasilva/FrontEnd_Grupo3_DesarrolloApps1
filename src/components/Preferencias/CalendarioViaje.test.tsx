@@ -4,7 +4,6 @@ import { CalendarioViaje } from './CalendarioViaje';
 
 // Mock react-native-calendars
 jest.mock('react-native-calendars', () => {
-  const React = require('react');
   const { View, Button, Text } = require('react-native');
   return {
     Calendar: ({ onDayPress, markedDates }: any) => (
@@ -52,7 +51,7 @@ describe('CalendarioViaje', () => {
   // Helper to find the parent button component containing the onPress handler
   const getButtonFromText = (renderResult: any, text: string) => {
     let node = renderResult.getByText(text);
-    while (node && node.parent && node.props.onPress === undefined) {
+    while (node && node.props?.onPress === undefined) {
       node = node.parent;
     }
     return node;
@@ -146,7 +145,7 @@ describe('CalendarioViaje', () => {
     // Let's traverse up from close icon:
     const closeIcon = renderResult.UNSAFE_getByProps({ name: 'close' });
     let closeBtn = closeIcon;
-    while (closeBtn && closeBtn.parent && closeBtn.props.onPress === undefined) {
+    while (closeBtn && closeBtn.props?.onPress === undefined) {
       closeBtn = closeBtn.parent;
     }
 

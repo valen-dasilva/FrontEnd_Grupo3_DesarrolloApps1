@@ -104,6 +104,15 @@ export const putItinerarioFechas = async (
     return response.data;
 }
 
+//actualizar titulo de un itinerario en favoritos
+export const putItinerarioTitulo = async (
+    id: number, 
+    titulo: string
+    ): Promise<ItinerarioUsuario> => {
+    const response = await apiClient.put<ItinerarioUsuario>(`${FAVS_PATH}/${id}`, { titulo });
+    return response.data;
+}
+
 //quitar un itinerario de favoritos
 export const deleteItinerario = async (id: number): Promise<void> => {
     const response = await apiClient.delete<void>(`${FAVS_PATH}/${id}`);
