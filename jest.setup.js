@@ -81,3 +81,13 @@ jest.mock('@expo/vector-icons', () => {
     MaterialIcons: createMockIcon('MaterialIcons'),
   };
 });
+
+// Mock expo-image to prevent ESM syntax issues in Jest
+jest.mock('expo-image', () => {
+  const React = require('react');
+  const Component = React.forwardRef((props, ref) => {
+    return React.createElement('Image', { ...props, ref }, props.children);
+  });
+  Component.displayName = 'Image';
+  return { Image: Component };
+});

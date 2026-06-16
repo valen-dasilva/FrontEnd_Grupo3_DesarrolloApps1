@@ -13,7 +13,7 @@ const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 export const RegisterScreen: React.FC = () => {
   const router = useRouter();
   const { register } = useAuth();
-  
+
   const [name, setName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -32,7 +32,7 @@ export const RegisterScreen: React.FC = () => {
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
       Toast.show({
         type: 'error',
@@ -104,7 +104,7 @@ export const RegisterScreen: React.FC = () => {
         value={lastName}
         onChangeText={setLastName}
       />
-      
+
       <CustomInput
         iconName="mail-outline"
         placeholder="Tu@correo.com"
