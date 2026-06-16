@@ -7,7 +7,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { icons } from '@/constants/icons';
 import Toast from 'react-native-toast-message';
 import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/CustomButton';
+import { FormActionButtons } from '@/components/common/FormActionButtons';
 import { SafeAreaView, ScrollView, Text, View } from 'react-native';
 import { styles } from './ChangePasswordScreen.styles';
 
@@ -90,18 +90,10 @@ export default function CambiarContrasenaScreen() {
           onChangeText={setConfirmar}
         />
 
-        <CustomButton
-          title={loading ? 'Guardando...' : 'Guardar Cambios'}
-          variant="primary"
-          onPress={handleSave}
-          disabled={loading}
-        />
-
-        <CustomButton
-          title="Cancelar"
-          variant="outline"
-          onPress={() => router.navigate('/(tabs)/perfil')}
-          disabled={loading}
+        <FormActionButtons 
+          loading={loading}
+          onSave={handleSave}
+          onCancel={() => router.navigate('/(tabs)/perfil')}
         />
       </ScrollView>
     </SafeAreaView>

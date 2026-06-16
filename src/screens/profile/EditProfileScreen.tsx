@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { getUserProfile, updateUserProfile } from "@/services/userService";
 import { UserAvatar } from "@/components/common/UserAvatar/UserAvatar";
 import { CustomInput } from "@/components/CustomInput";
-import { CustomButton } from "@/components/CustomButton";
+import { FormActionButtons } from "@/components/common/FormActionButtons";
 import Toast from 'react-native-toast-message';
 import { SafeAreaView, ScrollView, ActivityIndicator, View } from "react-native";
 import { styles } from './EditProfileScreen.styles';
@@ -106,18 +106,10 @@ export default function EditarUsuarioScreen() {
           editable={false}
         />
 
-        <CustomButton
-          title={loading ? "Guardando..." : "Guardar Cambios"}
-          variant="primary"
-          onPress={handleSave}
-          disabled={loading}
-        />
-
-        <CustomButton
-          title="Cancelar"
-          variant="outline"
-          onPress={() => router.navigate('/(tabs)/perfil')}
-          disabled={loading}
+        <FormActionButtons 
+          loading={loading}
+          onSave={handleSave}
+          onCancel={() => router.navigate('/(tabs)/perfil')}
         />
       </ScrollView>
     </SafeAreaView>
