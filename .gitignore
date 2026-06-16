@@ -42,5 +42,8 @@ app-example
 /ios
 /android
 
+# test coverage
+coverage/
+
 .claude
 .vscode/
