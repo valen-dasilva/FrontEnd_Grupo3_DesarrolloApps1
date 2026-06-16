@@ -11,10 +11,8 @@ export const categoryIconMap: Record<string, keyof typeof icons> = {
   'Compra': 'ShoppingBag',
 };
 
-/**
+/*
  * Mapa de colores por categoría. Cada valor es una key de themeColors
- * para que se resuelva dinámicamente según el tema (light/dark).
- * Los colores coinciden con los del carrusel de FiltroCategoriasCarrusel.
  */
 export const categoryColorKey: Record<string, 'lightgreen' | 'orange' | 'primary' | 'brownlight' | 'gray'> = {
   'Naturaleza': 'lightgreen',

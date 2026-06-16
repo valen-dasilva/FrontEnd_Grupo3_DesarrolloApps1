@@ -114,7 +114,6 @@ export default function ExploreScreen() {
             ? CATEGORIA_LABEL[item.etiquetas[0]]
             : 'General'
         }
-        categories={item.etiquetas}
         image={item.fotoPortada}
         rating={item.likes.toString()}
         duration={durationText}
@@ -131,10 +130,10 @@ export default function ExploreScreen() {
       <Header title="Explorar" />
       <FlatList
         data={loading || error ? [] : itineraries}
-        renderItem={renderItem}
-        keyExtractor={(item) => String(item.idItinerario)}
-        ListHeaderComponent={renderHeader}
-        ListEmptyComponent={renderEmptyComponent}
+        renderItem={renderItem} //Función que recibe cada item y devuelve el componente a renderizar
+        keyExtractor={(item) => String(item.idItinerario)}  //Convierte el ID del itinerario en string para usarlo como key única.
+        ListHeaderComponent={renderHeader} //Componente que se renderiza al inicio de la lista
+        ListEmptyComponent={renderEmptyComponent} //Se muestra cuando data está vacía
         style={[styles.container, { backgroundColor: theme.background }]}
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
