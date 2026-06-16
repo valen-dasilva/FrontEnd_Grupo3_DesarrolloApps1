@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Keyboard } from 'react-native';
 import { BottomNavBar, TabName } from '@/components/common/BottomNavBar/BottomNavBar';
 
+<<<<<<< HEAD
 // Componente real (montado como JSX): acá SÍ se pueden usar hooks.
 // Oculta la barra cuando el teclado está abierto.
 function KeyboardAwareBottomNav({
@@ -31,6 +32,8 @@ function KeyboardAwareBottomNav({
 
 // React Navigation invoca esta función como render prop, NO como componente:
 // por eso acá NO se pueden usar hooks. Solo calcula y delega.
+=======
+>>>>>>> 136a0ef40246463be4568087e697c96fa33d52de
 function TabBarComponent({ state, navigation }: Readonly<BottomTabBarProps>) {
   const currentRouteName = state.routes[state.index].name;
 
@@ -62,11 +65,20 @@ function TabBarComponent({ state, navigation }: Readonly<BottomTabBarProps>) {
 
 export default function TabLayout() {
   return (
+<<<<<<< HEAD
     <Tabs tabBar={TabBarComponent} screenOptions={{ headerShown: false }}>
       <Tabs.Screen name="index" options={{ title: 'Inicio' }} />
       <Tabs.Screen name="explorar" options={{ title: 'Explorar' }} />
       <Tabs.Screen name="favoritos" options={{ title: 'Favoritos' }} />
       <Tabs.Screen name="perfil" options={{ title: 'Perfil' }} />
+=======
+    <Tabs tabBar={TabBarComponent} screenOptions={{ headerShown: false, }}>
+      {/* Pantallas principales */}
+      <Tabs.Screen name="index" options={{ title: 'Inicio', }} />
+      <Tabs.Screen name="explorar" options={{ title: 'Explorar', }} />
+      <Tabs.Screen name="favoritos" options={{ title: 'Favoritos', }} />
+      <Tabs.Screen name="perfil" options={{ title: 'Perfil', }} />
+>>>>>>> 136a0ef40246463be4568087e697c96fa33d52de
 
       <Tabs.Screen name="(favorite)" options={{ href: null }} />
       <Tabs.Screen name="explorarApp" options={{ href: null }} />
