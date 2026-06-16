@@ -1,7 +1,6 @@
 
 import { useTheme } from "@/hooks/useColorScheme";
 import {
-    CATEGORIA_LABEL,
     ItinerarioEnCursoDTO,
     ItemItinerarioUsuarioDTO,
     PROVINCIA_LABEL,
@@ -69,19 +68,16 @@ export default function ActiveItineraryCard({
 
   const handleEnCursoPress = () => {
     router.push({
-      pathname: "/(tabs)/explorarApp/itinerarioInfo",
+      pathname: "/(tabs)/(favorite)/itinerarioInfoFav",
       params: {
-        idItinerario: itinerarioActivo.idItinerarioSistema.toString(),
-        title: itinerarioActivo.titulo,
-        image: itinerarioActivo.fotoPortada ?? "",
-        category: itinerarioActivo.etiquetas?.length > 0
-          ? CATEGORIA_LABEL[itinerarioActivo.etiquetas[0]]
-          : "General",
-        startDate: itinerarioActivo.fechaInicio,
-        endDate: itinerarioActivo.fechaFin,
-        description: itinerarioActivo.descripcion,
-        isFavorite: "true",
-        idFavorito: itinerarioActivo.idItinerarioUsuario.toString(),
+        id: itinerarioActivo.idItinerarioUsuario.toString(),
+        titulo: itinerarioActivo.titulo,
+        provincia: itinerarioActivo.provincia,
+        duracionDias: String(itinerarioActivo.duracionDias),
+        fotoPortada: itinerarioActivo.fotoPortada ?? "",
+        fechaInicio: itinerarioActivo.fechaInicio,
+        fechaFin: itinerarioActivo.fechaFin,
+        etiquetas: itinerarioActivo.etiquetas?.join(","),
       },
     });
   };
