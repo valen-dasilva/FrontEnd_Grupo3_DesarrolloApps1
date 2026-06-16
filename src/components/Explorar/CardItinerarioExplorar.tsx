@@ -9,7 +9,7 @@ import { styles } from './CardItinerarioExplorar.styles';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
 import { FavoriteButton } from '../common/FavoriteButton/FavoriteButton';
 import { CategoryBadge } from '../common/CategoryBadge/CategoryBadge';
-import { CATEGORIA_LABEL } from '@/types/itinerario';
+import { CATEGORIA_LABEL, CategoriaItinerario } from '@/types/itinerario';
 
 type Props = Readonly<{
   idItinerario: number;
@@ -101,7 +101,7 @@ export function ExploreItineraryCard({
             pointerEvents="box-none"
           >
             {categories.map((catId) => {
-              const label = CATEGORIA_LABEL[catId as any] || catId;
+              const label = CATEGORIA_LABEL[catId as CategoriaItinerario] || catId;
               return (
                 <CategoryBadge
                   key={catId}
