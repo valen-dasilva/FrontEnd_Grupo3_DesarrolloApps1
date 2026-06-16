@@ -11,6 +11,7 @@ export interface ItinerarioResumen {
   idItinerarioUsuario: number;
   idItinerarioSistema: number;
   titulo: string;
+  descripcion?: string;
   provincia: string;
   fechaInicio: string; //fecha
   fechaFin: string;
@@ -35,6 +36,7 @@ export interface ItemItinerarioUsuario {
 export interface ItinerarioUsuario {
   id: number;
   titulo: string;
+  descripcion?: string;
   provincia: string;
   fechaInicio: string; //fecha
   fechaFin: string;
@@ -55,6 +57,7 @@ export const postItinerario = async (idItinerario: number): Promise<ItinerarioRe
       idItinerarioUsuario: data.idItinerarioUsuario,
       idItinerarioSistema: data.idItinerarioSistema,
       titulo: data.titulo,
+      descripcion: data.descripcion,
       provincia: data.provincia,
       fechaInicio: data.fechaInicio,
       fechaFin: data.fechaFin,
@@ -73,6 +76,7 @@ export const getItinerarios = async (): Promise<ItinerarioResumen[]> => {
       idItinerarioUsuario: data.idItinerarioUsuario,
       idItinerarioSistema: data.idItinerarioSistema,
       titulo: data.titulo,
+      descripcion: data.descripcion,
       provincia: data.provincia,
       fechaInicio: data.fechaInicio,
       fechaFin: data.fechaFin,

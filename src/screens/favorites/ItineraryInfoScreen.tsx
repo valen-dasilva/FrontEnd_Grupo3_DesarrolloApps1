@@ -23,7 +23,8 @@ export default function FavoriteItineraryInfoScreen() {
         fotoPortada, 
         fechaInicio, 
         fechaFin, 
-        etiquetas 
+        etiquetas,
+        description
     } = useLocalSearchParams<{ 
         id: string;
         titulo?: string;
@@ -33,6 +34,7 @@ export default function FavoriteItineraryInfoScreen() {
         fechaInicio?: string;
         fechaFin?: string;
         etiquetas?: string;
+        description?: string;
     }>();
 
     const insets = useSafeAreaInsets();
@@ -76,9 +78,9 @@ export default function FavoriteItineraryInfoScreen() {
         ? `${formatFecha(startDate)} - ${formatFecha(endDate)}`
         : undefined;
 
-    const displayDescription = displayProvincia
+    const displayDescription = description || itineraryDetails?.descripcion || (displayProvincia
         ? `Itinerario para explorar ${displayProvincia} en ${displayDuration} Días.`
-        : undefined;
+        : undefined);
 
     const renderHeader = useCallback(() => (
         <CardItinerarioInfoFav 

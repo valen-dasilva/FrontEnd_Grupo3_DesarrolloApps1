@@ -122,6 +122,7 @@ export default function FavoritosScreen() {
           fechaInicio: itinerary.fechaInicio,
           fechaFin: itinerary.fechaFin,
           etiquetas: itinerary.etiquetas?.join(','),
+          description: itinerary.descripcion || '',
         }
       })}
       onFavoriteToggle={() => handleToggleFavorite(itinerary.id)}
