@@ -11,7 +11,7 @@ import { FavoriteButton } from '../common/FavoriteButton/FavoriteButton';
 import { CategoryBadge } from '../common/CategoryBadge/CategoryBadge';
 import { CATEGORIA_LABEL } from '@/types/itinerario';
 
-type Props = {
+type Props = Readonly<{
   idItinerario: number;
   title: string;
   description: string;
@@ -24,7 +24,7 @@ type Props = {
   endDate?: string;
   isFavorite?: boolean;
   idFavorito?: number;
-};
+}>;
 
 export function ExploreItineraryCard({
   idItinerario,

@@ -4,6 +4,7 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useMemo,
 } from "react"; 
 import {
   isTokenExpired,
@@ -173,10 +174,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUnauthorizedHandler(logout);
   }, [logout]);
 
+  const contextValue = useMemo(
+    () => ({ user, token, isLoading, login, register, logout, updateUser }),
+    [user, token, isLoading, login, register, logout, updateUser]
+  );
+
   return (
-    <AuthContext.Provider
-      value={{ user, token, isLoading, login, register, logout, updateUser }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
