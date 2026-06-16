@@ -10,21 +10,17 @@ import { useTheme } from '@/hooks/useColorScheme';
 import { CategoriaItinerario } from '@/types/itinerario';
 import { CategoriaCard } from './CategoriaCard';
 import { icons } from '@/constants/icons';
+import { fonts } from '@/constants/fonts';
+import { colors } from '@/constants/colors';
 
 // Mapeo de cada categoría a su ícono.
 const CATEGORIAS: { value: CategoriaItinerario; icon: (color: string) => React.ReactNode }[] = [
-  { value: CategoriaItinerario.NATURALEZA, icon: () => <MaterialIcons name={icons.Landscape} size={28} color="#1E63D6" /> },
-  { value: CategoriaItinerario.GASTRONOMIA, icon: () => <MaterialIcons name={icons.Restaurant} size={28} color="#FEC73C" /> },
-  { value: CategoriaItinerario.AVENTURA, icon: () => <MaterialIcons name={icons.Hiking} size={28} color="#B14800" /> },
-  { value: CategoriaItinerario.CULTURA, icon: () => <MaterialIcons name={icons.Museum} size={28} color="#0F3FA8" /> },
-  {
-    value: CategoriaItinerario.NOCHE,
-    icon: (color) => <Ionicons name="moon-outline" size={28} color={color} />,
-  },
-  {
-    value: CategoriaItinerario.COMPRA,
-    icon: (color) => <MaterialCommunityIcons name="shopping-outline" size={28} color={color} />,
-  },
+  { value: CategoriaItinerario.NATURALEZA, icon: () => <MaterialIcons name={icons.Landscape} size={fonts.size.xxxl} color={colors.lightgreen} /> },
+  { value: CategoriaItinerario.GASTRONOMIA, icon: () => <MaterialIcons name={icons.Restaurant} size={fonts.size.xxxl} color={colors.orange || colors.warning} /> },
+  { value: CategoriaItinerario.AVENTURA, icon: () => <MaterialIcons name={icons.Hiking} size={fonts.size.xxxl} color={colors.brownlight} /> },
+  { value: CategoriaItinerario.CULTURA, icon: () => <MaterialIcons name={icons.Museum} size={fonts.size.xxxl} color={colors.primary} /> },
+  { value: CategoriaItinerario.NOCHE, icon: () => <MaterialIcons name={icons.Nightlife} size={fonts.size.xxxl} color={colors.gray} />, },
+  { value: CategoriaItinerario.COMPRA, icon: () => <MaterialIcons name={icons.ShoppingBag} size={fonts.size.xxxl} color={colors.orange} />, },
 ];
 
 interface CategoriaGridProps {

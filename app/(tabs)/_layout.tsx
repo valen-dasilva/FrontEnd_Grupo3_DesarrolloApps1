@@ -1,13 +1,38 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Tabs } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { Keyboard } from 'react-native';
 import { BottomNavBar, TabName } from '@/components/common/BottomNavBar/BottomNavBar';
 
-// Uses BottomTabBarProps so TabBarComponent can be passed directly as tabBar={TabBarComponent}
-// with no anonymous wrapper arrow function inside TabLayout.
+// Componente real (montado como JSX): acá SÍ se pueden usar hooks.
+// Oculta la barra cuando el teclado está abierto.
+function KeyboardAwareBottomNav({
+  activeTab,
+  onTabPress,
+}: {
+  activeTab: TabName;
+  onTabPress: (tabName: TabName) => void;
+}) {
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  if (keyboardVisible) return null;
+
+  return <BottomNavBar activeTab={activeTab} onTabPress={onTabPress} />;
+}
+
+// React Navigation invoca esta función como render prop, NO como componente:
+// por eso acá NO se pueden usar hooks. Solo calcula y delega.
 function TabBarComponent({ state, navigation }: Readonly<BottomTabBarProps>) {
   const currentRouteName = state.routes[state.index].name;
-
 
   let activeTab: TabName = 'Inicio';
   if (currentRouteName.startsWith('explorar') || currentRouteName.startsWith('explorarApp')) activeTab = 'Explorar';
@@ -32,19 +57,18 @@ function TabBarComponent({ state, navigation }: Readonly<BottomTabBarProps>) {
     }
   };
 
-  return <BottomNavBar activeTab={activeTab} onTabPress={handleTabPress} />;
+  return <KeyboardAwareBottomNav activeTab={activeTab} onTabPress={handleTabPress} />;
 }
 
 export default function TabLayout() {
   return (
-    <Tabs tabBar={TabBarComponent} screenOptions={{ headerShown: false, }} backBehavior="history">
+    <Tabs tabBar={TabBarComponent} screenOptions={{ headerShown: false }} backBehavior="history">
       {/* Pantallas principales */}
-      <Tabs.Screen name="index" options={{ title: 'Inicio',}} />
-      <Tabs.Screen name="explorar" options={{title: 'Explorar',}}/>
-      <Tabs.Screen name="favoritos" options={{ title: 'Favoritos',}}/>
-      <Tabs.Screen name="perfil" options={{title: 'Perfil',}}/>
+      <Tabs.Screen name="index" options={{ title: 'Inicio' }} />
+      <Tabs.Screen name="explorar" options={{ title: 'Explorar' }} />
+      <Tabs.Screen name="favoritos" options={{ title: 'Favoritos' }} />
+      <Tabs.Screen name="perfil" options={{ title: 'Perfil' }} />
 
-      {/* Navegacion por stacks */}
       <Tabs.Screen name="(favorite)" options={{ href: null }} />
       <Tabs.Screen name="explorarApp" options={{ href: null }} />
       <Tabs.Screen name="inicioApp" options={{ href: null }} />
