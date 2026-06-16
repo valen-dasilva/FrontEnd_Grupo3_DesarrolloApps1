@@ -93,7 +93,7 @@ apiClient.interceptors.response.use(
     }
     const data = error.response?.data;
     let message: string =
-      data?.message || data?.error || error.message || `HTTP ${status}`;
+      data?.message || `HTTP ${status}`;
 
     // Si es un error de red o timeout, mostramos un mensaje amigable en español
     if (
