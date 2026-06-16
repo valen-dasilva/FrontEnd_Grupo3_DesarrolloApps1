@@ -69,6 +69,7 @@ export class ApiError extends Error {
 export const apiClient = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
+  timeout: 30000, // 30 segundos de timeout para todas las llamadas
 });
 
 // Interceptor de request: antes de cada llamada, si hay token lo agrega como
