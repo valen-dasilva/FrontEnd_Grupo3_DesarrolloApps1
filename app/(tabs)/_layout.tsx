@@ -37,7 +37,7 @@ function TabBarComponent({ state, navigation }: Readonly<BottomTabBarProps>) {
 
 export default function TabLayout() {
   return (
-    <Tabs tabBar={TabBarComponent} screenOptions={{ headerShown: false, }}>
+    <Tabs tabBar={TabBarComponent} screenOptions={{ headerShown: false, }} backBehavior="history">
       {/* Pantallas principales */}
       <Tabs.Screen name="index" options={{ title: 'Inicio',}} />
       <Tabs.Screen name="explorar" options={{title: 'Explorar',}}/>
