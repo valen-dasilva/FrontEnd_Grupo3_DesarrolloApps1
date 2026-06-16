@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View, Alert } from 'react-native';
 import { styles } from './EditActivityFormulary.styles';
 import { useTheme } from '@/hooks/useColorScheme';
@@ -32,7 +32,11 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
   const [location, setLocation] = useState(initialValues.location);
   const [day, setDay] = useState(initialValues.day || 1);
   const [timeError, setTimeError] = useState<string | null>(null);
-  const [localDuracionDias, setLocalDuracionDias] = useState(duracionDias);
+  const [localDuracionDias, setLocalDuracionDias] = useState(Math.max(duracionDias, initialValues.day || 1));
+
+  useEffect(() => {
+    setLocalDuracionDias(Math.max(duracionDias, initialValues.day || 1));
+  }, [duracionDias, initialValues.day]);
 
   const { theme } = useTheme();
 

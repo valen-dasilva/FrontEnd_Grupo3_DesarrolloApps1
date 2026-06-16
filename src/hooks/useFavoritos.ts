@@ -1,7 +1,25 @@
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiError } from '@/services/api';
+
+// Local title overrides helper functions
+export const getLocalTitleOverride = async (id: number): Promise<string | null> => {
+    try {
+        return await AsyncStorage.getItem(`@turistear/title_override_${id}`);
+    } catch {
+        return null;
+    }
+};
+
+export const saveLocalTitleOverride = async (id: number, title: string): Promise<void> => {
+    try {
+        await AsyncStorage.setItem(`@turistear/title_override_${id}`, title);
+    } catch (e) {
+        console.error("Error saving local title override:", e);
+    }
+};
 import {
     deleteItem,
     deleteItinerario,
@@ -31,11 +49,17 @@ import {
 
 // Fetch favorites with local offline fallback
 const fetchFavoritesWithOfflineFallback = async () => {
+    let list: ItinerarioResumen[] = [];
     try {
-        return await getItinerarios();
+        list = await getItinerarios();
     } catch {
-        return await getOfflineItinerariesList();
+        list = await getOfflineItinerariesList();
     }
+    // Merge local title overrides
+    return await Promise.all(list.map(async (it) => {
+        const localTitle = await getLocalTitleOverride(it.id);
+        return localTitle ? { ...it, titulo: localTitle } : it;
+    }));
 };
 
 export const useFavoritosHook = () => {
@@ -56,7 +80,14 @@ export const useFavoritosHook = () => {
     const { data: activeItinerary = null } = useQuery({
         queryKey: ['activeItinerary'],
         queryFn: async () => {
-            return getItinerarioEnCurso();
+            const active = await getItinerarioEnCurso();
+            if (active) {
+                const localTitle = await getLocalTitleOverride(active.idItinerarioUsuario);
+                if (localTitle) {
+                    return { ...active, titulo: localTitle };
+                }
+            }
+            return active;
         },
     });
 
@@ -252,15 +283,24 @@ export const useFavoritosDetailsHook = () => {
         queryKey: ['itineraryDetails', activeId],
         queryFn: async () => {
             if (!activeId) return undefined;
+            let details;
             try {
-                return await getItinerarioDetalles(activeId);
+                details = await getItinerarioDetalles(activeId);
             } catch (err) {
                 const offlineDetails = await getOfflineItineraryDetails(activeId);
                 if (offlineDetails) {
-                    return offlineDetails;
+                    details = offlineDetails;
+                } else {
+                    throw err;
                 }
-                throw err;
             }
+            if (details) {
+                const localTitle = await getLocalTitleOverride(activeId);
+                if (localTitle) {
+                    return { ...details, titulo: localTitle };
+                }
+            }
+            return details;
         },
         enabled: activeId !== null,
     });
@@ -286,11 +326,12 @@ export const useFavoritosDetailsHook = () => {
     // Mutation: put title
     const putTitleMutation = useMutation({
         mutationFn: async ({ idItinerary, titulo }: { idItinerary: number; titulo: string }) => {
+            await saveLocalTitleOverride(idItinerary, titulo);
             try {
                 return await putItinerarioTitulo(idItinerary, titulo);
             } catch (err) {
                 console.warn("Failed to update title on backend, keeping local update:", err);
-                return null;
+                return { id: idItinerary, titulo }; // Mock success response
             }
         },
         onMutate: async ({ idItinerary, titulo }) => {
@@ -312,7 +353,7 @@ export const useFavoritosDetailsHook = () => {
             }
 
             const prevActive = queryClient.getQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary']);
-            if (prevActive && prevActive.idItinerarioUsuario === idItinerary) {
+            if (prevActive?.idItinerarioUsuario === idItinerary) {
                 queryClient.setQueryData<ItinerarioEnCursoDTO>(['activeItinerary'], { ...prevActive, titulo });
             }
 
@@ -371,7 +412,7 @@ export const useFavoritosDetailsHook = () => {
                 });
             }
 
-            if (prevActive && prevActive.idItinerarioUsuario === idItinerary) {
+            if (prevActive?.idItinerarioUsuario === idItinerary) {
                 const newDuracion = Math.max(prevActive.duracionDias, itemData.dia);
                 queryClient.setQueryData<ItinerarioEnCursoDTO>(['activeItinerary'], {
                     ...prevActive,
@@ -460,7 +501,7 @@ export const useFavoritosDetailsHook = () => {
                 });
             }
 
-            if (prevActive && prevActive.idItinerarioUsuario === idItinerary) {
+            if (prevActive?.idItinerarioUsuario === idItinerary) {
                 const currentMaxDay = prevDetails ? Math.max(...prevDetails.items.map(item => item.id === idItem ? itemData.dia : item.dia), 1) : itemData.dia;
                 const newDuracion = Math.max(prevActive.duracionDias, currentMaxDay);
                 queryClient.setQueryData<ItinerarioEnCursoDTO>(['activeItinerary'], {
