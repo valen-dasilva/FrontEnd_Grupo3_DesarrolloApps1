@@ -16,9 +16,6 @@ export async function getToken(): Promise<string | null> {
   return AsyncStorage.getItem(TOKEN_KEY);
 }
 
-export async function removeToken(): Promise<void> {
-  await AsyncStorage.removeItem(TOKEN_KEY);
-}
 
 // Usamos genérico <T> para no acoplar storage al tipo AuthUser: este archivo no
 // necesita saber qué forma tiene el usuario, solo guardarlo y devolverlo igual.

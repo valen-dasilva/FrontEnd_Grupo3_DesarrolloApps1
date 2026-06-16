@@ -6,7 +6,7 @@ import {
   Provincia,
 } from '@/types/itinerario';
 
-import { apiClient } from "./api";
+import { apiClient, ApiError } from "./api";
 
 export interface BuscarParams {
   provincia?: Provincia;
@@ -40,10 +40,15 @@ export async function obtenerItinerarioPorId(
 // o null si no tiene ninguno en curso o próximo.
 // El backend lo identifica por el JWT — no hace falta pasar el userId.
 export async function getItinerarioEnCurso(): Promise<ItinerarioEnCursoDTO | null> {
-  return apiClient
-    .get<ItinerarioEnCursoDTO>("/favoritos/activo")
-    .then((r) => r.data)
-    .catch(() => null);
+  try {
+    const r = await apiClient.get<ItinerarioEnCursoDTO>("/favoritos/activo");
+    return r.data;
+  } catch (error) {
+    // 404 = el usuario no tiene viaje activo: caso normal, devolvemos null.
+    if (error instanceof ApiError && error.status === 404) return null;
+    // Red, 500, etc.: lo propagamos para que React Query lo marque como error.
+    throw error;
+  }
 }
 
 export interface ItineraryCard {

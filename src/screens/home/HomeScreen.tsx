@@ -27,7 +27,7 @@ export default function HomeScreen() {
   const isDark = colorScheme === "dark";
   const { user } = useAuth();
 
-  const { data: itinerarioActivo = null, isLoading: loadingItinerario, refetch: refetchActiveItinerary } = useQuery({
+  const { data: itinerarioActivo = null, isLoading: loadingItinerario, isError, refetch: refetchActiveItinerary } = useQuery({
     queryKey: ['activeItinerary'],
     queryFn: async () => {
       return getItinerarioEnCurso();
@@ -63,6 +63,42 @@ export default function HomeScreen() {
           <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
             Cargando tu viaje...
           </Text>
+        </View>
+      );
+    }
+
+    if (isError) {
+      return (
+        <View
+          style={[
+            styles.sinViajeCard,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+              borderWidth: isDark ? 1 : 0,
+            },
+          ]}
+        >
+          <Ionicons
+            name="cloud-offline-outline"
+            size={36}
+            color={theme.textSecondary}
+          />
+          <Text style={[styles.sinViajeTitle, { color: theme.text }]}>
+            No pudimos cargar tu viaje
+          </Text>
+          <Text
+            style={[styles.sinViajeSubtitle, { color: theme.textSecondary }]}
+          >
+            Revisá tu conexión e intentá de nuevo.
+          </Text>
+          <TouchableOpacity
+            style={[styles.sinViajeCTA, { backgroundColor: theme.primary }]}
+            onPress={() => refetchActiveItinerary()}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.sinViajeCTAText}>Reintentar</Text>
+          </TouchableOpacity>
         </View>
       );
     }

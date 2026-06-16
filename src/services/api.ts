@@ -53,6 +53,7 @@ export class ApiError extends Error {
 export const apiClient = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
+  timeout: 30000, // 30 segundos de timeout para todas las llamadas
 });
 
 // Interceptor de request: antes de cada llamada, si hay token lo agrega como
@@ -76,15 +77,10 @@ apiClient.interceptors.response.use(
     }
     const data = error.response?.data;
     let message: string =
-      data?.message || data?.error || error.message || `HTTP ${status}`;
+      data?.message || `HTTP ${status}`;
 
     // Si es un error de red o timeout, mostramos un mensaje amigable en español
-    if (
-      message === "Network Error" ||
-      error.code === "ERR_NETWORK" ||
-      error.code === "ECONNABORTED" ||
-      message.toLowerCase().includes("timeout")
-    ) {
+    if (error.code === "ERR_NETWORK" || error.code === "ECONNABORTED") {
       message = "No hay conexión con el servidor. Por favor, verifica tu conexión a internet e inténtalo de nuevo.";
     }
 
