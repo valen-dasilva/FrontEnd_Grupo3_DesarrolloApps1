@@ -114,7 +114,7 @@ export const deleteItinerario = async (id: number): Promise<void> => {
 export const patchPin = async (id: number): Promise<void> => {
     await apiClient.patch<void>(`${FAVS_PATH}/${id}/pin`);
 }
-
+ 
 //------endpoints a items
 
 //crear un item itinerario

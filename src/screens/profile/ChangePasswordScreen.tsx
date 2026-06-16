@@ -5,19 +5,18 @@ import { useAuth } from '@/context/AuthContext';
 import { changePassword } from '@/services/userService';
 import { MaterialIcons } from '@expo/vector-icons';
 import { icons } from '@/constants/icons';
-import { validatePasswordChange } from './passwordValidation';
-import { CustomInput } from '@/components/CustomInput';
+import Toast from 'react-native-toast-message';
 
 import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
+  Pressable,
 } from 'react-native';
 
 const COLORS = {
@@ -39,45 +38,51 @@ export default function CambiarContrasenaScreen() {
   const [nueva, setNueva] = useState('');
   const [confirmar, setConfirmar] = useState('');
   const [loading, setLoading] = useState(false);
-  const [hideNewPassword, setHideNewPassword] = useState(true);
+
+  const [showActual, setShowActual] = useState(false);
+  const [showNueva, setShowNueva] = useState(false);
+  const [showConfirmar, setShowConfirmar] = useState(false);
 
   const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === 'dark';
 
   const handleSave = async () => {
-    const validation = validatePasswordChange(actual, nueva, confirmar);
-    if (!validation.valid) {
-      Alert.alert(validation.errorTitle!, validation.errorMessage!);
-      return;
-    }
+  if (!actual.trim() || !nueva.trim() || !confirmar.trim()) {
+    Toast.show({ type: 'error', text1: 'Campos incompletos', text2: 'Completá todos los campos.' });
+    return;
+  }
 
-    if (!user) return;
+  if (nueva.length < 6) {
+    Toast.show({ type: 'error', text1: 'Contraseña muy corta', text2: 'Mínimo 6 caracteres.' });
+    return;
+  }
 
-    try {
-      setLoading(true);
-      await changePassword(user.idUsuario, {
-        contraseniaActual: actual,
-        contraseniaNueva: nueva,
-      });
-      Alert.alert('Éxito', 'Tu contraseña fue actualizada correctamente.', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
-    } catch (err: any) {
-      console.error('Error al cambiar contraseña:', err);
-      Alert.alert('Error', err.message || 'No se pudo cambiar la contraseña.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (nueva !== confirmar) {
+    Toast.show({ type: 'error', text1: 'No coinciden', text2: 'Las contraseñas nuevas no coinciden.' });
+    return;
+  }
+
+  if (!user) return;
+
+  try {
+    setLoading(true);
+    await changePassword(user.idUsuario, {
+      contraseniaActual: actual,
+      contraseniaNueva: nueva,
+    });
+    Toast.show({ type: 'success', text1: 'Contraseña actualizada', text2: 'Tu contraseña se cambió correctamente.' });
+    router.navigate('/(tabs)/perfil');
+  } catch (err: any) {
+    Toast.show({ type: 'error', text1: 'Error', text2: err.message || 'No se pudo cambiar la contraseña.' });
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={styles.scroll}>
 
         <View style={[styles.lockCircle, isDark && { backgroundColor: '#2A303D' }]}>
           <MaterialIcons name={icons.Lock} size={26} color={theme.primary} />
@@ -89,32 +94,62 @@ export default function CambiarContrasenaScreen() {
           cuenta. Asegúrate de que sea única y difícil de adivinar.
         </Text>
 
-        <CustomInput
-          label="Contraseña actual"
-          secureTextEntry
-          placeholder="••••••••"
-          value={actual}
-          onChangeText={setActual}
-        />
+        <Text style={[styles.label, { color: theme.text }]}>Contraseña actual</Text>
+        <View style={[styles.passwordField, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <TextInput
+            style={[styles.passwordInput, { color: theme.text }]}
+            secureTextEntry={!showActual}
+            placeholder="••••••••"
+            placeholderTextColor={theme.textSecondary}
+            value={actual}
+            onChangeText={setActual}
+          />
+          <Pressable onPress={() => setShowActual((v) => !v)} hitSlop={8}>
+            <MaterialIcons
+              name={showActual ? icons.Visibility : icons.VisibilityOff}
+              size={22}
+              color={theme.textSecondary}
+            />
+          </Pressable>
+        </View>
 
-        <CustomInput
-          label="Nueva contraseña"
-          secureTextEntry={hideNewPassword}
-          onEyePress={() => setHideNewPassword(!hideNewPassword)}
-          placeholder="••••••••"
-          value={nueva}
-          onChangeText={setNueva}
-        />
+        <Text style={[styles.label, { color: theme.text }]}>Nueva contraseña</Text>
+        <View style={[styles.passwordField, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <TextInput
+            style={[styles.passwordInput, { color: theme.text }]}
+            secureTextEntry={!showNueva}
+            placeholder="••••••••"
+            placeholderTextColor={theme.textSecondary}
+            value={nueva}
+            onChangeText={setNueva}
+          />
+          <Pressable onPress={() => setShowNueva((v) => !v)} hitSlop={8}>
+            <MaterialIcons
+              name={showNueva ? icons.Visibility : icons.VisibilityOff}
+              size={22}
+              color={theme.textSecondary}
+            />
+          </Pressable>
+        </View>
 
-        <CustomInput
-          label="Confirmar nueva contraseña"
-          secureTextEntry={hideNewPassword}
-          showEyeButton={false}
-          onEyePress={() => setHideNewPassword(!hideNewPassword)}
-          placeholder="••••••••"
-          value={confirmar}
-          onChangeText={setConfirmar}
-        />
+        <Text style={[styles.label, { color: theme.text }]}>Confirmar nueva contraseña</Text>
+        <View style={[styles.passwordField, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <TextInput
+            style={[styles.passwordInput, { color: theme.text }]}
+            secureTextEntry={!showConfirmar}
+            placeholder="••••••••"
+            placeholderTextColor={theme.textSecondary}
+            value={confirmar}
+            onChangeText={setConfirmar}
+          />
+          <Pressable onPress={() => setShowConfirmar((v) => !v)} hitSlop={8}>
+            <MaterialIcons
+              name={showConfirmar ? icons.Visibility : icons.VisibilityOff}
+              size={22}
+              color={theme.textSecondary}
+            />
+          </Pressable>
+        </View>
 
         <TouchableOpacity
           style={[styles.primaryBtn, { backgroundColor: theme.primary }]}
@@ -128,13 +163,12 @@ export default function CambiarContrasenaScreen() {
 
         <TouchableOpacity
           style={[styles.dangerBtn, { backgroundColor: theme.danger }]}
-          onPress={() => router.back()}
+          onPress={() => router.navigate('/(tabs)/perfil')}
           disabled={loading}
         >
           <Text style={styles.dangerBtnText}>Cancelar</Text>
         </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -173,13 +207,17 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     marginTop: 10,
   },
-  input: {
-    backgroundColor: COLORS.inputBg,
+  passwordField: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderRadius: 10,
-    padding: 14,
-    fontSize: 15,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    paddingHorizontal: 14,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 14,
+    fontSize: 15,
   },
   primaryBtn: {
     backgroundColor: COLORS.primary,

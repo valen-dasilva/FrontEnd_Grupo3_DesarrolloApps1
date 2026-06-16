@@ -4,6 +4,7 @@ import { useTheme } from "@/hooks/useColorScheme";
 import { useAuth } from "@/context/AuthContext";
 import { getUserProfile, updateUserProfile } from "@/services/userService";
 import { UserAvatar } from "@/components/common/UserAvatar/UserAvatar";
+import Toast from 'react-native-toast-message';
 
 import {
   SafeAreaView,
@@ -47,44 +48,41 @@ export default function EditarUsuarioScreen() {
           setCorreo(profile.email);
           setFotoPerfil((current) => current ?? profile.fotoPerfil);
         })
-        .catch((err) => {
-          console.error("Error al cargar perfil:", err);
-          Alert.alert("Error", "No se pudo cargar la información completa del perfil.");
+        .catch(() => {
+          Toast.show({ type: 'error', text1: 'Error', text2: 'No se pudo cargar el perfil.' });
         })
         .finally(() => setLoading(false));
     }
   }, [user]);
 
   const handleSave = async () => {
-    if (!nombre.trim() || !apellido.trim()) {
-      Alert.alert("Campos incompletos", "Nombre y apellido son obligatorios.");
-      return;
-    }
+  if (!nombre.trim() || !apellido.trim()) {
+    Toast.show({ type: 'error', text1: 'Campos incompletos', text2: 'Nombre y apellido son obligatorios.' });
+    return;
+  }
 
-    try {
-      setLoading(true);
-      const updatedProfile = await updateUserProfile(user!.idUsuario, {
-        nombre: nombre.trim(),
-        apellido: apellido.trim(),
-        email: correo,
-        fotoPerfil: fotoPerfil,
-      });
+  try {
+    setLoading(true);
+    const updatedProfile = await updateUserProfile(user!.idUsuario, {
+      nombre: nombre.trim(),
+      apellido: apellido.trim(),
+      email: correo,
+      fotoPerfil: fotoPerfil,
+    });
 
-      await updateUser({
-        nombre: updatedProfile.nombre,
-        fotoPerfil: updatedProfile.fotoPerfil,
-      });
+    await updateUser({
+      nombre: updatedProfile.nombre,
+      fotoPerfil: updatedProfile.fotoPerfil,
+    });
 
-      Alert.alert("Éxito", "Perfil actualizado correctamente.", [
-        { text: "OK", onPress: () => router.back() },
-      ]);
-    } catch (err: any) {
-      console.error("Error al guardar perfil:", err);
-      Alert.alert("Error", err.message || "No se pudieron guardar los cambios.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    Toast.show({ type: 'success', text1: 'Cambios guardados', text2: 'Tu perfil se actualizó correctamente.' });
+    router.navigate('/(tabs)/perfil');
+  } catch (err: any) {
+    Toast.show({ type: 'error', text1: 'Error', text2: err.message || 'No se pudieron guardar los cambios.' });
+  } finally {
+    setLoading(false);
+  }
+};
 
 
 
@@ -162,7 +160,7 @@ export default function EditarUsuarioScreen() {
 
         <TouchableOpacity
           style={[styles.dangerBtn, { backgroundColor: theme.danger }]}
-          onPress={() => router.back()}
+          onPress={() => router.navigate('/perfil')}
           disabled={loading}
         >
           <Text style={styles.dangerBtnText}>Cancelar</Text>

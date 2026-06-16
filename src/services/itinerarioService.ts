@@ -15,9 +15,7 @@ export interface BuscarParams {
   fechaFin?: string;
 }
 
-export async function buscarPorPreferencias(
-  params: BuscarParams,
-): Promise<ItinerarioSistemaResumenDTO[]> {
+export async function buscarPorPreferencias( params: BuscarParams ): Promise<ItinerarioSistemaResumenDTO[]> {
   const query = new URLSearchParams();
   if (params.provincia) query.append("provincia", params.provincia);
   params.tags?.forEach((t) => query.append("tags", t));
