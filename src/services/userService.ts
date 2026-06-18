@@ -68,3 +68,16 @@ export function changePassword(
     .put(`/users/${idUsuario}/password`, payload)
     .then(() => undefined);
 }
+
+export interface EstadisticasUsuario {
+  provinciasVisitadas: string[];
+  totalProvincias: number;
+  porcentajeArgentina: number;
+  diasTotalesViajados: number;
+  provinciaFavorita: string | null;
+  etiquetaPredominante: string | null;
+}
+
+export function getEstadisticas(): Promise<EstadisticasUsuario> {
+  return apiClient.get<EstadisticasUsuario>('/users/me/estadisticas').then((r) => r.data);
+}

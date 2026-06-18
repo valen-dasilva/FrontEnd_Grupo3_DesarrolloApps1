@@ -75,4 +75,61 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 15,
   },
+  statsRow: {
+    flexDirection: 'row',
+    gap: paddings.spacing.sm,
+    marginBottom: paddings.spacing.md,
+  },
+  statCard: {
+    flex: 1,
+    borderRadius: paddings.radius.md,
+    padding: paddings.spacing.md,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: '800',
+  },
+  statLabel: {
+    fontSize: 11,
+    marginTop: 2,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  favCard: {
+    borderRadius: paddings.radius.md,
+    padding: paddings.spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    marginBottom: paddings.spacing.md,
+  },
+  favLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  favValue: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  mapaCard: {
+    borderRadius: paddings.radius.md,
+    padding: paddings.spacing.lg,
+    borderWidth: 1,
+    marginBottom: paddings.spacing.md,
+    alignItems: 'center',
+  },
+  mapaTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: paddings.spacing.md,
+    alignSelf: 'flex-start',
+  },
+  mapaEmpty: {
+    fontSize: 13,
+    marginTop: paddings.spacing.sm,
+    textAlign: 'center',
+  },
 });

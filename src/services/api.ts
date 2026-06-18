@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = `https://turistear-back.onrender.com`;
+const BASE_URL = `http://localhost:8080`; // Cambia esto por la URL real de tu backend
 
 // Guardamos el token y el handler de "no autorizado" como variables de módulo
 // (no como estado de React) porque el interceptor de abajo no es un componente:
