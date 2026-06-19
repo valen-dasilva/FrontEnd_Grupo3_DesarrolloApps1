@@ -72,6 +72,10 @@ export default function FavoriteItineraryInfoScreen() {
     // Dynamic props resolving (route params with hook callback)
     const displayTitle = titulo || itineraryDetails?.titulo;
     const displayImageUrl = fotoPortada || itineraryDetails?.fotoPortada;
+    const displayImages = useMemo(() => {
+        const detailImages = (itineraryDetails?.fotos ?? []).map((foto) => foto.url);
+        return detailImages.length > 0 ? detailImages : displayImageUrl ? [displayImageUrl] : [];
+    }, [displayImageUrl, itineraryDetails?.fotos]);
     const displayCategory = (etiquetas?.split(',')[0]) || itineraryDetails?.etiquetas?.[0];
     const displayDuration = duracionDias || itineraryDetails?.duracionDias;
     const displayProvincia = provincia || itineraryDetails?.provincia;
@@ -165,6 +169,7 @@ export default function FavoriteItineraryInfoScreen() {
             <CardItinerarioInfoFav
                 title={displayTitle}
                 imageUrl={displayImageUrl}
+                images={displayImages}
                 category={displayCategory}
                 dateRange={displayDateRange}
                 description={displayDescription}
@@ -198,7 +203,7 @@ export default function FavoriteItineraryInfoScreen() {
                 </Animated.View>
             </TouchableOpacity>
         </>
-    ), [displayTitle, displayImageUrl, displayCategory, displayDateRange, displayDescription, id, router, yaCompletado, isCompletando, handleCompletarViaje, theme, scaleAnim, completarBg, completarBorder, completarIconColor]);
+    ), [displayTitle, displayImageUrl, displayImages, displayCategory, displayDateRange, displayDescription, id, router, yaCompletado, isCompletando, handleCompletarViaje, scaleAnim, completarBg, completarBorder, completarIconColor]);
 
     const renderEmptyComponent = () => {
         if (isLoading) {

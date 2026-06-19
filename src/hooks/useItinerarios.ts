@@ -3,6 +3,7 @@ import { Alert } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiError } from '@/services/api';
+import { deleteItineraryPhotoFromStorage } from '@/services/itineraryPhotoService';
 
 // Local title overrides helper functions
 export const getLocalTitleOverride = async (id: number): Promise<string | null> => {
@@ -21,6 +22,7 @@ export const saveLocalTitleOverride = async (id: number, title: string): Promise
     }
 };
 import {
+    deleteFoto,
     deleteItem,
     deleteItinerario,
     getItinerarioDetalles,
@@ -33,6 +35,7 @@ import {
     ItemItinerarioUsuario,
     ItinerarioResumen,
     ItinerarioUsuario,
+    postFoto,
     postItem,
     putItem,
     putItinerarioFechas,
@@ -132,7 +135,23 @@ export const useItinerariosHook = () => {
 
     // Mutation: remove itinerary
     const deleteMutation = useMutation({
-        mutationFn: deleteItinerario,
+        mutationFn: async (idItinerario: number) => {
+            const details = await getItinerarioDetalles(idItinerario);
+            const photoUrls = Array.from(new Set([
+                ...(details.fotos ?? []).map((photo) => photo.url),
+                ...(details.fotoPortada ? [details.fotoPortada] : []),
+            ]));
+
+            await deleteItinerario(idItinerario);
+
+            const cleanupResults = await Promise.allSettled(
+                photoUrls.map(deleteItineraryPhotoFromStorage)
+            );
+            const failedCleanups = cleanupResults.filter((result) => result.status === 'rejected').length;
+            if (failedCleanups > 0) {
+                console.warn(`No se pudieron limpiar ${failedCleanups} fotos del itinerario ${idItinerario}.`);
+            }
+        },
         onSuccess: (data, idItinerario) => {
             queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
             queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
@@ -142,6 +161,7 @@ export const useItinerariosHook = () => {
             // Cleanup offline download if it exists
             removeItineraryOffline(idItinerario).catch(console.error);
             queryClient.invalidateQueries({ queryKey: ['downloadedIds'] });
+            queryClient.removeQueries({ queryKey: ['itineraryDetails', idItinerario], exact: true });
         },
         onError: (err) => {
             Alert.alert("Error", err instanceof ApiError ? err.message : 'No se pudo eliminar el itinerario.');
@@ -633,6 +653,62 @@ export const useItinerariosDetailsHook = () => {
         await quitItemMutation.mutateAsync({ idItinerary, idItem });
     };
 
+    // Mutation: add photo URL to an itinerary
+    const addPhotoMutation = useMutation({
+        mutationFn: ({ idItinerary, url }: { idItinerary: number; url: string }) =>
+            postFoto(idItinerary, url),
+        onSuccess: (createdPhoto, variables) => {
+            queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary], (prev) => {
+                if (!prev) return prev;
+                const fotos = [...(prev.fotos ?? []), createdPhoto]
+                    .sort((a, b) => a.orden - b.orden || a.id - b.id);
+                return { ...prev, fotos };
+            });
+        },
+        onError: (err) => {
+            Alert.alert('Error', err instanceof ApiError ? err.message : 'No se pudo agregar la foto.');
+        },
+        onSettled: (_data, _error, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+        },
+    });
+
+    const addPhoto = async (idItinerary: number, url: string) => {
+        return await addPhotoMutation.mutateAsync({ idItinerary, url });
+    };
+
+    // Mutation: delete a photo with optimistic cache update
+    const quitPhotoMutation = useMutation({
+        mutationFn: ({ idItinerary, idPhoto }: { idItinerary: number; idPhoto: number }) =>
+            deleteFoto(idItinerary, idPhoto),
+        onMutate: async ({ idItinerary, idPhoto }) => {
+            await queryClient.cancelQueries({ queryKey: ['itineraryDetails', idItinerary] });
+            const previousDetails = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary]);
+
+            if (previousDetails) {
+                queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary], {
+                    ...previousDetails,
+                    fotos: (previousDetails.fotos ?? []).filter((photo) => photo.id !== idPhoto),
+                });
+            }
+
+            return { previousDetails };
+        },
+        onError: (err, variables, context) => {
+            if (context?.previousDetails) {
+                queryClient.setQueryData(['itineraryDetails', variables.idItinerary], context.previousDetails);
+            }
+            Alert.alert('Error', err instanceof ApiError ? err.message : 'No se pudo eliminar la foto.');
+        },
+        onSettled: (_data, _error, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+        },
+    });
+
+    const quitPhoto = async (idItinerary: number, idPhoto: number) => {
+        await quitPhotoMutation.mutateAsync({ idItinerary, idPhoto });
+    };
+
     // Mutation: completar itinerario
     const completarMutation = useMutation({
         mutationFn: (idItinerary: number) => completarItinerario(idItinerary),
@@ -676,7 +752,7 @@ export const useItinerariosDetailsHook = () => {
 
     return {
         error: errorString,
-        isMutating: putDatesMutation.isPending || putTitleMutation.isPending || newItemMutation.isPending || editItemMutation.isPending || quitItemMutation.isPending || completarMutation.isPending,
+        isMutating: putDatesMutation.isPending || putTitleMutation.isPending || newItemMutation.isPending || editItemMutation.isPending || quitItemMutation.isPending || addPhotoMutation.isPending || quitPhotoMutation.isPending || completarMutation.isPending,
         isLoading,
         itineraryDetails,
         quitItem,
@@ -687,5 +763,8 @@ export const useItinerariosDetailsHook = () => {
         loadItineraryInfo,
         completarViaje,
         isCompletando: completarMutation.isPending,
+        addPhoto,
+        quitPhoto,
+        isMutatingPhotos: addPhotoMutation.isPending || quitPhotoMutation.isPending,
     };
 };

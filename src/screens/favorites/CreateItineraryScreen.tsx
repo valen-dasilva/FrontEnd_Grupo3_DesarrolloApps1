@@ -19,13 +19,24 @@ import { CategoriaGrid } from '@/components/Preferencias/CategoriaGrid';
 import { DestinoInput } from '@/components/Preferencias/DestinoInput';
 import { FechaRangeSelector } from '@/components/Preferencias/FechaRangeSelector';
 import { ProvinciaSelector } from '@/components/Preferencias/ProvinciaSelector';
+import {
+  ItineraryPhotoPicker,
+  SelectedItineraryPhoto,
+} from '@/components/favorites/itinerary_photos/ItineraryPhotoPicker/ItineraryPhotoPicker';
+import { useAuth } from '@/context/AuthContext';
 import { useItinerariosHook } from '@/hooks/useItinerarios';
+import { ApiError } from '@/services/api';
+import {
+  deleteItineraryPhotoFromStorage,
+  uploadItineraryPhoto,
+} from '@/services/itineraryPhotoService';
 import { CategoriaItinerario, Provincia, PROVINCIA_LABEL } from '@/types/itinerario';
 
 export default function CreateItineraryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { theme, toggleColorScheme } = useTheme();
+  const { user } = useAuth();
 
   const { crearItinerario, isCreando } = useItinerariosHook();
 
@@ -35,6 +46,8 @@ export default function CreateItineraryScreen() {
   const [fechaInicio, setFechaInicio] = useState<string | undefined>();
   const [fechaFin, setFechaFin] = useState<string | undefined>();
   const [categorias, setCategorias] = useState<Set<CategoriaItinerario>>(new Set());
+  const [photos, setPhotos] = useState<SelectedItineraryPhoto[]>([]);
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
 
   const [showCalendario, setShowCalendario] = useState(false);
   const [showProvincia, setShowProvincia] = useState(false);
@@ -61,8 +74,21 @@ export default function CreateItineraryScreen() {
       Toast.show({ type: 'error', text1: 'Faltan las fechas', text2: 'Elegí el rango de fechas del viaje.' });
       return;
     }
+    if (!user) {
+      Toast.show({ type: 'error', text1: 'Sesión no disponible', text2: 'Volvé a iniciar sesión para crear el itinerario.' });
+      return;
+    }
 
+    const uploadedUrls: string[] = [];
+    let creationRequested = false;
     try {
+      setIsUploadingPhotos(true);
+      for (const photo of photos) {
+        const uploaded = await uploadItineraryPhoto(user.idUsuario, photo);
+        uploadedUrls.push(uploaded.url);
+      }
+
+      creationRequested = true;
       await crearItinerario({
         titulo: titulo.trim(),
         descripcion: descripcion.trim() || undefined,
@@ -70,6 +96,8 @@ export default function CreateItineraryScreen() {
         fechaInicio,
         fechaFin,
         etiquetas: categorias.size > 0 ? Array.from(categorias) : undefined,
+        fotoPortada: uploadedUrls[0],
+        fotos: uploadedUrls.length > 0 ? uploadedUrls : undefined,
       });
       Toast.show({
         type: 'success',
@@ -77,10 +105,25 @@ export default function CreateItineraryScreen() {
         text2: 'Agregale actividades desde "Mis viajes".',
       });
       router.back();
-    } catch {
-      // el hook ya muestra el Alert de error
+    } catch (error) {
+      const failureIsConfirmed = !creationRequested || (error instanceof ApiError && error.status > 0);
+      if (failureIsConfirmed) {
+        await Promise.allSettled(uploadedUrls.map(deleteItineraryPhotoFromStorage));
+      }
+      if (!creationRequested) {
+        Toast.show({
+          type: 'error',
+          text1: 'No se pudieron subir las fotos',
+          text2: error instanceof Error ? error.message : 'Revisá tu conexión e intentá nuevamente.',
+        });
+      }
+      // Los errores del backend los muestra el hook.
+    } finally {
+      setIsUploadingPhotos(false);
     }
   };
+
+  const isSubmitting = isCreando || isUploadingPhotos;
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: theme.background }]}>
@@ -156,17 +199,23 @@ export default function CreateItineraryScreen() {
           titulo="Categorías del viaje"
           subtitulo="Elegí las que mejor describan tu itinerario"
         />
+
+        <ItineraryPhotoPicker
+          photos={photos}
+          onChange={setPhotos}
+          disabled={isSubmitting}
+        />
       </ScrollView>
 
       {/* Botón fijo */}
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: theme.background, borderTopColor: theme.border }]}>
         <TouchableOpacity
-          style={[styles.btnCrear, { backgroundColor: theme.primary }, isCreando && styles.btnLoading]}
+          style={[styles.btnCrear, { backgroundColor: theme.primary }, isSubmitting && styles.btnLoading]}
           onPress={handleCrear}
-          disabled={isCreando}
+          disabled={isSubmitting}
           activeOpacity={0.85}
         >
-          {isCreando ? (
+          {isSubmitting ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <>

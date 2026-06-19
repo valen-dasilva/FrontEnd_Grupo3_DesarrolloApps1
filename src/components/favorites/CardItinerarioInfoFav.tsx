@@ -4,6 +4,7 @@ import { ItineraryInfoCard } from '../Explorar/CardItinerarioInfo';
 type Props = {
     title?: string;
     imageUrl?: string;
+    images?: readonly string[];
     category?: string;
     dateRange?: string;
     description?: string;
@@ -18,6 +19,7 @@ type Props = {
 export function CardItinerarioInfoFav({
     title,
     imageUrl,
+    images,
     category,
     dateRange,
     description,
@@ -33,6 +35,7 @@ export function CardItinerarioInfoFav({
             idItinerario={idItinerario}
             title={title}
             image={imageUrl}
+            images={images}
             category={category}
             dateRange={dateRange}
             description={description}

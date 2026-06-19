@@ -2,13 +2,14 @@ import { fonts } from '@/constants/fonts';
 import { icons } from '@/constants/icons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { styles } from './CardItinerarioInfo.styles';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
 import { formatDateRange } from '@/utils/dateUtils';
 import { FavoriteButton } from '../common/FavoriteButton/FavoriteButton';
 import { CategoryBadge } from '../common/CategoryBadge/CategoryBadge';
+import { ImageCarousel } from '../common/ImageCarousel/ImageCarousel';
 
 type Props = {
   idItinerario?: number;
@@ -19,6 +20,7 @@ type Props = {
   dateRange?: string;
   description?: string;
   image?: string;
+  images?: readonly string[];
   isFavorite?: boolean;
   idFavorito?: number;
   onBackPress?: () => void;
@@ -35,6 +37,7 @@ export function ItineraryInfoCard({
   dateRange,
   description = "Visita guiada por el emblemático Teatro Colón, descubriendo su historia, arquitectura y secretos detrás del escenario.",
   image,
+  images,
   isFavorite = false,
   idFavorito,
   onBackPress,
@@ -57,18 +60,15 @@ export function ItineraryInfoCard({
   return (
     <View>
       {/** Image container */}
-      <View style={styles.imageContainer}>
-        {/** Overlay image with text */}
-        {image ? (
-          <Image source={{ uri: image }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
-        ) : (
-          <View style={[StyleSheet.absoluteFillObject, { backgroundColor: theme.card }]} />
-        )}
-
+      <ImageCarousel
+        images={images?.length ? images : image ? [image] : []}
+        fallbackColor={theme.card}
+        style={styles.imageContainer}
+      >
         {/** Dark transparent overlay */}
-        <View style={styles.heroOverlay}>
+        <View pointerEvents="box-none" style={styles.heroOverlay}>
           {/* Back and heart icons */}
-          <View style={styles.heroTopBar}>
+          <View pointerEvents="box-none" style={styles.heroTopBar}>
             {/** Back button */}
             <TouchableOpacity 
               style={[
@@ -99,7 +99,7 @@ export function ItineraryInfoCard({
           </View>
 
           {/** Bottom info container */}
-          <View style={styles.bottomInfoContainer}>
+          <View pointerEvents="box-none" style={styles.bottomInfoContainer}>
             {/** Category badge */}
             <CategoryBadge
               category={category}
@@ -128,7 +128,7 @@ export function ItineraryInfoCard({
             </View>
           </View>
         </View>
-      </View>
+      </ImageCarousel>
 
       {/* Description */}
       <Text style={[styles.description, { color: theme.textSecondary }]}>

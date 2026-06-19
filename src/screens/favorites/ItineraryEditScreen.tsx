@@ -12,8 +12,19 @@ import { colors } from '@/constants/colors';
 import { styles } from './ItineraryEditScreen.styles';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useItinerariosDetailsHook } from '@/hooks/useItinerarios';
-import { ItemItinerarioUsuario } from '@/services/itinerariosService';
+import { FotoItinerarioUsuario, ItemItinerarioUsuario } from '@/services/itinerariosService';
 import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
+import {
+  ItineraryPhotoPicker,
+  SelectedItineraryPhoto,
+} from '@/components/favorites/itinerary_photos/ItineraryPhotoPicker/ItineraryPhotoPicker';
+import { useAuth } from '@/context/AuthContext';
+import { ApiError } from '@/services/api';
+import {
+  deleteItineraryPhotoFromStorage,
+  uploadItineraryPhoto,
+} from '@/services/itineraryPhotoService';
+import Toast from 'react-native-toast-message';
 
 type DaySectionProps = Readonly<{
   dayNum: number;
@@ -51,6 +62,7 @@ export default function EdicionItinerarioScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { user } = useAuth();
 
   const { colorScheme, theme, toggleColorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
@@ -60,7 +72,10 @@ export default function EdicionItinerarioScreen() {
       itineraryDetails,
       isLoading,
       quitItem,
-      putItineraryTitle
+      putItineraryTitle,
+      addPhoto,
+      quitPhoto,
+      isMutatingPhotos,
   } = useItinerariosDetailsHook();
 
   useFocusEffect(
@@ -74,6 +89,9 @@ export default function EdicionItinerarioScreen() {
   const activities = itineraryDetails?.items || [];
   const [title, setTitle] = useState(itineraryDetails?.titulo || 'Cargando...');
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; title: string } | null>(null);
+  const [pendingPhotos, setPendingPhotos] = useState<SelectedItineraryPhoto[]>([]);
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
+  const [photoDeleteTarget, setPhotoDeleteTarget] = useState<FotoItinerarioUsuario | null>(null);
 
   React.useEffect(() => {
       if (itineraryDetails) {
@@ -116,12 +134,79 @@ export default function EdicionItinerarioScreen() {
     });
   };
 
+  const handleUploadPhotos = async () => {
+    if (!user || !id || pendingPhotos.length === 0) return;
+
+    let uploadedCount = 0;
+    setIsUploadingPhotos(true);
+    try {
+      for (const photo of pendingPhotos) {
+        let uploadedUrl: string;
+        try {
+          const uploaded = await uploadItineraryPhoto(user.idUsuario, photo);
+          uploadedUrl = uploaded.url;
+        } catch (error) {
+          Toast.show({
+            type: 'error',
+            text1: 'No se pudo subir una foto',
+            text2: error instanceof Error ? error.message : 'Revisá tu conexión e intentá nuevamente.',
+          });
+          break;
+        }
+
+        try {
+          await addPhoto(Number(id), uploadedUrl);
+          uploadedCount += 1;
+          setPendingPhotos((current) => current.filter((item) => item.key !== photo.key));
+        } catch (error) {
+          if (error instanceof ApiError && error.status > 0) {
+            await deleteItineraryPhotoFromStorage(uploadedUrl).catch(console.warn);
+          }
+          break;
+        }
+      }
+
+      if (uploadedCount > 0) {
+        Toast.show({
+          type: 'success',
+          text1: uploadedCount === 1 ? 'Foto agregada' : 'Fotos agregadas',
+          text2: `${uploadedCount} ${uploadedCount === 1 ? 'foto se guardó' : 'fotos se guardaron'} correctamente.`,
+        });
+      }
+    } finally {
+      setIsUploadingPhotos(false);
+    }
+  };
+
+  const handleDeletePhoto = async () => {
+    if (!photoDeleteTarget || !id) return;
+
+    const target = photoDeleteTarget;
+    try {
+      await quitPhoto(Number(id), target.id);
+      try {
+        await deleteItineraryPhotoFromStorage(target.url);
+      } catch (error) {
+        console.warn('No se pudo limpiar la foto de Storage:', error);
+        Toast.show({
+          type: 'info',
+          text1: 'Foto eliminada',
+          text2: 'La imagen se quitó del itinerario, pero su limpieza quedó pendiente.',
+        });
+      }
+    } finally {
+      setPhotoDeleteTarget(null);
+    }
+  };
+
   const handleGoBack = () => {
     router.back();
   };
 
   const days = Array.from(new Set(activities.map((act) => act.dia))).sort((a, b) => a - b);
   if (days.length === 0) days.push(1);
+  const existingPhotos = itineraryDetails?.fotos ?? [];
+  const isManagingPhotos = isUploadingPhotos || isMutatingPhotos;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
@@ -156,6 +241,23 @@ export default function EdicionItinerarioScreen() {
                         }
                     }}
                   />
+                </View>
+
+                <View style={styles.photoSection}>
+                  <ItineraryPhotoPicker
+                    photos={pendingPhotos}
+                    onChange={setPendingPhotos}
+                    existingPhotos={existingPhotos}
+                    onRemoveExisting={setPhotoDeleteTarget}
+                    disabled={isManagingPhotos}
+                  />
+                  {pendingPhotos.length > 0 && (
+                    <CustomButton
+                      title={isUploadingPhotos ? 'Subiendo fotos...' : 'Guardar fotos seleccionadas'}
+                      onPress={handleUploadPhotos}
+                      disabled={isManagingPhotos}
+                    />
+                  )}
                 </View>
 
                 {days.map((dayNum) => (
@@ -198,6 +300,15 @@ export default function EdicionItinerarioScreen() {
             setDeleteTarget(null);
           }
         }}
+      />
+
+      <ConfirmAlert
+        visible={photoDeleteTarget !== null}
+        title="Eliminar Foto"
+        message="¿Estás seguro de que deseas eliminar esta foto del itinerario?"
+        confirmText="Eliminar"
+        onCancel={() => setPhotoDeleteTarget(null)}
+        onConfirm={handleDeletePhoto}
       />
     </View>
   );

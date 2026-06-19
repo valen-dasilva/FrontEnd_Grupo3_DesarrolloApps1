@@ -23,6 +23,10 @@ export const styles = StyleSheet.create({
   titleInputWrapper: {
     marginBottom: paddings.spacing.md,
   },
+  photoSection: {
+    paddingHorizontal: paddings.spacing.lg,
+    marginBottom: paddings.spacing.xl,
+  },
   daySection: {
     paddingHorizontal: paddings.spacing.lg,
     marginBottom: paddings.spacing.xl,

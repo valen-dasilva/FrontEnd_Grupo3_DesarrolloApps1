@@ -17,6 +17,7 @@ export interface CrearItinerarioRequest {
   fechaFin: string;
   fotoPortada?: string;
   etiquetas?: string[];
+  fotos?: string[];
 }
 
 /** Resumen de un itinerario propio del usuario (sin items). */
@@ -45,6 +46,12 @@ export interface ItemItinerarioUsuario {
   hora: string;
 }
 
+export interface FotoItinerarioUsuario {
+  id: number;
+  url: string;
+  orden: number;
+}
+
 /** Detalle completo de un itinerario propio (con items). */
 export interface ItinerarioUsuario {
   id: number;
@@ -59,6 +66,7 @@ export interface ItinerarioUsuario {
   items: ItemItinerarioUsuario[];
   esPinned: boolean;
   completado: boolean;
+  fotos: FotoItinerarioUsuario[];
 }
 
 const ITIN_PATH = '/itinerarios';
@@ -165,4 +173,24 @@ export const deleteItem = async (
   idItem: number,
 ): Promise<void> => {
   await apiClient.delete<void>(`${ITIN_PATH}/${idItinerario}/items/${idItem}`);
+}
+
+//------ endpoints de fotos
+
+export const postFoto = async (
+  idItinerario: number,
+  url: string,
+): Promise<FotoItinerarioUsuario> => {
+  const response = await apiClient.post<FotoItinerarioUsuario>(
+    `${ITIN_PATH}/${idItinerario}/fotos`,
+    { url },
+  );
+  return response.data;
+}
+
+export const deleteFoto = async (
+  idItinerario: number,
+  idFoto: number,
+): Promise<void> => {
+  await apiClient.delete<void>(`${ITIN_PATH}/${idItinerario}/fotos/${idFoto}`);
 }
