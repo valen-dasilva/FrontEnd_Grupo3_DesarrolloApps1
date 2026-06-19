@@ -3,45 +3,24 @@ import {
   Modal,
   View,
   Text,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   Dimensions,
   SafeAreaView,
 } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
 import { MapaArgentina } from './MapaArgentina';
+import { HeaderModal } from './HeaderModal';
+import { PanelEstadisticasProvincia } from './PanelEstadisticasProvincia';
 import { ItinerarioResumen } from '@/services/favoritosService';
+import { Provincia } from '@/types/itinerario';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const SCREEN_HEIGHT = Dimensions.get('window').height;
+const ANCHO_PANTALLA = Dimensions.get('window').width;
+const ALTO_PANTALLA = Dimensions.get('window').height;
 
-const NOMBRE_PROVINCIA: Record<string, string> = {
-  BUENOS_AIRES: 'Buenos Aires',
-  CABA: 'Ciudad Autónoma de Buenos Aires',
-  CATAMARCA: 'Catamarca',
-  CHACO: 'Chaco',
-  CHUBUT: 'Chubut',
-  CORDOBA: 'Córdoba',
-  CORRIENTES: 'Corrientes',
-  ENTRE_RIOS: 'Entre Ríos',
-  FORMOSA: 'Formosa',
-  JUJUY: 'Jujuy',
-  LA_PAMPA: 'La Pampa',
-  LA_RIOJA: 'La Rioja',
-  MENDOZA: 'Mendoza',
-  MISIONES: 'Misiones',
-  NEUQUEN: 'Neuquén',
-  RIO_NEGRO: 'Río Negro',
-  SALTA: 'Salta',
-  SAN_JUAN: 'San Juan',
-  SAN_LUIS: 'San Luis',
-  SANTA_CRUZ: 'Santa Cruz',
-  SANTA_FE: 'Santa Fe',
-  SANTIAGO_DEL_ESTERO: 'Santiago del Estero',
-  TIERRA_DEL_FUEGO: 'Tierra del Fuego',
-  TUCUMAN: 'Tucumán',
-};
+// Color ámbar para resaltar una provincia visitada al tocarla
+const COLOR_RESALTADO_VISITADA = '#F59E0B';
+// Color gris para resaltar una provincia sin visitar al tocarla
+const COLOR_RESALTADO_NO_VISITADA = '#94A3B8';
 
 interface Props {
   visible: boolean;
@@ -64,45 +43,48 @@ export function MapaInteractivoModal({
   strokeColor,
   theme,
 }: Props) {
-  const [provinciaSeleccionada, setProvinciaSeleccionada] = useState<string | null>(null);
+  const [provinciaSeleccionada, setProvinciaSeleccionada] = useState<Provincia | null>(null);
 
-  const handleProvincePress = (provincia: string) => {
-    setProvinciaSeleccionada(prev => (prev === provincia ? null : provincia));
+  const handleTapEnProvincia = (provincia: string) => {
+    // Toggle: tocar la misma provincia la deselecciona; tocar otra la selecciona
+    setProvinciaSeleccionada(prev => (prev === provincia ? null : provincia as Provincia));
   };
 
-  const handleClose = () => {
-    setProvinciaSeleccionada(null);
+  const handleCerrarModal = () => {
+    setProvinciaSeleccionada(null); // limpiamos para que la próxima apertura empiece sin selección
     onClose();
   };
 
-  const visitadasSet = new Set(provinciasVisitadas);
+  // Set para buscar en O(1) si una provincia fue visitada (más eficiente que .includes())
+  const provinciasVisitadasSet = new Set(provinciasVisitadas);
 
-  const statsDeProvancia = provinciaSeleccionada
-    ? favoritos.filter(f => f.completado && f.provincia === provinciaSeleccionada)
+  // Itinerarios completados del usuario en la provincia actualmente seleccionada
+  const itinerariosEnProvinciaSeleccionada = provinciaSeleccionada
+    ? favoritos.filter(fav => fav.completado && fav.provincia === provinciaSeleccionada)
     : [];
 
-  const diasEnProvincia = statsDeProvancia.reduce((acc, f) => acc + f.duracionDias, 0);
-  const vecesVisitada = statsDeProvancia.length;
+  const diasTotalesEnProvinciaSeleccionada = itinerariosEnProvinciaSeleccionada
+    .reduce((acumulado, fav) => acumulado + fav.duracionDias, 0);
 
-  const colorSeleccionada = visitadasSet.has(provinciaSeleccionada ?? '')
-    ? '#F59E0B'
-    : '#94A3B8';
+  const cantidadViajesEnProvinciaSeleccionada = itinerariosEnProvinciaSeleccionada.length;
+
+  const provinciaSeleccionadaFueVisitada = provinciasVisitadasSet.has(provinciaSeleccionada ?? '');
+
+  // El color del highlight del mapa depende de si la provincia tocada fue visitada
+  const colorResaltadoProvinciaActual = provinciaSeleccionadaFueVisitada
+    ? COLOR_RESALTADO_VISITADA
+    : COLOR_RESALTADO_NO_VISITADA;
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen">
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
-        {/* Header */}
-        <View style={[styles.header, { borderBottomColor: theme.border }]}>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Mi recorrido</Text>
-          <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
-            <MaterialIcons name="close" size={24} color={theme.text} />
-          </TouchableOpacity>
-        </View>
+      <SafeAreaView style={[styles.contenedorPrincipal, { backgroundColor: theme.background }]}>
 
-        {/* Mapa con pan + zoom nativo via ScrollView */}
+        <HeaderModal titulo="Mi recorrido" onCerrar={handleCerrarModal} theme={theme} />
+
+        {/* Mapa interactivo con pan + zoom nativo via ScrollView */}
         <ScrollView
-          style={styles.mapScroll}
-          contentContainerStyle={styles.mapContainer}
+          style={styles.contenedorScrollMapa}
+          contentContainerStyle={styles.contenedorInternoMapa}
           minimumZoomScale={0.6}
           maximumZoomScale={4}
           showsVerticalScrollIndicator={false}
@@ -114,132 +96,49 @@ export function MapaInteractivoModal({
             colorVisitada={colorVisitada}
             colorNoVisitada={colorNoVisitada}
             strokeColor={strokeColor ?? theme.background}
-            width={SCREEN_WIDTH * 1.1}
-            height={SCREEN_HEIGHT * 0.65}
-            onProvincePress={handleProvincePress}
+            width={ANCHO_PANTALLA * 1.1}
+            height={ALTO_PANTALLA * 0.65}
+            onProvincePress={handleTapEnProvincia}
             provinciaSeleccionada={provinciaSeleccionada}
-            colorSeleccionada={colorSeleccionada}
+            colorSeleccionada={colorResaltadoProvinciaActual}
           />
         </ScrollView>
 
-        {/* Panel inferior: stats de la provincia seleccionada */}
         {provinciaSeleccionada ? (
-          <View style={[styles.statsPanel, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
-            <View style={styles.statsPanelRow}>
-              <View style={styles.statsPanelLeft}>
-                <Text style={[styles.provinciaNombre, { color: theme.text }]}>
-                  {NOMBRE_PROVINCIA[provinciaSeleccionada] ?? provinciaSeleccionada}
-                </Text>
-                <View style={[
-                  styles.estadoBadge,
-                  { backgroundColor: visitadasSet.has(provinciaSeleccionada) ? colorVisitada + '22' : theme.border },
-                ]}>
-                  <MaterialIcons
-                    name={visitadasSet.has(provinciaSeleccionada) ? 'check-circle' : 'radio-button-unchecked'}
-                    size={14}
-                    color={visitadasSet.has(provinciaSeleccionada) ? colorVisitada : theme.gray}
-                  />
-                  <Text style={[styles.estadoText, { color: visitadasSet.has(provinciaSeleccionada) ? colorVisitada : theme.gray }]}>
-                    {visitadasSet.has(provinciaSeleccionada) ? 'Visitada' : 'Sin visitar'}
-                  </Text>
-                </View>
-              </View>
-
-              {visitadasSet.has(provinciaSeleccionada) && (
-                <View style={styles.statsPanelRight}>
-                  <View style={styles.statItem}>
-                    <Text style={[styles.statNum, { color: colorVisitada }]}>{vecesVisitada}</Text>
-                    <Text style={[styles.statLbl, { color: theme.gray }]}>
-                      {vecesVisitada === 1 ? 'viaje' : 'viajes'}
-                    </Text>
-                  </View>
-                  <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
-                  <View style={styles.statItem}>
-                    <Text style={[styles.statNum, { color: colorVisitada }]}>{diasEnProvincia}</Text>
-                    <Text style={[styles.statLbl, { color: theme.gray }]}>
-                      {diasEnProvincia === 1 ? 'día' : 'días'}
-                    </Text>
-                  </View>
-                </View>
-              )}
-            </View>
-
-            {statsDeProvancia.length > 0 && (
-              <Text style={[styles.itinerariosList, { color: theme.gray }]} numberOfLines={2}>
-                {statsDeProvancia.map(f => f.titulo).join(' · ')}
-              </Text>
-            )}
-          </View>
+          <PanelEstadisticasProvincia
+            provincia={provinciaSeleccionada}
+            fueVisitada={provinciaSeleccionadaFueVisitada}
+            cantidadViajes={cantidadViajesEnProvinciaSeleccionada}
+            diasTotales={diasTotalesEnProvinciaSeleccionada}
+            titulosItinerarios={itinerariosEnProvinciaSeleccionada.map(fav => fav.titulo)}
+            colorVisitada={colorVisitada}
+            theme={theme}
+          />
         ) : (
-          <View style={[styles.hintPanel, { borderTopColor: theme.border }]}>
-            <Text style={[styles.hintText, { color: theme.gray }]}>
+          <View style={[styles.panelSugerencia, { borderTopColor: theme.border }]}>
+            <Text style={[styles.textoSugerencia, { color: theme.gray }]}>
               Tocá una provincia para ver sus estadísticas
             </Text>
           </View>
         )}
+
       </SafeAreaView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-  },
-  headerTitle: { fontSize: 17, fontWeight: '700' },
-  closeBtn: { padding: 4 },
-  mapScroll: { flex: 1 },
-  mapContainer: {
+  contenedorPrincipal: { flex: 1 },
+  contenedorScrollMapa: { flex: 1 },
+  contenedorInternoMapa: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
   },
-  statsPanel: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-  },
-  statsPanelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  statsPanelLeft: { flex: 1 },
-  provinciaNombre: { fontSize: 16, fontWeight: '700', marginBottom: 4 },
-  estadoBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    alignSelf: 'flex-start',
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  estadoText: { fontSize: 12, fontWeight: '600' },
-  statsPanelRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  statItem: { alignItems: 'center' },
-  statNum: { fontSize: 22, fontWeight: '800' },
-  statLbl: { fontSize: 11, fontWeight: '500' },
-  statDivider: { width: 1, height: 32, borderRadius: 1 },
-  itinerariosList: {
-    fontSize: 12,
-    marginTop: 8,
-    lineHeight: 16,
-  },
-  hintPanel: {
+  panelSugerencia: {
     paddingVertical: 16,
     alignItems: 'center',
     borderTopWidth: 1,
   },
-  hintText: { fontSize: 13 },
+  textoSugerencia: { fontSize: 13 },
 });
