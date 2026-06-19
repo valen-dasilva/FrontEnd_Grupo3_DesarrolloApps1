@@ -19,6 +19,7 @@ export interface ItinerarioResumen {
   duracionDias: number;
   etiquetas: string[];
   esPinned: boolean; // true si es el itinerario fijado como activo (tachuela)
+  completado: boolean;
 }
 
 
@@ -44,6 +45,7 @@ export interface ItinerarioUsuario {
   duracionDias: number;
   etiquetas: string[];
   items: ItemItinerarioUsuario[];
+  completado: boolean;
 }
 
 const FAVS_PATH = '/favoritos';
@@ -65,6 +67,7 @@ export const postItinerario = async (idItinerario: number): Promise<ItinerarioRe
       duracionDias: data.duracionDias,
       etiquetas: data.etiquetas,
       esPinned: data.esPinned,
+      completado: data.completado ?? false,
     };
 }
 
@@ -84,7 +87,8 @@ export const getItinerarios = async (): Promise<ItinerarioResumen[]> => {
       duracionDias: data.duracionDias,
       etiquetas: data.etiquetas,
       esPinned: data.esPinned,
-    })); 
+      completado: data.completado ?? false,
+    }));
 }
 
 //devuelve el itinerario activo o proximo a iniciar
@@ -126,6 +130,11 @@ export const deleteItinerario = async (id: number): Promise<void> => {
 //fijar/desfijar un itinerario como el activo del Home (tachuela)
 export const patchPin = async (id: number): Promise<void> => {
     await apiClient.patch<void>(`${FAVS_PATH}/${id}/pin`);
+}
+
+//marcar un itinerario como completado (viaje realizado)
+export const completarItinerario = async (id: number): Promise<void> => {
+    await apiClient.patch<void>(`${FAVS_PATH}/${id}/completar`);
 }
  
 //------endpoints a items

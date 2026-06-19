@@ -121,11 +121,16 @@ export const styles = StyleSheet.create({
     marginBottom: paddings.spacing.md,
     alignItems: 'center',
   },
+  mapaTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    alignSelf: 'stretch',
+    marginBottom: paddings.spacing.md,
+  },
   mapaTitle: {
     fontSize: 14,
     fontWeight: '600',
-    marginBottom: paddings.spacing.md,
-    alignSelf: 'flex-start',
   },
   mapaEmpty: {
     fontSize: 13,

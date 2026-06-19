@@ -27,6 +27,7 @@ import {
     getItinerarioDetalles,
     getItinerarios,
     patchPin,
+    completarItinerario,
     ItemItinerarioUsuario,
     ItinerarioResumen,
     ItinerarioUsuario,
@@ -613,6 +614,40 @@ export const useFavoritosDetailsHook = () => {
         await quitItemMutation.mutateAsync({ idItinerary, idItem });
     };
 
+    // Mutation: completar itinerario
+    const completarMutation = useMutation({
+        mutationFn: (idItinerary: number) => completarItinerario(idItinerary),
+        onMutate: async (idItinerary) => {
+            await queryClient.cancelQueries({ queryKey: ['itineraryDetails', idItinerary] });
+            await queryClient.cancelQueries({ queryKey: ['favorites'] });
+            const prevDetails = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary]);
+            if (prevDetails) {
+                queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary], { ...prevDetails, completado: true });
+            }
+            const prevFavorites = queryClient.getQueryData<ItinerarioResumen[]>(['favorites']);
+            if (prevFavorites) {
+                queryClient.setQueryData<ItinerarioResumen[]>(['favorites'], prevFavorites.map(it => it.id === idItinerary ? { ...it, completado: true } : it));
+            }
+            return { prevDetails, prevFavorites };
+        },
+        onError: (_err, idItinerary, context) => {
+            // Solo revertimos el optimistic update. El mensaje al usuario lo
+            // muestra la pantalla con un Toast cross-platform (Alert queda mudo
+            // en Expo web), evitando además un doble aviso en nativo.
+            if (context?.prevDetails) queryClient.setQueryData(['itineraryDetails', idItinerary], context.prevDetails);
+            if (context?.prevFavorites) queryClient.setQueryData(['favorites'], context.prevFavorites);
+        },
+        onSettled: (data, error, idItinerary) => {
+            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', idItinerary] });
+            queryClient.invalidateQueries({ queryKey: ['favorites'] });
+            queryClient.invalidateQueries({ queryKey: ['estadisticas'] });
+        },
+    });
+
+    const completarViaje = async (idItinerary: number) => {
+        await completarMutation.mutateAsync(idItinerary);
+    };
+
     let errorString: string | null = null;
     if (error instanceof Error) {
         errorString = error.message;
@@ -622,7 +657,7 @@ export const useFavoritosDetailsHook = () => {
 
     return {
         error: errorString,
-        isMutating: putDatesMutation.isPending || putTitleMutation.isPending || newItemMutation.isPending || editItemMutation.isPending || quitItemMutation.isPending,
+        isMutating: putDatesMutation.isPending || putTitleMutation.isPending || newItemMutation.isPending || editItemMutation.isPending || quitItemMutation.isPending || completarMutation.isPending,
         isLoading,
         itineraryDetails,
         quitItem,
@@ -631,5 +666,7 @@ export const useFavoritosDetailsHook = () => {
         putItineraryDates,
         putItineraryTitle,
         loadItineraryInfo,
+        completarViaje,
+        isCompletando: completarMutation.isPending,
     };
 };

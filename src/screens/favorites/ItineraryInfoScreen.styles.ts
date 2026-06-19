@@ -44,4 +44,22 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 50,
   },
+  completarBtnWrapper: {
+    marginHorizontal: paddings.spacing.xl,
+    marginTop: paddings.spacing.md,
+    marginBottom: paddings.spacing.xl,
+  },
+  completarBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: paddings.radius.md,
+    borderWidth: 1.5,
+  },
+  completarBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
 });

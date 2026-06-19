@@ -9,6 +9,9 @@ interface Props {
   strokeColor?: string;
   width?: number | string;
   height?: number;
+  onProvincePress?: (provincia: string) => void;
+  provinciaSeleccionada?: string | null;
+  colorSeleccionada?: string;
 }
 
 export function MapaArgentina({
@@ -18,8 +21,18 @@ export function MapaArgentina({
   strokeColor = '#FFFFFF',
   width = '100%',
   height = 320,
+  onProvincePress,
+  provinciaSeleccionada = null,
+  colorSeleccionada = '#F59E0B',
 }: Props) {
   const visitadasSet = new Set(provinciasVisitadas);
+
+  //Obtiene el color de relleno para una provincia según si fue visitada, seleccionada o no visitada.
+  const getFill = (codProvincia: string) => {
+    if (codProvincia === provinciaSeleccionada) return colorSeleccionada;
+    if (visitadasSet.has(codProvincia)) return colorVisitada;
+    return colorNoVisitada;
+  };
 
   return (
     <Svg viewBox="0 0 500 835" width={width} height={height}>
@@ -27,15 +40,10 @@ export function MapaArgentina({
         <Path
           key={provincia.enum}
           d={provincia.path}
-          fill={
-            provincia.enum === 'BUENOS_AIRES'
-              ? '#FF0000'
-              : visitadasSet.has(provincia.enum)
-                ? colorVisitada
-                : colorNoVisitada
-          }
+          fill={getFill(provincia.enum)}
           stroke={strokeColor}
           strokeWidth={1.5}
+          onPress={onProvincePress ? () => onProvincePress(provincia.enum) : undefined}
         />
       ))}
     </Svg>

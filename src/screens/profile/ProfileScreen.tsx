@@ -14,7 +14,9 @@ import { UserAvatar } from '@/components/common/UserAvatar/UserAvatar';
 import Toast from 'react-native-toast-message';
 import { styles } from './ProfileScreen.styles';
 import { MapaArgentina } from '@/components/perfil/MapaArgentina/MapaArgentina';
+import { MapaInteractivoModal } from '@/components/perfil/MapaArgentina/MapaInteractivoModal';
 import { useEstadisticas } from '@/hooks/useEstadisticas';
+import { useFavoritosHook } from '@/hooks/useFavoritos';
 
 export default function PerfilScreen() {
   const router = useRouter();
@@ -23,7 +25,9 @@ export default function PerfilScreen() {
   const { user, logout, updateUser } = useAuth();
 
   const [loadingImage, setLoadingImage] = useState(false);
+  const [mapaVisible, setMapaVisible] = useState(false);
   const { data: estadisticas } = useEstadisticas();
+  const { listItinerarioResumen } = useFavoritosHook();
 
   const handlePickImage = async () => {
     if (!user) return;
@@ -155,8 +159,15 @@ export default function PerfilScreen() {
           </View>
         )}
 
-        <View style={[styles.mapaCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.mapaTitle, { color: theme.text }]}>Provincias visitadas</Text>
+        <TouchableOpacity
+          style={[styles.mapaCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+          onPress={() => setMapaVisible(true)}
+          activeOpacity={0.85}
+        >
+          <View style={styles.mapaTitleRow}>
+            <Text style={[styles.mapaTitle, { color: theme.text }]}>Provincias visitadas</Text>
+            <MaterialIcons name="open-in-full" size={16} color={theme.gray} />
+          </View>
           <MapaArgentina
             provinciasVisitadas={estadisticas?.provinciasVisitadas ?? []}
             colorVisitada={theme.primary}
@@ -169,7 +180,18 @@ export default function PerfilScreen() {
               Completá tus primeros viajes para ver el mapa
             </Text>
           )}
-        </View>
+        </TouchableOpacity>
+
+        <MapaInteractivoModal
+          visible={mapaVisible}
+          onClose={() => setMapaVisible(false)}
+          provinciasVisitadas={estadisticas?.provinciasVisitadas ?? []}
+          favoritos={listItinerarioResumen}
+          colorVisitada={theme.primary}
+          colorNoVisitada={theme.border}
+          strokeColor={theme.background}
+          theme={theme as unknown as Record<string, string>}
+        />
 
         <TouchableOpacity
           style={[styles.logoutBtn, { borderColor: theme.danger }]}
