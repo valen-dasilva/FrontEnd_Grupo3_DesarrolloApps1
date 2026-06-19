@@ -1,5 +1,5 @@
-import { Stack, useRouter, useFocusEffect, type Href } from 'expo-router';
-import React, { useState, useCallback } from 'react';
+import { Stack, useRouter, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
+import React, { useState, useCallback, useEffect } from 'react';
 import { FlatList, StatusBar, Text, View, ActivityIndicator, Platform, Pressable, StyleSheet } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,10 +23,17 @@ type Vista = 'guardados' | 'misViajes';
 export default function FavoritosScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { vista: requestedVista } = useLocalSearchParams<{ vista?: string }>();
   const { colorScheme, theme, toggleColorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
 
-  const [vista, setVista] = useState<Vista>('guardados');
+  const [vista, setVista] = useState<Vista>(requestedVista === 'misViajes' ? 'misViajes' : 'guardados');
+
+  useEffect(() => {
+    if (requestedVista === 'guardados' || requestedVista === 'misViajes') {
+      setVista(requestedVista);
+    }
+  }, [requestedVista]);
 
   // Favoritos = bookmarks (templates del sistema guardados)
   const {

@@ -22,7 +22,7 @@ export const saveLocalTitleOverride = async (id: number, title: string): Promise
     }
 };
 import {
-    deleteFoto,
+    deleteFotoConfirmada,
     deleteItem,
     deleteItinerario,
     getItinerarioDetalles,
@@ -106,8 +106,8 @@ export const useItinerariosHook = () => {
     // Mutation: crear copia desde un favorito (template del sistema guardado)
     const crearCopiaMutation = useMutation({
         mutationFn: (idSistema: number) => crearItinerarioDesdeFavorito(idSistema),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
         },
         onError: (err) => {
             Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo crear la copia del itinerario.");
@@ -121,8 +121,11 @@ export const useItinerariosHook = () => {
     // Mutation: crear itinerario desde cero
     const crearDesdeCeroMutation = useMutation({
         mutationFn: (payload: CrearItinerarioRequest) => crearItinerarioDesdeCero(payload),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: ['misItinerarios'],
+                refetchType: 'all',
+            });
         },
         onError: (err) => {
             Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo crear el itinerario.");
@@ -670,6 +673,8 @@ export const useItinerariosDetailsHook = () => {
         },
         onSettled: (_data, _error, variables) => {
             queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
         },
     });
 
@@ -677,31 +682,28 @@ export const useItinerariosDetailsHook = () => {
         return await addPhotoMutation.mutateAsync({ idItinerary, url });
     };
 
-    // Mutation: delete a photo with optimistic cache update
+    // Mutation: delete a photo and confirm persistence before Storage cleanup.
     const quitPhotoMutation = useMutation({
-        mutationFn: ({ idItinerary, idPhoto }: { idItinerary: number; idPhoto: number }) =>
-            deleteFoto(idItinerary, idPhoto),
-        onMutate: async ({ idItinerary, idPhoto }) => {
-            await queryClient.cancelQueries({ queryKey: ['itineraryDetails', idItinerary] });
-            const previousDetails = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary]);
-
-            if (previousDetails) {
-                queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary], {
-                    ...previousDetails,
-                    fotos: (previousDetails.fotos ?? []).filter((photo) => photo.id !== idPhoto),
-                });
-            }
-
-            return { previousDetails };
+        mutationFn: async ({ idItinerary, idPhoto }: { idItinerary: number; idPhoto: number }) => {
+            return deleteFotoConfirmada(idItinerary, idPhoto);
         },
-        onError: (err, variables, context) => {
-            if (context?.previousDetails) {
-                queryClient.setQueryData(['itineraryDetails', variables.idItinerary], context.previousDetails);
-            }
-            Alert.alert('Error', err instanceof ApiError ? err.message : 'No se pudo eliminar la foto.');
+        onSuccess: (confirmedDetails, variables) => {
+            queryClient.setQueryData(
+                ['itineraryDetails', variables.idItinerary],
+                confirmedDetails,
+            );
+            queryClient.setQueryData<ItinerarioResumen[]>(['misItinerarios'], (previous) =>
+                previous?.map((itinerary) => itinerary.id === variables.idItinerary
+                    ? { ...itinerary, fotoPortada: confirmedDetails.fotoPortada }
+                    : itinerary)
+            );
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+        },
+        onError: (err) => {
+            Alert.alert('Error', err instanceof Error ? err.message : 'No se pudo eliminar la foto.');
         },
         onSettled: (_data, _error, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+            return queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
         },
     });
 

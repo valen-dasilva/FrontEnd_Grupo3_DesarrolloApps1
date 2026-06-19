@@ -194,3 +194,17 @@ export const deleteFoto = async (
 ): Promise<void> => {
   await apiClient.delete<void>(`${ITIN_PATH}/${idItinerario}/fotos/${idFoto}`);
 }
+
+export const deleteFotoConfirmada = async (
+  idItinerario: number,
+  idFoto: number,
+): Promise<ItinerarioUsuario> => {
+  await deleteFoto(idItinerario, idFoto);
+  const details = await getItinerarioDetalles(idItinerario);
+
+  if ((details.fotos ?? []).some((foto) => foto.id === idFoto)) {
+    throw new Error('El servidor no confirmó el borrado de la foto. Intentá nuevamente.');
+  }
+
+  return details;
+}

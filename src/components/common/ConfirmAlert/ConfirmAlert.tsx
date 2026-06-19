@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, View, Text, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Modal, View, Text, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/hooks/useColorScheme';
 
 import { styles } from './ConfirmAlert.styles';
@@ -10,6 +10,7 @@ export interface ConfirmAlertProps {
   message: string;
   cancelText?: string;
   confirmText?: string;
+  loading?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
 }
@@ -20,6 +21,7 @@ export function ConfirmAlert({
   message,
   cancelText = 'Cancelar',
   confirmText = 'Aceptar',
+  loading = false,
   onCancel,
   onConfirm,
 }: ConfirmAlertProps) {
@@ -43,6 +45,7 @@ export function ConfirmAlert({
             <TouchableOpacity
               style={[styles.button, styles.cancelButton, { borderColor: theme.border }]}
               onPress={onCancel}
+              disabled={loading}
             >
               <Text style={[styles.buttonText, { color: theme.text }]}>
                 {cancelText}
@@ -50,11 +53,13 @@ export function ConfirmAlert({
             </TouchableOpacity>
             
             <TouchableOpacity
-              style={[styles.button, styles.confirmButton]}
+              style={[styles.button, styles.confirmButton, loading && styles.disabledButton]}
               onPress={onConfirm}
+              disabled={loading}
             >
+              {loading && <ActivityIndicator color="#FFF" size="small" />}
               <Text style={[styles.buttonText, { color: '#FFF' }]}>
-                {confirmText}
+                {loading ? 'Eliminando...' : confirmText}
               </Text>
             </TouchableOpacity>
           </View>

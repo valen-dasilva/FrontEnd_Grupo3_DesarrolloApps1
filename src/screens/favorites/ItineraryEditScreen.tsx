@@ -91,6 +91,7 @@ export default function EdicionItinerarioScreen() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; title: string } | null>(null);
   const [pendingPhotos, setPendingPhotos] = useState<SelectedItineraryPhoto[]>([]);
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
+  const [isDeletingPhoto, setIsDeletingPhoto] = useState(false);
   const [photoDeleteTarget, setPhotoDeleteTarget] = useState<FotoItinerarioUsuario | null>(null);
 
   React.useEffect(() => {
@@ -182,10 +183,16 @@ export default function EdicionItinerarioScreen() {
     if (!photoDeleteTarget || !id) return;
 
     const target = photoDeleteTarget;
+    setIsDeletingPhoto(true);
     try {
       await quitPhoto(Number(id), target.id);
       try {
         await deleteItineraryPhotoFromStorage(target.url);
+        Toast.show({
+          type: 'success',
+          text1: 'Foto eliminada',
+          text2: 'La foto se quitó correctamente del itinerario.',
+        });
       } catch (error) {
         console.warn('No se pudo limpiar la foto de Storage:', error);
         Toast.show({
@@ -194,19 +201,26 @@ export default function EdicionItinerarioScreen() {
           text2: 'La imagen se quitó del itinerario, pero su limpieza quedó pendiente.',
         });
       }
+    } catch {
+      // El hook informa el error y conserva la foto en pantalla.
     } finally {
+      setIsDeletingPhoto(false);
       setPhotoDeleteTarget(null);
     }
   };
 
   const handleGoBack = () => {
-    router.back();
+    if (!id) return;
+    router.replace({
+      pathname: '/(tabs)/(favorite)/itinerarioInfoFav',
+      params: { id },
+    });
   };
 
   const days = Array.from(new Set(activities.map((act) => act.dia))).sort((a, b) => a - b);
   if (days.length === 0) days.push(1);
   const existingPhotos = itineraryDetails?.fotos ?? [];
-  const isManagingPhotos = isUploadingPhotos || isMutatingPhotos;
+  const isManagingPhotos = isUploadingPhotos || isMutatingPhotos || isDeletingPhoto;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
@@ -216,7 +230,7 @@ export default function EdicionItinerarioScreen() {
       <Header
         title="Editar Itinerario"
         showBackButton={true}
-        onBackPress={() => router.back()}
+        onBackPress={handleGoBack}
         onThemeTogglePress={toggleColorScheme}
         onAvatarPress={() => router.push('/(tabs)/perfil')}
       />
@@ -307,6 +321,7 @@ export default function EdicionItinerarioScreen() {
         title="Eliminar Foto"
         message="¿Estás seguro de que deseas eliminar esta foto del itinerario?"
         confirmText="Eliminar"
+        loading={isDeletingPhoto}
         onCancel={() => setPhotoDeleteTarget(null)}
         onConfirm={handleDeletePhoto}
       />

@@ -53,4 +53,17 @@ describe('ConfirmAlert', () => {
     fireEvent.press(confirmBtn);
     expect(defaultProps.onConfirm).toHaveBeenCalledTimes(1);
   });
+
+  it('disables both actions and shows progress while loading', () => {
+    const { getByText, queryByText } = render(
+      <ConfirmAlert {...defaultProps} loading />,
+    );
+
+    expect(queryByText('Aceptar')).toBeNull();
+    fireEvent.press(getByText('Eliminando...'));
+    fireEvent.press(getByText('Cancelar'));
+
+    expect(defaultProps.onConfirm).not.toHaveBeenCalled();
+    expect(defaultProps.onCancel).not.toHaveBeenCalled();
+  });
 });

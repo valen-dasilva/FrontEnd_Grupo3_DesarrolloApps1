@@ -48,6 +48,12 @@ export const styles = StyleSheet.create({
   },
   confirmButton: {
     backgroundColor: colors.light.danger, // or some other prominent color
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
   buttonText: {
     fontSize: 16,

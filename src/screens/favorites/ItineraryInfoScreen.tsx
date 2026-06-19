@@ -173,8 +173,11 @@ export default function FavoriteItineraryInfoScreen() {
                 category={displayCategory}
                 dateRange={displayDateRange}
                 description={displayDescription}
-                onBackPress={() => router.back()}
-                onEditPress={() => router.push({ pathname: '/(tabs)/(favorite)/edicionItinerario', params: { id } })}
+                onBackPress={() => router.replace({
+                    pathname: '/(tabs)/favoritos',
+                    params: { vista: 'misViajes' },
+                })}
+                onEditPress={() => router.replace({ pathname: '/(tabs)/(favorite)/edicionItinerario', params: { id } })}
             />
             <TouchableOpacity
                 style={styles.completarBtnWrapper}

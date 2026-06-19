@@ -104,7 +104,10 @@ export default function CreateItineraryScreen() {
         text1: '¡Itinerario creado!',
         text2: 'Agregale actividades desde "Mis viajes".',
       });
-      router.back();
+      router.replace({
+        pathname: '/(tabs)/favoritos',
+        params: { vista: 'misViajes' },
+      });
     } catch (error) {
       const failureIsConfirmed = !creationRequested || (error instanceof ApiError && error.status > 0);
       if (failureIsConfirmed) {
