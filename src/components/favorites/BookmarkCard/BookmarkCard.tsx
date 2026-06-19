@@ -1,6 +1,6 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useRef } from 'react';
-import { Animated, ImageBackground, Pressable, Text, View, StyleSheet } from 'react-native';
+import { Animated, ImageBackground, Pressable, Text, View, StyleSheet, TouchableOpacity } from 'react-native';
 
 import { icons } from '@/constants/icons';
 import { paddings } from '@/constants/paddings';
@@ -22,6 +22,8 @@ interface Props {
   onCrearCopia?: () => void;
   /** Quitar de favoritos (el corazón) */
   onQuitar?: () => void;
+  /** Ver el detalle del template (al tocar la card) */
+  onVerDetalle?: () => void;
 }
 
 /**
@@ -37,6 +39,7 @@ export const BookmarkCard: React.FC<Props> = ({
   isCreando = false,
   onCrearCopia,
   onQuitar,
+  onVerDetalle,
 }) => {
   const { theme } = useTheme();
   const crearScale = useRef(new Animated.Value(1)).current;
@@ -49,7 +52,11 @@ export const BookmarkCard: React.FC<Props> = ({
   };
 
   return (
-    <View style={[styles.cardContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+    <TouchableOpacity
+      activeOpacity={onVerDetalle ? 0.85 : 1}
+      onPress={onVerDetalle}
+      style={[styles.cardContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}
+    >
       <ImageBackground
         source={{ uri: imageUrl }}
         style={styles.imageBackground}
@@ -93,7 +100,7 @@ export const BookmarkCard: React.FC<Props> = ({
           </Animated.View>
         </Pressable>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

@@ -136,6 +136,9 @@ export const useItinerariosHook = () => {
         onSuccess: (data, idItinerario) => {
             queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
             queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+            // Recalcula el mapa: si el viaje borrado estaba completado, sus
+            // provincias/días deben dejar de contar.
+            queryClient.invalidateQueries({ queryKey: ['estadisticas'] });
             // Cleanup offline download if it exists
             removeItineraryOffline(idItinerario).catch(console.error);
             queryClient.invalidateQueries({ queryKey: ['downloadedIds'] });

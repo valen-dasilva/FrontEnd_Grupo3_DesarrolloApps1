@@ -150,7 +150,12 @@ export default function CreateItineraryScreen() {
         </View>
 
         {/* Categorías */}
-        <CategoriaGrid seleccionadas={categorias} onToggle={toggleCategoria} />
+        <CategoriaGrid
+          seleccionadas={categorias}
+          onToggle={toggleCategoria}
+          titulo="Categorías del viaje"
+          subtitulo="Elegí las que mejor describan tu itinerario"
+        />
       </ScrollView>
 
       {/* Botón fijo */}

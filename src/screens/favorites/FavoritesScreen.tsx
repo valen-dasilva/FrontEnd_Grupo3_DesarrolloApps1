@@ -15,7 +15,7 @@ import { useTheme } from '@/hooks/useColorScheme';
 import { useFavoritosHook } from '@/hooks/useFavoritos';
 import { useItinerariosHook } from '@/hooks/useItinerarios';
 import { ItinerarioResumen } from '@/services/itinerariosService';
-import { ItinerarioSistemaResumenDTO, PROVINCIA_LABEL } from '@/types/itinerario';
+import { ItinerarioSistemaResumenDTO, PROVINCIA_LABEL, CATEGORIA_LABEL } from '@/types/itinerario';
 
 type Vista = 'guardados' | 'misViajes';
 
@@ -191,8 +191,22 @@ export default function FavoritosScreen() {
       isCreando={isCreando}
       onCrearCopia={() => handleCrearCopia(item.idItinerario)}
       onQuitar={() => handleQuitarFavorito(item.idItinerario)}
+      onVerDetalle={() => router.push({
+        pathname: '/(tabs)/explorarApp/itinerarioInfo',
+        params: {
+          idItinerario: String(item.idItinerario),
+          title: item.titulo,
+          description: item.descripcion,
+          category: item.etiquetas?.length > 0 ? CATEGORIA_LABEL[item.etiquetas[0]] : 'General',
+          image: item.fotoPortada,
+          startDate: item.fechaInicio,
+          endDate: item.fechaFin,
+          isFavorite: 'true',
+          idFavorito: '',
+        },
+      })}
     />
-  ), [isCreando, handleCrearCopia, handleQuitarFavorito]);
+  ), [isCreando, handleCrearCopia, handleQuitarFavorito, router]);
 
   const renderCopia = useCallback(({ item: itinerary }: { item: ItinerarioResumen }) => (
     <ItineraryCard
@@ -217,7 +231,7 @@ export default function FavoritosScreen() {
           description: itinerary.descripcion || '',
         }
       })}
-      onFavoriteToggle={() => setConfirmDeleteId(itinerary.id)}
+      onDeletePress={() => setConfirmDeleteId(itinerary.id)}
       onPinPress={() => handleTogglePin(itinerary.id)}
       onDownloadPress={() => handleToggleDownload(itinerary.id)}
     />

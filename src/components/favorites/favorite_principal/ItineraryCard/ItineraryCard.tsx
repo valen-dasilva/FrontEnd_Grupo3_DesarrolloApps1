@@ -31,6 +31,8 @@ export interface ItineraryCardProps {
   onPinPress?: () => void;
   /** Callback triggered when the download icon is pressed */
   onDownloadPress?: () => void;
+  /** Si se provee, muestra un botón de eliminar (papelera) en vez del corazón */
+  onDeletePress?: () => void;
 }
 
 export const ItineraryCard: React.FC<ItineraryCardProps> = ({
@@ -45,6 +47,7 @@ export const ItineraryCard: React.FC<ItineraryCardProps> = ({
   onFavoriteToggle,
   onPinPress,
   onDownloadPress,
+  onDeletePress,
 }) => {
   // Animation Scales
   const detailScale = useRef(new Animated.Value(1)).current;
@@ -86,10 +89,21 @@ export const ItineraryCard: React.FC<ItineraryCardProps> = ({
             <View /> // Empty view to maintain space-between layout for the heart icon
           )}
 
-          <FavoriteButton
-            isFavorite={isFavorite}
-            onPress={onFavoriteToggle}
-          />
+          {onDeletePress ? (
+            <Pressable
+              onPress={onDeletePress}
+              style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.surface }}
+              accessibilityRole="button"
+              accessibilityLabel="Eliminar itinerario"
+            >
+              <MaterialIcons name="delete-outline" size={22} color={theme.danger} />
+            </Pressable>
+          ) : (
+            <FavoriteButton
+              isFavorite={isFavorite}
+              onPress={onFavoriteToggle}
+            />
+          )}
         </View>
       </ImageBackground>
 

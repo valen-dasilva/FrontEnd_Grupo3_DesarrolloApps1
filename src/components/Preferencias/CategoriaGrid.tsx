@@ -26,16 +26,23 @@ const CATEGORIAS: { value: CategoriaItinerario; icon: (color: string) => React.R
 interface CategoriaGridProps {
   seleccionadas: Set<CategoriaItinerario>;
   onToggle: (cat: CategoriaItinerario) => void;
+  titulo?: string;
+  subtitulo?: string;
 }
 
-export function CategoriaGrid({ seleccionadas, onToggle }: CategoriaGridProps) {
+export function CategoriaGrid({
+  seleccionadas,
+  onToggle,
+  titulo = '¿Qué te interesa?',
+  subtitulo = 'Selecciona todas las categorías que quieras',
+}: CategoriaGridProps) {
   const { theme } = useTheme();
 
   return (
     <View style={styles.seccion}>
-      <Text style={[styles.pregunta, { color: theme.text }]}>¿Qué te interesa?</Text>
+      <Text style={[styles.pregunta, { color: theme.text }]}>{titulo}</Text>
       <Text style={[styles.subtitulo, { color: theme.textSecondary }]}>
-        Selecciona todas las categorías que quieras
+        {subtitulo}
       </Text>
       <View style={styles.grid}>
         {CATEGORIAS.map(({ value, icon }) => (
