@@ -7,6 +7,7 @@ export default function FavoriteLayout() {
       <Stack.Screen name="itinerarioInfoFav" />
       <Stack.Screen name="edicionItinerario" />
       <Stack.Screen name="editActivityFormulary" />
+      <Stack.Screen name="crearItinerario" />
     </Stack>
   );
 }

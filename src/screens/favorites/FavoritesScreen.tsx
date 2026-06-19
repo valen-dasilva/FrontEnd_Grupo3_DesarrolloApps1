@@ -1,6 +1,7 @@
-import { Stack, useRouter, useFocusEffect } from 'expo-router';
+import { Stack, useRouter, useFocusEffect, type Href } from 'expo-router';
 import React, { useState, useCallback } from 'react';
 import { FlatList, StatusBar, Text, View, ActivityIndicator, Platform, Pressable, StyleSheet } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { Header } from '@/components/common/Header/Header';
@@ -137,8 +138,18 @@ export default function FavoritosScreen() {
           : 'Tus itinerarios propios, listos para editar y completar.'}
       </Text>
       {renderToggle()}
+      {vista === 'misViajes' && (
+        <Pressable
+          onPress={() => router.push('/(tabs)/(favorite)/crearItinerario' as Href)}
+          style={[local.crearDesdeCeroBtn, { borderColor: theme.primary }]}
+          accessibilityRole="button"
+        >
+          <MaterialIcons name="add" size={20} color={theme.primary} />
+          <Text style={[local.crearDesdeCeroText, { color: theme.primary }]}>Crear itinerario desde cero</Text>
+        </Pressable>
+      )}
     </View>
-  ), [theme, vista]);
+  ), [theme, vista, router]);
 
   const isLoading = vista === 'guardados' ? isLoadingFavoritos : isLoadingItinerarios;
 
@@ -284,5 +295,19 @@ const local = StyleSheet.create({
   toggleText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  crearDesdeCeroBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingVertical: 12,
+    marginTop: 12,
+  },
+  crearDesdeCeroText: {
+    fontSize: 15,
+    fontWeight: '700',
   },
 });
