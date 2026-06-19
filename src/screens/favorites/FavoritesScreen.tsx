@@ -9,6 +9,7 @@ import { ItineraryCard } from '@/components/favorites/favorite_principal/Itinera
 import { BookmarkCard } from '@/components/favorites/BookmarkCard/BookmarkCard';
 import { EmptyState } from '@/components/favorites/favorite_principal/EmptyState/EmptyState';
 import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
+import { StatusModal } from '@/components/common/StatusModal/StatusModal';
 
 import { styles } from './FavoritesScreen.styles';
 import { useTheme } from '@/hooks/useColorScheme';
@@ -46,8 +47,14 @@ export default function FavoritosScreen() {
     removeDownload,
     loadItinerarios,
     crearCopiaDesdeFavorito,
-    isCreando,
   } = useItinerariosHook();
+
+  // Modal de estado para "crear copia" (loading -> success). Reemplaza el
+  // flag global isCreando que prendía el loading en TODAS las cards.
+  const [copiaModal, setCopiaModal] = useState<{ visible: boolean; state: 'loading' | 'success' }>({
+    visible: false,
+    state: 'loading',
+  });
 
   useFocusEffect(
     useCallback(() => {
@@ -60,15 +67,12 @@ export default function FavoritosScreen() {
 
   // ---- acciones vista "Guardados" (bookmarks) ----
   const handleCrearCopia = useCallback(async (idSistema: number) => {
+    setCopiaModal({ visible: true, state: 'loading' });
     try {
       await crearCopiaDesdeFavorito(idSistema);
-      Toast.show({
-        type: 'success',
-        text1: '¡Copia creada!',
-        text2: 'La encontrás en "Mis viajes" para editarla.',
-      });
-      setVista('misViajes');
+      setCopiaModal({ visible: true, state: 'success' });
     } catch {
+      setCopiaModal({ visible: false, state: 'loading' });
       // el hook ya muestra el Alert de error
     }
   }, [crearCopiaDesdeFavorito]);
@@ -188,7 +192,6 @@ export default function FavoritosScreen() {
       location={PROVINCIA_LABEL[item.provincia] ?? item.provincia}
       duration={`${item.duracionDias} Días`}
       imageUrl={item.fotoPortada}
-      isCreando={isCreando}
       onCrearCopia={() => handleCrearCopia(item.idItinerario)}
       onQuitar={() => handleQuitarFavorito(item.idItinerario)}
       onVerDetalle={() => router.push({
@@ -206,7 +209,7 @@ export default function FavoritosScreen() {
         },
       })}
     />
-  ), [isCreando, handleCrearCopia, handleQuitarFavorito, router]);
+  ), [handleCrearCopia, handleQuitarFavorito, router]);
 
   const renderCopia = useCallback(({ item: itinerary }: { item: ItinerarioResumen }) => (
     <ItineraryCard
@@ -287,6 +290,20 @@ export default function FavoritosScreen() {
         onCancel={() => setConfirmDeleteId(null)}
         onConfirm={confirmDelete}
         confirmText="Eliminar"
+      />
+
+      <StatusModal
+        visible={copiaModal.visible}
+        state={copiaModal.state}
+        title={copiaModal.state === 'loading' ? 'Copiando itinerario...' : '¡Copia creada!'}
+        message={copiaModal.state === 'loading'
+          ? 'Estamos creando tu copia editable.'
+          : 'La encontrás en "Mis viajes" para personalizarla.'}
+        actionLabel="Ver mis viajes"
+        onAction={() => {
+          setCopiaModal({ visible: false, state: 'loading' });
+          setVista('misViajes');
+        }}
       />
     </View>
   );

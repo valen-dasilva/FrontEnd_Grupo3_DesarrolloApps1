@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { View, Text, FlatList, ActivityIndicator, Platform, Alert, TouchableOpacity, Animated } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import Toast from 'react-native-toast-message';
@@ -10,6 +10,7 @@ import { ActivityCard } from '@/components/common/ActivityCard/ActivityCard';
 import { styles } from './ItineraryInfoScreen.styles';
 import { useTheme } from '@/hooks/useColorScheme';
 import { MaterialIcons } from '@expo/vector-icons';
+import { StatusModal } from '@/components/common/StatusModal/StatusModal';
 
 import { useItinerariosDetailsHook } from '@/hooks/useItinerarios';
 import { ItemItinerarioUsuario } from '@/services/itinerariosService';
@@ -88,6 +89,11 @@ export default function FavoriteItineraryInfoScreen() {
 
     const yaCompletado = itineraryDetails?.completado ?? false;
 
+    const [completarModal, setCompletarModal] = useState<{ visible: boolean; state: 'loading' | 'success' }>({
+        visible: false,
+        state: 'loading',
+    });
+
     // Animaciones del botón "completar": bounce al tocar + relleno verde al completar
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const fillAnim = useRef(new Animated.Value(itineraryDetails?.completado ? 1 : 0)).current;
@@ -129,14 +135,12 @@ export default function FavoriteItineraryInfoScreen() {
         if (yaCompletado || isCompletando) return;
         playBounce();
         confirmarCompletar(async () => {
+            setCompletarModal({ visible: true, state: 'loading' });
             try {
                 await completarViaje(Number(id));
-                Toast.show({
-                    type: 'success',
-                    text1: '¡Viaje completado! 🎉',
-                    text2: 'Lo sumamos a tus estadísticas.',
-                });
+                setCompletarModal({ visible: true, state: 'success' });
             } catch {
+                setCompletarModal({ visible: false, state: 'loading' });
                 Toast.show({
                     type: 'error',
                     text1: 'No se pudo completar',
@@ -251,6 +255,17 @@ export default function FavoriteItineraryInfoScreen() {
                 maxToRenderPerBatch={3} // Carga en lotes pequeños de 3
                 windowSize={3} // Ventana reducida para optimizar memoria
                 removeClippedSubviews={Platform.OS === 'android'} // Remueve subviews invisibles en Android
+            />
+
+            <StatusModal
+                visible={completarModal.visible}
+                state={completarModal.state}
+                title={completarModal.state === 'loading' ? 'Completando viaje...' : '¡Viaje completado!'}
+                message={completarModal.state === 'loading'
+                    ? 'Estamos sumándolo a tus estadísticas.'
+                    : 'Se sumó a tu recorrido y coloreamos la provincia en el mapa.'}
+                actionLabel="Listo"
+                onAction={() => setCompletarModal({ visible: false, state: 'loading' })}
             />
         </View>
     );
