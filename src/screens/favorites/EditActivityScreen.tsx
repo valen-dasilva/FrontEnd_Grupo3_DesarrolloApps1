@@ -7,7 +7,7 @@ import { EditActivityFormulary } from '@/components/favorites/editActivityFormul
 
 import { styles } from './EditActivityScreen.styles';
 import { useTheme } from '@/hooks/useColorScheme';
-import { useFavoritosDetailsHook } from '@/hooks/useFavoritos';
+import { useItinerariosDetailsHook } from '@/hooks/useItinerarios';
 
 export default function EditActivityFormularyScreen() {
   const router = useRouter();
@@ -26,7 +26,7 @@ export default function EditActivityFormularyScreen() {
     duracionDias?: string;
   }>();
 
-  const { editItem, newItem } = useFavoritosDetailsHook();
+  const { editItem, newItem } = useItinerariosDetailsHook();
 
   const initialValues = {
     title: params.title || '',

@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ItinerarioResumen, ItinerarioUsuario } from "./favoritosService";
+import { ItinerarioResumen, ItinerarioUsuario } from "./itinerariosService";
 
 const OFFLINE_LIST_KEY = "@turistear/offline_itineraries_list";
 const OFFLINE_DETAIL_PREFIX = "@turistear/offline_itinerary_detail_";

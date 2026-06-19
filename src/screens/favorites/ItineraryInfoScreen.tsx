@@ -11,8 +11,8 @@ import { styles } from './ItineraryInfoScreen.styles';
 import { useTheme } from '@/hooks/useColorScheme';
 import { MaterialIcons } from '@expo/vector-icons';
 
-import { useFavoritosDetailsHook } from '@/hooks/useFavoritos';
-import { ItemItinerarioUsuario } from '@/services/favoritosService';
+import { useItinerariosDetailsHook } from '@/hooks/useItinerarios';
+import { ItemItinerarioUsuario } from '@/services/itinerariosService';
 import { formatFecha } from '@/utils/dateUtils';
 
 export default function FavoriteItineraryInfoScreen() {
@@ -48,7 +48,7 @@ export default function FavoriteItineraryInfoScreen() {
         isLoading,
         completarViaje,
         isCompletando,
-    } = useFavoritosDetailsHook();
+    } = useItinerariosDetailsHook();
 
     useEffect(() => {
         if (id) {

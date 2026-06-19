@@ -127,7 +127,7 @@ export interface ItemItinerarioUsuarioDTO {
 // Devuelto por GET /favoritos/activo — usa JWT, no necesita userId en la ruta.
 export interface ItinerarioEnCursoDTO {
   idItinerarioUsuario: number;
-  idItinerarioSistema: number;
+  idItinerarioSistema?: number; // legacy: los itinerarios de usuario ya no referencian al sistema
   titulo: string;
   descripcion: string;
   provincia: Provincia;

@@ -11,7 +11,7 @@ import {
 import { MapaArgentina } from './MapaArgentina';
 import { HeaderModal } from './HeaderModal';
 import { PanelEstadisticasProvincia } from './PanelEstadisticasProvincia';
-import { ItinerarioResumen } from '@/services/favoritosService';
+import { ItinerarioResumen } from '@/services/itinerariosService';
 import { Provincia } from '@/types/itinerario';
 
 const ANCHO_PANTALLA = Dimensions.get('window').width;

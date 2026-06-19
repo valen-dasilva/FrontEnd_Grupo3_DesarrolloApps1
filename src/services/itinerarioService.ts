@@ -41,7 +41,7 @@ export async function obtenerItinerarioPorId(
 // El backend lo identifica por el JWT — no hace falta pasar el userId.
 export async function getItinerarioEnCurso(): Promise<ItinerarioEnCursoDTO | null> {
   try {
-    const r = await apiClient.get<ItinerarioEnCursoDTO>("/favoritos/activo");
+    const r = await apiClient.get<ItinerarioEnCursoDTO>("/itinerarios/activo");
     return r.data;
   } catch (error) {
     // 404 = el usuario no tiene viaje activo: caso normal, devolvemos null.

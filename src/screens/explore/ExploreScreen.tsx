@@ -36,12 +36,12 @@ export default function ExploreScreen() {
   const [provincia, setProvincia] = useState<Provincia | undefined>();
   const [categoria, setCategoria] = useState<CategoriaItinerario | undefined>();
 
-  const { listItinerarioResumen, loadItinerarios } = useFavoritosHook();
+  const { favoritos, loadFavoritos } = useFavoritosHook();
 
   useFocusEffect(
     useCallback(() => {
-      loadItinerarios();
-    }, [loadItinerarios])
+      loadFavoritos();
+    }, [loadFavoritos])
   );
 
   const {
@@ -105,9 +105,8 @@ export default function ExploreScreen() {
     const days = calculateDurationDays(item.fechaInicio, item.fechaFin);
     const durationText = `${days} ${days === 1 ? 'día' : 'días'}`;
 
-    const matchingFav = listItinerarioResumen.find(fav => fav.idItinerarioSistema === item.idItinerario);
-    const isFavorite = !!matchingFav;
-    const idFavorito = matchingFav?.id;
+    const isFavorite = favoritos.some(fav => fav.idItinerario === item.idItinerario);
+    const idFavorito = undefined; // los bookmarks se operan por idItinerario del sistema
 
     return (
       <ExploreItineraryCard
@@ -129,7 +128,7 @@ export default function ExploreScreen() {
         idFavorito={idFavorito}
       />
     );
-  }, [listItinerarioResumen]);
+  }, [favoritos]);
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: theme.background }]}>

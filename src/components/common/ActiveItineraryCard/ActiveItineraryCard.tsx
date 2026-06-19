@@ -71,7 +71,7 @@ export default function ActiveItineraryCard({
     router.push({
       pathname: "/(tabs)/explorarApp/itinerarioInfo",
       params: {
-        idItinerario: itinerarioActivo.idItinerarioSistema.toString(),
+        idItinerario: (itinerarioActivo.idItinerarioSistema ?? itinerarioActivo.idItinerarioUsuario).toString(),
         title: itinerarioActivo.titulo,
         image: itinerarioActivo.fotoPortada ?? "",
         category: itinerarioActivo.etiquetas?.length > 0

@@ -1,165 +1,32 @@
 import { apiClient } from './api'
+import { ItinerarioSistemaResumenDTO } from '@/types/itinerario'
 
-
-export interface UpdateDatesRequest{
-        fechaInicio: string, 
-        fechaFin: string 
-    }
- 
-export interface ItinerarioResumen {
-  id: number; // mapped to idItinerarioUsuario
-  idItinerarioUsuario: number;
-  idItinerarioSistema: number;
-  titulo: string;
-  descripcion?: string;
-  provincia: string;
-  fechaInicio: string; //fecha
-  fechaFin: string;
-  fotoPortada: string;
-  duracionDias: number;
-  etiquetas: string[];
-  esPinned: boolean; // true si es el itinerario fijado como activo (tachuela)
-  completado: boolean;
-}
-
-
-export interface ItemItinerarioUsuario {
-    id: number;
-    nombreActividad: string;
-    descripcion: string;
-    localidad: string;
-    direccion: string;
-    dia: number;
-    hora: string;
-}
-
-
-export interface ItinerarioUsuario {
-  id: number;
-  titulo: string;
-  descripcion?: string;
-  provincia: string;
-  fechaInicio: string; //fecha
-  fechaFin: string;
-  fotoPortada: string;
-  duracionDias: number;
-  etiquetas: string[];
-  items: ItemItinerarioUsuario[];
-  completado: boolean;
-}
-
+/**
+ * Servicio de FAVORITOS = bookmarks de itinerarios del sistema.
+ * Guardar un favorito NO crea una copia: solo marca el template.
+ * La copia editable se crea con el servicio de itinerarios
+ * (crearItinerarioDesdeFavorito).
+ */
 const FAVS_PATH = '/favoritos';
 
-//guardar en favoritos un itinerario
-export const postItinerario = async (idItinerario: number): Promise<ItinerarioResumen> => {
-    const response = await apiClient.post<any>(`${FAVS_PATH}/${idItinerario}`);
-    const data = response.data;
-    return {
-      id: data.idItinerarioUsuario,
-      idItinerarioUsuario: data.idItinerarioUsuario,
-      idItinerarioSistema: data.idItinerarioSistema,
-      titulo: data.titulo,
-      descripcion: data.descripcion,
-      provincia: data.provincia,
-      fechaInicio: data.fechaInicio,
-      fechaFin: data.fechaFin,
-      fotoPortada: data.fotoPortada,
-      duracionDias: data.duracionDias,
-      etiquetas: data.etiquetas,
-      esPinned: data.esPinned,
-      completado: data.completado ?? false,
-    };
+// Listar mis favoritos: devuelve los templates del sistema guardados.
+export const getFavoritos = async (): Promise<ItinerarioSistemaResumenDTO[]> => {
+  const response = await apiClient.get<ItinerarioSistemaResumenDTO[]>(`${FAVS_PATH}`);
+  return response.data;
 }
 
-//obtener todos los itinerarios de favoritos
-export const getItinerarios = async (): Promise<ItinerarioResumen[]> => {
-    const response = await apiClient.get<any[]>(`${FAVS_PATH}`);
-    return response.data.map((data: any) => ({
-      id: data.idItinerarioUsuario,
-      idItinerarioUsuario: data.idItinerarioUsuario,
-      idItinerarioSistema: data.idItinerarioSistema,
-      titulo: data.titulo,
-      descripcion: data.descripcion,
-      provincia: data.provincia,
-      fechaInicio: data.fechaInicio,
-      fechaFin: data.fechaFin,
-      fotoPortada: data.fotoPortada,
-      duracionDias: data.duracionDias,
-      etiquetas: data.etiquetas,
-      esPinned: data.esPinned,
-      completado: data.completado ?? false,
-    }));
+// Guardar un itinerario del sistema como favorito (idempotente).
+export const guardarFavorito = async (idSistema: number): Promise<void> => {
+  await apiClient.post<void>(`${FAVS_PATH}/${idSistema}`);
 }
 
-//devuelve el itinerario activo o proximo a iniciar
-export const getActiveItinerario = async (): Promise<ItinerarioUsuario> => {
-    const response = await apiClient.get<ItinerarioUsuario>(`${FAVS_PATH}/activo`);
-    return response.data;
+// Quitar un itinerario del sistema de favoritos.
+export const quitarFavorito = async (idSistema: number): Promise<void> => {
+  await apiClient.delete<void>(`${FAVS_PATH}/${idSistema}`);
 }
 
-//devuelve detalles de un itinerario en favoritos
-export const getItinerarioDetalles = async (id: number): Promise<ItinerarioUsuario> => {
-    const response = await apiClient.get<ItinerarioUsuario>(`${FAVS_PATH}/${id}`);
-    return response.data;
-}
-
-//actualizar fechas de un itinerario en favoritos
-export const putItinerarioFechas = async (
-    id: number, 
-    dates: UpdateDatesRequest
-    ): Promise<ItinerarioUsuario> => {
-    const response = await apiClient.put<ItinerarioUsuario>(`${FAVS_PATH}/${id}`, dates);
-    return response.data;
-}
-
-//actualizar titulo de un itinerario en favoritos
-export const putItinerarioTitulo = async (
-    id: number, 
-    titulo: string
-    ): Promise<ItinerarioUsuario> => {
-    const response = await apiClient.put<ItinerarioUsuario>(`${FAVS_PATH}/${id}`, { titulo });
-    return response.data;
-}
-
-//quitar un itinerario de favoritos
-export const deleteItinerario = async (id: number): Promise<void> => {
-    const response = await apiClient.delete<void>(`${FAVS_PATH}/${id}`);
-    return response.data;
-}
-
-//fijar/desfijar un itinerario como el activo del Home (tachuela)
-export const patchPin = async (id: number): Promise<void> => {
-    await apiClient.patch<void>(`${FAVS_PATH}/${id}/pin`);
-}
-
-//marcar un itinerario como completado (viaje realizado)
-export const completarItinerario = async (id: number): Promise<void> => {
-    await apiClient.patch<void>(`${FAVS_PATH}/${id}/completar`);
-}
- 
-//------endpoints a items
-
-//crear un item itinerario
-export const postItem = async (
-    idItinerario: number, 
-    itemData: Omit<ItemItinerarioUsuario, 'id'> ): Promise<ItemItinerarioUsuario> => {
-    const response = await apiClient.post<ItemItinerarioUsuario>(`${FAVS_PATH}/${idItinerario}/items`, itemData);
-    return response.data;
-}
-
-//actualizar item de itinerario
-export const putItem = async (
-    idItinerario: number, 
-    idItem: number, 
-    itemData: Omit<ItemItinerarioUsuario, 'id'>): Promise<ItemItinerarioUsuario> => {
-    const response = await apiClient.put<ItemItinerarioUsuario>(`${FAVS_PATH}/${idItinerario}/items/${idItem}`, itemData);
-    return response.data;
-}
-
-//eliminat una actividad del itinerario
-export const deleteItem = async (
-    idItinerario: number,
-    idItem: number,
-): Promise<void> => {
-    await apiClient.delete<void>(`${FAVS_PATH}/${idItinerario}/items/${idItem}`);
+// ¿El usuario ya tiene guardado este template? (para el toggle del corazón).
+export const existeFavorito = async (idSistema: number): Promise<boolean> => {
+  const response = await apiClient.get<boolean>(`${FAVS_PATH}/${idSistema}/existe`);
+  return response.data;
 }

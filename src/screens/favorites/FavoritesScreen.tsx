@@ -10,8 +10,8 @@ import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
 
 import { styles } from './FavoritesScreen.styles';
 import { useTheme } from '@/hooks/useColorScheme';
-import { useFavoritosHook } from '@/hooks/useFavoritos';
-import { ItinerarioResumen } from '@/services/favoritosService';
+import { useItinerariosHook } from '@/hooks/useItinerarios';
+import { ItinerarioResumen } from '@/services/itinerariosService';
 
 export default function FavoritosScreen() {
   const insets = useSafeAreaInsets();
@@ -22,13 +22,13 @@ export default function FavoritosScreen() {
   const {
     listItinerarioResumen,
     isLoading,
-    quitItineraryFromFavs,
+    quitItinerary,
     togglePin,
     downloadedIds,
     downloadItinerary,
     removeDownload,
     loadItinerarios
-  } = useFavoritosHook();
+  } = useItinerariosHook();
 
   useFocusEffect(
     useCallback(() => {
@@ -44,7 +44,7 @@ export default function FavoritosScreen() {
 
   const confirmDelete = () => {
     if (confirmDeleteId !== null) {
-      quitItineraryFromFavs(confirmDeleteId);
+      quitItinerary(confirmDeleteId);
       setConfirmDeleteId(null);
     }
   };

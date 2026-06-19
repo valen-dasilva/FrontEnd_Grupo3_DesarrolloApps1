@@ -16,7 +16,7 @@ import { styles } from './ProfileScreen.styles';
 import { MapaArgentina } from '@/components/perfil/MapaArgentina/MapaArgentina';
 import { MapaInteractivoModal } from '@/components/perfil/MapaArgentina/MapaInteractivoModal';
 import { useEstadisticas } from '@/hooks/useEstadisticas';
-import { useFavoritosHook } from '@/hooks/useFavoritos';
+import { useItinerariosHook } from '@/hooks/useItinerarios';
 
 export default function PerfilScreen() {
   const router = useRouter();
@@ -27,7 +27,7 @@ export default function PerfilScreen() {
   const [loadingImage, setLoadingImage] = useState(false);
   const [mapaVisible, setMapaVisible] = useState(false);
   const { data: estadisticas } = useEstadisticas();
-  const { listItinerarioResumen } = useFavoritosHook();
+  const { listItinerarioResumen } = useItinerariosHook();
 
   const handlePickImage = async () => {
     if (!user) return;

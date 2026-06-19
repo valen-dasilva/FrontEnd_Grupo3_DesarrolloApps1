@@ -1,0 +1,688 @@
+import { useCallback, useState } from 'react';
+import { Alert } from 'react-native';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ApiError } from '@/services/api';
+
+// Local title overrides helper functions
+export const getLocalTitleOverride = async (id: number): Promise<string | null> => {
+    try {
+        return await AsyncStorage.getItem(`@turistear/title_override_${id}`);
+    } catch {
+        return null;
+    }
+};
+
+export const saveLocalTitleOverride = async (id: number, title: string): Promise<void> => {
+    try {
+        await AsyncStorage.setItem(`@turistear/title_override_${id}`, title);
+    } catch (e) {
+        console.error("Error saving local title override:", e);
+    }
+};
+import {
+    deleteItem,
+    deleteItinerario,
+    getItinerarioDetalles,
+    getItinerarios,
+    patchPin,
+    completarItinerario,
+    crearItinerarioDesdeFavorito,
+    crearItinerarioDesdeCero,
+    CrearItinerarioRequest,
+    ItemItinerarioUsuario,
+    ItinerarioResumen,
+    ItinerarioUsuario,
+    postItem,
+    putItem,
+    putItinerarioFechas,
+    putItinerarioTitulo,
+    UpdateDatesRequest
+} from '@/services/itinerariosService';
+import { ItinerarioEnCursoDTO, Provincia, CategoriaItinerario } from '@/types/itinerario';
+import { getItinerarioEnCurso } from '@/services/itinerarioService';
+import {
+    getDownloadedIds,
+    getOfflineItinerariesList,
+    getOfflineItineraryDetails,
+    saveItineraryOffline,
+    removeItineraryOffline
+} from '@/services/itineraryStorage';
+
+// Fetch itineraries with local offline fallback
+const fetchItinerariosWithOfflineFallback = async () => {
+    let list: ItinerarioResumen[] = [];
+    try {
+        list = await getItinerarios();
+    } catch {
+        list = await getOfflineItinerariesList();
+    }
+    // Merge local title overrides
+    return await Promise.all(list.map(async (it) => {
+        const localTitle = await getLocalTitleOverride(it.id);
+        return localTitle ? { ...it, titulo: localTitle } : it;
+    }));
+};
+
+export const useItinerariosHook = () => {
+    const queryClient = useQueryClient();
+
+    // Query for itineraries list
+    const {
+        data: listItinerarioResumen = [],
+        isLoading,
+        error,
+        refetch: loadItinerarios,
+    } = useQuery({
+        queryKey: ['misItinerarios'],
+        queryFn: fetchItinerariosWithOfflineFallback,
+    });
+
+    // Query for active itinerary (pin / home)
+    const { data: activeItinerary = null } = useQuery({
+        queryKey: ['activeItinerary'],
+        queryFn: async () => {
+            const active = await getItinerarioEnCurso();
+            if (active) {
+                const localTitle = await getLocalTitleOverride(active.idItinerarioUsuario);
+                if (localTitle) {
+                    return { ...active, titulo: localTitle };
+                }
+            }
+            return active;
+        },
+    });
+
+    // Query for downloaded offline IDs
+    const { data: downloadedIds = [] } = useQuery({
+        queryKey: ['downloadedIds'],
+        queryFn: getDownloadedIds,
+        initialData: [],
+    });
+
+    // Mutation: crear copia desde un favorito (template del sistema guardado)
+    const crearCopiaMutation = useMutation({
+        mutationFn: (idSistema: number) => crearItinerarioDesdeFavorito(idSistema),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
+        },
+        onError: (err) => {
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo crear la copia del itinerario.");
+        }
+    });
+
+    const crearCopiaDesdeFavorito = async (idSistema: number) => {
+        return await crearCopiaMutation.mutateAsync(idSistema);
+    };
+
+    // Mutation: crear itinerario desde cero
+    const crearDesdeCeroMutation = useMutation({
+        mutationFn: (payload: CrearItinerarioRequest) => crearItinerarioDesdeCero(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
+        },
+        onError: (err) => {
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo crear el itinerario.");
+        }
+    });
+
+    const crearItinerario = async (payload: CrearItinerarioRequest) => {
+        return await crearDesdeCeroMutation.mutateAsync(payload);
+    };
+
+    // Mutation: remove itinerary
+    const deleteMutation = useMutation({
+        mutationFn: deleteItinerario,
+        onSuccess: (data, idItinerario) => {
+            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+            // Cleanup offline download if it exists
+            removeItineraryOffline(idItinerario).catch(console.error);
+            queryClient.invalidateQueries({ queryKey: ['downloadedIds'] });
+        },
+        onError: (err) => {
+            Alert.alert("Error", err instanceof ApiError ? err.message : 'No se pudo eliminar el itinerario.');
+        }
+    });
+
+    const quitItinerary = async (idItinerario: number) => {
+        await deleteMutation.mutateAsync(idItinerario);
+    };
+
+    // Mutation: toggle pin with Optimistic Updates
+    const pinMutation = useMutation({
+        mutationKey: ['pinItinerary'],
+        mutationFn: patchPin,
+        onMutate: async (id) => {
+            await queryClient.cancelQueries({ queryKey: ['misItinerarios'] });
+            await queryClient.cancelQueries({ queryKey: ['activeItinerary'] });
+
+            const previousItinerarios = queryClient.getQueryData<ItinerarioResumen[]>(['misItinerarios']);
+            const previousActiveItinerary = queryClient.getQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary']);
+
+            // 1. Optimistically update itineraries list
+            if (previousItinerarios) {
+                queryClient.setQueryData<ItinerarioResumen[]>(
+                    ['misItinerarios'],
+                    previousItinerarios.map((it) => ({
+                        ...it,
+                        esPinned: it.id === id ? !it.esPinned : false,
+                    }))
+                );
+            }
+
+            // 2. Optimistically update activeItinerary
+            const targetItinerary = previousItinerarios?.find(it => it.id === id);
+            if (targetItinerary) {
+                const wasPinned = targetItinerary.esPinned;
+                if (!wasPinned) {
+                    // Pinned: set as active itinerary
+                    const optimisticActive: ItinerarioEnCursoDTO = {
+                        idItinerarioUsuario: targetItinerary.id,
+                        titulo: targetItinerary.titulo,
+                        descripcion: "", // blank
+                        provincia: targetItinerary.provincia as Provincia,
+                        fechaInicio: targetItinerary.fechaInicio,
+                        fechaFin: targetItinerary.fechaFin,
+                        fotoPortada: targetItinerary.fotoPortada,
+                        duracionDias: targetItinerary.duracionDias,
+                        etiquetas: targetItinerary.etiquetas as CategoriaItinerario[],
+                        items: [], // blank
+                        isOptimistic: true,
+                    };
+                    queryClient.setQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary'], optimisticActive);
+                } else {
+                    // Unpinned: set to null
+                    queryClient.setQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary'], null);
+                }
+            }
+
+            return { previousItinerarios, previousActiveItinerary };
+        },
+        onError: (err, id, context) => {
+            if (context?.previousItinerarios) {
+                queryClient.setQueryData(['misItinerarios'], context.previousItinerarios);
+            }
+            if (context?.previousActiveItinerary !== undefined) {
+                queryClient.setQueryData(['activeItinerary'], context.previousActiveItinerary);
+            }
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo fijar el itinerario.");
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+        }
+    });
+
+    const togglePin = async (id: number) => {
+        await pinMutation.mutateAsync(id);
+    };
+
+    // Mutation: download offline
+    const downloadMutation = useMutation({
+        mutationFn: async (summary: ItinerarioResumen) => {
+            const details = await getItinerarioDetalles(summary.id);
+            await saveItineraryOffline(summary, details);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['downloadedIds'] });
+        },
+        onError: (err) => {
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo descargar el itinerario.");
+        }
+    });
+
+    const downloadItinerary = async (summary: ItinerarioResumen) => {
+        await downloadMutation.mutateAsync(summary);
+    };
+
+    // Mutation: remove offline download
+    const removeDownloadMutation = useMutation({
+        mutationFn: async (id: number) => {
+            await removeItineraryOffline(id);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['downloadedIds'] });
+        },
+        onError: () => {
+            Alert.alert("Error", "No se pudo eliminar la descarga local.");
+        }
+    });
+
+    const removeDownload = async (id: number) => {
+        await removeDownloadMutation.mutateAsync(id);
+    };
+
+    const getActive = async () => {
+        await queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+    };
+
+    let errorString: string | null = null;
+    if (error instanceof Error) {
+        errorString = error.message;
+    } else if (error) {
+        errorString = String(error);
+    }
+
+    return {
+        loadItinerarios,
+        crearCopiaDesdeFavorito,
+        crearItinerario,
+        quitItinerary,
+        togglePin,
+        listItinerarioResumen,
+        getActive,
+        isLoading,
+        isMutating: crearCopiaMutation.isPending || crearDesdeCeroMutation.isPending || deleteMutation.isPending || pinMutation.isPending || downloadMutation.isPending || removeDownloadMutation.isPending,
+        isCreando: crearCopiaMutation.isPending || crearDesdeCeroMutation.isPending,
+        error: errorString,
+        activeItinerary,
+        downloadedIds,
+        downloadItinerary,
+        removeDownload,
+    };
+};
+
+export const useItinerariosDetailsHook = () => {
+    const queryClient = useQueryClient();
+    const [activeId, setActiveId] = useState<number | null>(null);
+
+    const loadItineraryInfo = useCallback((idItinerary: number) => {
+        setActiveId(idItinerary);
+    }, []);
+
+    // Query for specific itinerary details
+    const {
+        data: itineraryDetails,
+        isLoading,
+        error,
+    } = useQuery({
+        queryKey: ['itineraryDetails', activeId],
+        queryFn: async () => {
+            if (!activeId) return undefined;
+            let details;
+            try {
+                details = await getItinerarioDetalles(activeId);
+            } catch (err) {
+                const offlineDetails = await getOfflineItineraryDetails(activeId);
+                if (offlineDetails) {
+                    details = offlineDetails;
+                } else {
+                    throw err;
+                }
+            }
+            if (details) {
+                const localTitle = await getLocalTitleOverride(activeId);
+                if (localTitle) {
+                    return { ...details, titulo: localTitle };
+                }
+            }
+            return details;
+        },
+        enabled: activeId !== null,
+    });
+
+    // Mutation: put dates
+    const putDatesMutation = useMutation({
+        mutationFn: ({ idItinerary, dates }: { idItinerary: number; dates: UpdateDatesRequest }) =>
+            putItinerarioFechas(idItinerary, dates),
+        onSuccess: (updatedItinerary, variables) => {
+            queryClient.setQueryData(['itineraryDetails', variables.idItinerary], updatedItinerary);
+            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+        },
+        onError: (err) => {
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo modificar las fechas.");
+        }
+    });
+
+    const putItineraryDates = async (idItinerary: number, dates: UpdateDatesRequest) => {
+        await putDatesMutation.mutateAsync({ idItinerary, dates });
+    };
+
+    // Mutation: put title
+    const putTitleMutation = useMutation({
+        mutationFn: async ({ idItinerary, titulo }: { idItinerary: number; titulo: string }) => {
+            await saveLocalTitleOverride(idItinerary, titulo);
+            try {
+                return await putItinerarioTitulo(idItinerary, titulo);
+            } catch (err) {
+                console.warn("Failed to update title on backend, keeping local update:", err);
+                return { id: idItinerary, titulo }; // Mock success response
+            }
+        },
+        onMutate: async ({ idItinerary, titulo }) => {
+            await queryClient.cancelQueries({ queryKey: ['itineraryDetails', idItinerary] });
+            await queryClient.cancelQueries({ queryKey: ['misItinerarios'] });
+            await queryClient.cancelQueries({ queryKey: ['activeItinerary'] });
+
+            const prevDetails = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary]);
+            if (prevDetails) {
+                queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary], {
+                    ...prevDetails,
+                    titulo
+                });
+            }
+
+            const prevItinerarios = queryClient.getQueryData<ItinerarioResumen[]>(['misItinerarios']);
+            if (prevItinerarios) {
+                queryClient.setQueryData<ItinerarioResumen[]>(['misItinerarios'], prevItinerarios.map(it => it.id === idItinerary ? { ...it, titulo } : it));
+            }
+
+            const prevActive = queryClient.getQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary']);
+            if (prevActive?.idItinerarioUsuario === idItinerary) {
+                queryClient.setQueryData<ItinerarioEnCursoDTO>(['activeItinerary'], { ...prevActive, titulo });
+            }
+
+            return { prevDetails, prevItinerarios, prevActive };
+        },
+        onError: (err, variables, context) => {
+            if (context?.prevDetails) {
+                queryClient.setQueryData(['itineraryDetails', variables.idItinerary], context.prevDetails);
+            }
+            if (context?.prevItinerarios) {
+                queryClient.setQueryData(['misItinerarios'], context.prevItinerarios);
+            }
+            if (context?.prevActive !== undefined) {
+                queryClient.setQueryData(['activeItinerary'], context.prevActive);
+            }
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo modificar el título.");
+        },
+        onSettled: (data, error, variables) => {
+            if (data !== null && !error) {
+                queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+                queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
+                queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+            }
+        }
+    });
+
+    const putItineraryTitle = async (idItinerary: number, titulo: string) => {
+        await putTitleMutation.mutateAsync({ idItinerary, titulo });
+    };
+
+    // Mutation: create item
+    const newItemMutation = useMutation({
+        mutationFn: ({ idItinerary, itemData }: { idItinerary: number; itemData: Omit<ItemItinerarioUsuario, 'id'> }) =>
+            postItem(idItinerary, itemData),
+        onMutate: async ({ idItinerary, itemData }) => {
+            await queryClient.cancelQueries({ queryKey: ['itineraryDetails', idItinerary] });
+            await queryClient.cancelQueries({ queryKey: ['activeItinerary'] });
+            await queryClient.cancelQueries({ queryKey: ['misItinerarios'] });
+
+            const prevDetails = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary]);
+            const prevActive = queryClient.getQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary']);
+            const prevItinerarios = queryClient.getQueryData<ItinerarioResumen[]>(['misItinerarios']);
+
+            const optimisticItem: ItemItinerarioUsuario = {
+                ...itemData,
+                id: -Math.floor(Math.random() * 1000000),
+            };
+
+            if (prevDetails) {
+                const updatedItems = [...prevDetails.items, optimisticItem];
+                const newDuracion = Math.max(prevDetails.duracionDias, itemData.dia);
+                queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary], {
+                    ...prevDetails,
+                    items: updatedItems,
+                    duracionDias: newDuracion
+                });
+            }
+
+            if (prevActive?.idItinerarioUsuario === idItinerary) {
+                const newDuracion = Math.max(prevActive.duracionDias, itemData.dia);
+                queryClient.setQueryData<ItinerarioEnCursoDTO>(['activeItinerary'], {
+                    ...prevActive,
+                    duracionDias: newDuracion
+                });
+            }
+
+            if (prevItinerarios) {
+                queryClient.setQueryData<ItinerarioResumen[]>(
+                    ['misItinerarios'],
+                    prevItinerarios.map(it => it.id === idItinerary ? { ...it, duracionDias: Math.max(it.duracionDias, itemData.dia) } : it)
+                );
+            }
+
+            return { prevDetails, prevActive, prevItinerarios };
+        },
+        onSuccess: (createdItem, variables) => {
+            queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary], (prev) => {
+                if (!prev) return prev;
+                const cleanItems = prev.items.filter(item => item.id > 0);
+                const updatedItems = [...cleanItems, createdItem];
+                const newDuracion = Math.max(prev.duracionDias, createdItem.dia);
+                return {
+                    ...prev,
+                    items: updatedItems,
+                    duracionDias: newDuracion
+                };
+            });
+            queryClient.setQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary'], (prev) => {
+                if (!prev || prev.idItinerarioUsuario !== variables.idItinerary) return prev;
+                return {
+                    ...prev,
+                    duracionDias: Math.max(prev.duracionDias, createdItem.dia)
+                };
+            });
+            queryClient.setQueryData<ItinerarioResumen[]>(['misItinerarios'], (prev) => {
+                if (!prev) return prev;
+                return prev.map(it => it.id === variables.idItinerary ? { ...it, duracionDias: Math.max(it.duracionDias, createdItem.dia) } : it);
+            });
+        },
+        onError: (err, variables, context) => {
+            if (context?.prevDetails) {
+                queryClient.setQueryData(['itineraryDetails', variables.idItinerary], context.prevDetails);
+            }
+            if (context?.prevActive !== undefined) {
+                queryClient.setQueryData(['activeItinerary'], context.prevActive);
+            }
+            if (context?.prevItinerarios) {
+                queryClient.setQueryData(['misItinerarios'], context.prevItinerarios);
+            }
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo crear la actividad");
+        },
+        onSettled: (data, error, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+        }
+    });
+
+    const newItem = async (idItinerary: number, itemData: Omit<ItemItinerarioUsuario, 'id'>) => {
+        await newItemMutation.mutateAsync({ idItinerary, itemData });
+    };
+
+    // Mutation: edit item
+    const editItemMutation = useMutation({
+        mutationFn: ({ idItinerary, idItem, itemData }: { idItinerary: number; idItem: number; itemData: Omit<ItemItinerarioUsuario, 'id'> }) =>
+            putItem(idItinerary, idItem, itemData),
+        onMutate: async ({ idItinerary, idItem, itemData }) => {
+            await queryClient.cancelQueries({ queryKey: ['itineraryDetails', idItinerary] });
+            await queryClient.cancelQueries({ queryKey: ['activeItinerary'] });
+            await queryClient.cancelQueries({ queryKey: ['misItinerarios'] });
+
+            const prevDetails = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary]);
+            const prevActive = queryClient.getQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary']);
+            const prevItinerarios = queryClient.getQueryData<ItinerarioResumen[]>(['misItinerarios']);
+
+            if (prevDetails) {
+                const updatedItems = prevDetails.items.map((item) =>
+                    item.id === idItem ? { ...item, ...itemData } : item
+                );
+                const newDuracion = Math.max(...updatedItems.map(item => item.dia), prevDetails.duracionDias, 1);
+                queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary], {
+                    ...prevDetails,
+                    items: updatedItems,
+                    duracionDias: newDuracion
+                });
+            }
+
+            if (prevActive?.idItinerarioUsuario === idItinerary) {
+                const currentMaxDay = prevDetails ? Math.max(...prevDetails.items.map(item => item.id === idItem ? itemData.dia : item.dia), 1) : itemData.dia;
+                const newDuracion = Math.max(prevActive.duracionDias, currentMaxDay);
+                queryClient.setQueryData<ItinerarioEnCursoDTO>(['activeItinerary'], {
+                    ...prevActive,
+                    duracionDias: newDuracion
+                });
+            }
+
+            if (prevItinerarios) {
+                const currentMaxDay = prevDetails ? Math.max(...prevDetails.items.map(item => item.id === idItem ? itemData.dia : item.dia), 1) : itemData.dia;
+                queryClient.setQueryData<ItinerarioResumen[]>(
+                    ['misItinerarios'],
+                    prevItinerarios.map(it => it.id === idItinerary ? { ...it, duracionDias: Math.max(it.duracionDias, currentMaxDay) } : it)
+                );
+            }
+
+            return { prevDetails, prevActive, prevItinerarios };
+        },
+        onSuccess: (updatedItem, variables) => {
+            queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary], (prev) => {
+                if (!prev) return prev;
+                const updatedItems = prev.items.map((item) => item.id === variables.idItem ? updatedItem : item);
+                const newDuracion = Math.max(...updatedItems.map(item => item.dia), prev.duracionDias, 1);
+                return {
+                    ...prev,
+                    items: updatedItems,
+                    duracionDias: newDuracion
+                };
+            });
+            queryClient.setQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary'], (prev) => {
+                if (!prev || prev.idItinerarioUsuario !== variables.idItinerary) return prev;
+                const details = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary]);
+                const newDuracion = details ? details.duracionDias : prev.duracionDias;
+                return {
+                    ...prev,
+                    duracionDias: newDuracion
+                };
+            });
+            queryClient.setQueryData<ItinerarioResumen[]>(['misItinerarios'], (prev) => {
+                if (!prev) return prev;
+                const details = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary]);
+                const newDuracion = details ? details.duracionDias : 1;
+                return prev.map(it => it.id === variables.idItinerary ? { ...it, duracionDias: newDuracion } : it);
+            });
+        },
+        onError: (err, variables, context) => {
+            if (context?.prevDetails) {
+                queryClient.setQueryData(['itineraryDetails', variables.idItinerary], context.prevDetails);
+            }
+            if (context?.prevActive !== undefined) {
+                queryClient.setQueryData(['activeItinerary'], context.prevActive);
+            }
+            if (context?.prevItinerarios) {
+                queryClient.setQueryData(['misItinerarios'], context.prevItinerarios);
+            }
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo modificar la actividad");
+        },
+        onSettled: (data, error, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+        }
+    });
+
+    const editItem = async (idItinerary: number, idItem: number, itemData: Omit<ItemItinerarioUsuario, 'id'>) => {
+        await editItemMutation.mutateAsync({ idItinerary, idItem, itemData });
+    };
+
+    // Mutation: delete item
+    const quitItemMutation = useMutation({
+        mutationFn: ({ idItinerary, idItem }: { idItinerary: number; idItem: number }) =>
+            deleteItem(idItinerary, idItem),
+        onSuccess: (data, variables) => {
+            queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary], (prev) => {
+                if (!prev) return prev;
+
+                let newItems = prev.items.filter((item) => item.id !== variables.idItem);
+
+                // Re-mapear días para que no queden huecos (ej: Día 1, Día 3 -> Día 1, Día 2)
+                const daysPresent = Array.from(new Set(newItems.map(item => item.dia))).sort((a, b) => a - b);
+                const dayMap = new Map<number, number>();
+                daysPresent.forEach((oldDay, index) => {
+                    dayMap.set(oldDay, index + 1);
+                });
+
+                newItems = newItems.map(item => ({
+                    ...item,
+                    dia: dayMap.get(item.dia) || item.dia
+                }));
+
+                const newDuracion = daysPresent.length > 0 ? daysPresent.length : 1;
+
+                return {
+                    ...prev,
+                    items: newItems,
+                    duracionDias: newDuracion
+                };
+            });
+            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+        },
+        onError: (err) => {
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo eliminar la actividad");
+        }
+    });
+
+    const quitItem = async (idItinerary: number, idItem: number) => {
+        await quitItemMutation.mutateAsync({ idItinerary, idItem });
+    };
+
+    // Mutation: completar itinerario
+    const completarMutation = useMutation({
+        mutationFn: (idItinerary: number) => completarItinerario(idItinerary),
+        onMutate: async (idItinerary) => {
+            await queryClient.cancelQueries({ queryKey: ['itineraryDetails', idItinerary] });
+            await queryClient.cancelQueries({ queryKey: ['misItinerarios'] });
+            const prevDetails = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary]);
+            if (prevDetails) {
+                queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary], { ...prevDetails, completado: true });
+            }
+            const prevItinerarios = queryClient.getQueryData<ItinerarioResumen[]>(['misItinerarios']);
+            if (prevItinerarios) {
+                queryClient.setQueryData<ItinerarioResumen[]>(['misItinerarios'], prevItinerarios.map(it => it.id === idItinerary ? { ...it, completado: true } : it));
+            }
+            return { prevDetails, prevItinerarios };
+        },
+        onError: (_err, idItinerary, context) => {
+            // Solo revertimos el optimistic update. El mensaje al usuario lo
+            // muestra la pantalla con un Toast cross-platform (Alert queda mudo
+            // en Expo web), evitando además un doble aviso en nativo.
+            if (context?.prevDetails) queryClient.setQueryData(['itineraryDetails', idItinerary], context.prevDetails);
+            if (context?.prevItinerarios) queryClient.setQueryData(['misItinerarios'], context.prevItinerarios);
+        },
+        onSettled: (data, error, idItinerary) => {
+            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', idItinerary] });
+            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
+            queryClient.invalidateQueries({ queryKey: ['estadisticas'] });
+        },
+    });
+
+    const completarViaje = async (idItinerary: number) => {
+        await completarMutation.mutateAsync(idItinerary);
+    };
+
+    let errorString: string | null = null;
+    if (error instanceof Error) {
+        errorString = error.message;
+    } else if (error) {
+        errorString = String(error);
+    }
+
+    return {
+        error: errorString,
+        isMutating: putDatesMutation.isPending || putTitleMutation.isPending || newItemMutation.isPending || editItemMutation.isPending || quitItemMutation.isPending || completarMutation.isPending,
+        isLoading,
+        itineraryDetails,
+        quitItem,
+        editItem,
+        newItem,
+        putItineraryDates,
+        putItineraryTitle,
+        loadItineraryInfo,
+        completarViaje,
+        isCompletando: completarMutation.isPending,
+    };
+};

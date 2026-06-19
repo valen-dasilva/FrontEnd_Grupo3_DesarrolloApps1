@@ -1,49 +1,44 @@
 import { useState, useEffect } from 'react';
-import { postItinerario, deleteItinerario } from '@/services/favoritosService';
+import { guardarFavorito, quitarFavorito } from '@/services/favoritosService';
 import { useQueryClient } from '@tanstack/react-query';
 
+/**
+ * Toggle del "corazón" en Explorar: guarda o quita un itinerario del
+ * sistema de favoritos (bookmark). Se identifica solo por el id del
+ * template del sistema — ya no maneja id de copia (ese tercer argumento
+ * se mantiene por compatibilidad pero se ignora).
+ */
 export function useFavoriteToggle(
-  idItinerario: number | undefined,
+  idSistema: number | undefined,
   initialIsFavorite: boolean,
-  initialFavId: number | undefined
+  _legacyFavId?: number | undefined
 ) {
   const queryClient = useQueryClient();
   const [isFav, setIsFav] = useState(initialIsFavorite);
-  const [favId, setFavId] = useState<number | undefined>(initialFavId);
 
   useEffect(() => {
     setIsFav(initialIsFavorite);
   }, [initialIsFavorite]);
 
-  useEffect(() => {
-    setFavId(initialFavId);
-  }, [initialFavId]);
-
   const toggleFavorite = async () => {
-    if (idItinerario === undefined) {
-      console.warn("Cannot toggle favorite: idItinerario is undefined");
+    if (idSistema === undefined) {
+      console.warn("Cannot toggle favorite: idSistema is undefined");
       return;
     }
     const nextFav = !isFav;
-    setIsFav(nextFav);
+    setIsFav(nextFav); // optimista
     try {
       if (nextFav) {
-        const res = await postItinerario(idItinerario);
-        setFavId(res.id);
-      } else if (favId !== undefined) {
-        await deleteItinerario(favId);
-        setFavId(undefined);
+        await guardarFavorito(idSistema);
       } else {
-        console.warn("Cannot delete favorite: favId is undefined");
+        await quitarFavorito(idSistema);
       }
-      // Invalidate query caches to sync state across screens
-      queryClient.invalidateQueries({ queryKey: ['favorites'] });
-      queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+      queryClient.invalidateQueries({ queryKey: ['favoritos'] });
     } catch (error) {
-      setIsFav(!nextFav);
+      setIsFav(!nextFav); // revertir si falla
       console.error("Error toggling favorite:", error);
     }
   };
 
-  return { isFav, favId, toggleFavorite };
+  return { isFav, favId: undefined as number | undefined, toggleFavorite };
 }

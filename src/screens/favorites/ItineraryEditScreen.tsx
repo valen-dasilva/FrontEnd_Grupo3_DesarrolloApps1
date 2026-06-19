@@ -11,8 +11,8 @@ import { CustomInput } from '@/components/CustomInput';
 import { colors } from '@/constants/colors';
 import { styles } from './ItineraryEditScreen.styles';
 import { useTheme } from '@/hooks/useColorScheme';
-import { useFavoritosDetailsHook } from '@/hooks/useFavoritos';
-import { ItemItinerarioUsuario } from '@/services/favoritosService';
+import { useItinerariosDetailsHook } from '@/hooks/useItinerarios';
+import { ItemItinerarioUsuario } from '@/services/itinerariosService';
 import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
 
 type DaySectionProps = Readonly<{
@@ -61,7 +61,7 @@ export default function EdicionItinerarioScreen() {
       isLoading,
       quitItem,
       putItineraryTitle
-  } = useFavoritosDetailsHook();
+  } = useItinerariosDetailsHook();
 
   useFocusEffect(
     useCallback(() => {
