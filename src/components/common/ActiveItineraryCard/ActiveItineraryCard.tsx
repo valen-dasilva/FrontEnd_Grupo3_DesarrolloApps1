@@ -77,7 +77,6 @@ export default function ActiveItineraryCard({
         id: itinerarioActivo.idItinerarioUsuario.toString(),
         titulo: itinerarioActivo.titulo,
         provincia: itinerarioActivo.provincia,
-<<<<<<< HEAD
         duracionDias: itinerarioActivo.duracionDias?.toString() ?? "",
         fotoPortada: itinerarioActivo.fotoPortada ?? "",
         fechaInicio: itinerarioActivo.fechaInicio,
