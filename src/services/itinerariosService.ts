@@ -1,10 +1,5 @@
 import { apiClient } from './api'
 
-export interface UpdateDatesRequest {
-  fechaInicio: string,
-  fechaFin: string
-}
-
 /**
  * Payload para crear un itinerario propio desde cero.
  * La duración la calcula el backend a partir del rango de fechas.
@@ -117,22 +112,23 @@ export const getItinerarioDetalles = async (id: number): Promise<ItinerarioUsuar
   return response.data;
 }
 
-// Actualizar fechas.
-export const putItinerarioFechas = async (
+// Reprogramar la fecha de inicio. La fecha de fin la deriva el backend a
+// partir de la duración (fechaFin = fechaInicio + duracionDias - 1), así
+// que nunca queda inconsistente con la cantidad de días.
+export const patchFechaInicio = async (
   id: number,
-  dates: UpdateDatesRequest
+  fechaInicio: string
 ): Promise<ItinerarioUsuario> => {
-  const response = await apiClient.put<ItinerarioUsuario>(`${ITIN_PATH}/${id}`, dates);
+  const response = await apiClient.patch<ItinerarioUsuario>(`${ITIN_PATH}/${id}/fecha-inicio`, { fechaInicio });
   return response.data;
 }
 
-// Actualizar título (el backend solo persiste fechas; el front mantiene
-// override local del título — se conserva el comportamiento previo).
+// Renombrar un itinerario (el backend ya lo persiste de verdad).
 export const putItinerarioTitulo = async (
   id: number,
   titulo: string
 ): Promise<ItinerarioUsuario> => {
-  const response = await apiClient.put<ItinerarioUsuario>(`${ITIN_PATH}/${id}`, { titulo });
+  const response = await apiClient.patch<ItinerarioUsuario>(`${ITIN_PATH}/${id}/titulo`, { titulo });
   return response.data;
 }
 

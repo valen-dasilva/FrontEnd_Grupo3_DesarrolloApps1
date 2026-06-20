@@ -38,9 +38,8 @@ import {
     postFoto,
     postItem,
     putItem,
-    putItinerarioFechas,
+    patchFechaInicio,
     putItinerarioTitulo,
-    UpdateDatesRequest
 } from '@/services/itinerariosService';
 import { ItinerarioEnCursoDTO, Provincia, CategoriaItinerario } from '@/types/itinerario';
 import { getItinerarioEnCurso } from '@/services/itinerarioService';
@@ -359,22 +358,23 @@ export const useItinerariosDetailsHook = () => {
         enabled: activeId !== null,
     });
 
-    // Mutation: put dates
-    const putDatesMutation = useMutation({
-        mutationFn: ({ idItinerary, dates }: { idItinerary: number; dates: UpdateDatesRequest }) =>
-            putItinerarioFechas(idItinerary, dates),
+    // Mutation: reprogramar la fecha de inicio. La fecha de fin la recalcula
+    // el backend a partir de la duración, así que refrescamos detalle + listas.
+    const fechaInicioMutation = useMutation({
+        mutationFn: ({ idItinerary, fechaInicio }: { idItinerary: number; fechaInicio: string }) =>
+            patchFechaInicio(idItinerary, fechaInicio),
         onSuccess: (updatedItinerary, variables) => {
             queryClient.setQueryData(['itineraryDetails', variables.idItinerary], updatedItinerary);
             queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
             queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
         },
         onError: (err) => {
-            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo modificar las fechas.");
+            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo modificar la fecha de inicio.");
         }
     });
 
-    const putItineraryDates = async (idItinerary: number, dates: UpdateDatesRequest) => {
-        await putDatesMutation.mutateAsync({ idItinerary, dates });
+    const putItineraryFechaInicio = async (idItinerary: number, fechaInicio: string) => {
+        await fechaInicioMutation.mutateAsync({ idItinerary, fechaInicio });
     };
 
     // Mutation: put title
@@ -629,31 +629,12 @@ export const useItinerariosDetailsHook = () => {
         mutationFn: ({ idItinerary, idItem }: { idItinerary: number; idItem: number }) =>
             deleteItem(idItinerary, idItem),
         onSuccess: (data, variables) => {
-            queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary], (prev) => {
-                if (!prev) return prev;
-
-                let newItems = prev.items.filter((item) => item.id !== variables.idItem);
-
-                // Re-mapear días para que no queden huecos (ej: Día 1, Día 3 -> Día 1, Día 2)
-                const daysPresent = Array.from(new Set(newItems.map(item => item.dia))).sort((a, b) => a - b);
-                const dayMap = new Map<number, number>();
-                daysPresent.forEach((oldDay, index) => {
-                    dayMap.set(oldDay, index + 1);
-                });
-
-                newItems = newItems.map(item => ({
-                    ...item,
-                    dia: dayMap.get(item.dia) || item.dia
-                }));
-
-                const newDuracion = daysPresent.length > 0 ? daysPresent.length : 1;
-
-                return {
-                    ...prev,
-                    items: newItems,
-                    duracionDias: newDuracion
-                };
-            });
+            // Borrar una actividad no cambia la duración ni renumera los días:
+            // los días vacíos se siguen mostrando según duracionDias. Solo
+            // quitamos el item de la lista.
+            queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary], (prev) =>
+                prev ? { ...prev, items: prev.items.filter((item) => item.id !== variables.idItem) } : prev
+            );
             queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
             queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
             queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
@@ -756,13 +737,13 @@ export const useItinerariosDetailsHook = () => {
 
     return {
         error: errorString,
-        isMutating: putDatesMutation.isPending || putTitleMutation.isPending || newItemMutation.isPending || editItemMutation.isPending || quitItemMutation.isPending || addPhotoMutation.isPending || quitPhotoMutation.isPending || completarMutation.isPending,
+        isMutating: fechaInicioMutation.isPending || putTitleMutation.isPending || newItemMutation.isPending || editItemMutation.isPending || quitItemMutation.isPending || addPhotoMutation.isPending || quitPhotoMutation.isPending || completarMutation.isPending,
         isLoading,
         itineraryDetails,
         quitItem,
         editItem,
         newItem,
-        putItineraryDates,
+        putItineraryFechaInicio,
         putItineraryTitle,
         loadItineraryInfo,
         completarViaje,

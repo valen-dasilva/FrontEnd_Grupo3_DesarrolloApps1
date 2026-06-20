@@ -1,12 +1,12 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useState } from 'react';
-import { ScrollView, StatusBar, Text, View, ActivityIndicator } from 'react-native';
+import { ScrollView, StatusBar, Text, View, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Header } from '@/components/common/Header/Header';
 import { EditableActivityCard } from '@/components/favorites/itinerary_edit/EditableActivityCard/EditableActivityCard';
 import { CustomButton } from '@/components/CustomButton';
-import { CreateActivityCard } from '@/components/favorites/itinerary_edit/CreateActivityCard/CreateActivityCard';
 import { CustomInput } from '@/components/CustomInput';
 import { colors } from '@/constants/colors';
 import { styles } from './ItineraryEditScreen.styles';
@@ -14,6 +14,7 @@ import { useTheme } from '@/hooks/useColorScheme';
 import { useItinerariosDetailsHook } from '@/hooks/useItinerarios';
 import { FotoItinerarioUsuario, ItemItinerarioUsuario } from '@/services/itinerariosService';
 import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
+import { SingleDateModal } from '@/components/common/SingleDateModal/SingleDateModal';
 import {
   ItineraryPhotoPicker,
   SelectedItineraryPhoto,
@@ -24,6 +25,7 @@ import {
   deleteItineraryPhotoFromStorage,
   uploadItineraryPhoto,
 } from '@/services/itineraryPhotoService';
+import { formatFecha } from '@/utils/dateUtils';
 import Toast from 'react-native-toast-message';
 
 type DaySectionProps = Readonly<{
@@ -31,28 +33,32 @@ type DaySectionProps = Readonly<{
   activities: readonly ItemItinerarioUsuario[];
   onEdit: (activity: ItemItinerarioUsuario) => void;
   onDelete: (id: number, title: string) => void;
-  onAdd: (dayNum: number) => void;
   theme: typeof colors.light;
 }>;
 
-function DaySection({ dayNum, activities, onEdit, onDelete, onAdd, theme }: DaySectionProps) {
+function DaySection({ dayNum, activities, onEdit, onDelete, theme }: DaySectionProps) {
   const dayActivities = activities.filter((act) => act.dia === dayNum);
   return (
     <View style={styles.daySection}>
       <Text style={[styles.dayTitle, { color: theme.textSecondary }]}>{`Día ${dayNum}`}</Text>
       <View style={styles.activityList}>
-        {dayActivities.map((activity) => (
-          <EditableActivityCard
-            key={activity.id}
-            time={activity.hora}
-            title={activity.nombreActividad}
-            description={activity.descripcion}
-            location={activity.direccion || activity.localidad}
-            onEditPress={() => onEdit(activity)}
-            onDeletePress={() => onDelete(activity.id, activity.nombreActividad)}
-          />
-        ))}
-        <CreateActivityCard onPress={() => onAdd(dayNum)} />
+        {dayActivities.length > 0 ? (
+          dayActivities.map((activity) => (
+            <EditableActivityCard
+              key={activity.id}
+              time={activity.hora}
+              title={activity.nombreActividad}
+              description={activity.descripcion}
+              location={activity.direccion || activity.localidad}
+              onEditPress={() => onEdit(activity)}
+              onDeletePress={() => onDelete(activity.id, activity.nombreActividad)}
+            />
+          ))
+        ) : (
+          <Text style={[styles.emptyDayText, { color: theme.textSecondary }]}>
+            Sin actividades todavía
+          </Text>
+        )}
       </View>
     </View>
   );
@@ -73,6 +79,7 @@ export default function EdicionItinerarioScreen() {
       isLoading,
       quitItem,
       putItineraryTitle,
+      putItineraryFechaInicio,
       addPhoto,
       quitPhoto,
       isMutatingPhotos,
@@ -93,6 +100,7 @@ export default function EdicionItinerarioScreen() {
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
   const [isDeletingPhoto, setIsDeletingPhoto] = useState(false);
   const [photoDeleteTarget, setPhotoDeleteTarget] = useState<FotoItinerarioUsuario | null>(null);
+  const [showFechaModal, setShowFechaModal] = useState(false);
 
   React.useEffect(() => {
       if (itineraryDetails) {
@@ -120,12 +128,15 @@ export default function EdicionItinerarioScreen() {
     setDeleteTarget({ id: idItem, title: activityTitle });
   };
 
-  const handleAddActivity = (dayNum: number) => {
+  // Botón único a nivel itinerario: abre el formulario sin un día prefijado.
+  // Ahí el usuario elige un día existente o crea uno nuevo (lo pidió la
+  // cátedra: que agregar actividad no quede atado a un día puntual).
+  const handleAddActivity = () => {
     router.push({
       pathname: '/(tabs)/(favorite)/editActivityFormulary',
       params: {
         idItinerario: id,
-        day: String(dayNum),
+        day: '',
         time: '',
         title: '',
         description: '',
@@ -201,7 +212,16 @@ export default function EdicionItinerarioScreen() {
     }
   };
 
-  const handleGoBack = () => {
+  // Guarda el título si quedó pendiente. El onBlur del input ya lo guarda,
+  // pero si el usuario toca "Guardar y salir" con el campo enfocado el blur
+  // puede no haber disparado: este es el respaldo.
+  const guardarTituloPendiente = async () => {
+    if (id && itineraryDetails && title.trim() && title.trim() !== itineraryDetails.titulo) {
+      await putItineraryTitle(Number(id), title.trim());
+    }
+  };
+
+  const goToDetalle = () => {
     if (!id) return;
     router.replace({
       pathname: '/(tabs)/(favorite)/itinerarioInfoFav',
@@ -209,8 +229,28 @@ export default function EdicionItinerarioScreen() {
     });
   };
 
-  const days = Array.from(new Set(activities.map((act) => act.dia))).sort((a, b) => a - b);
-  if (days.length === 0) days.push(1);
+  const handleGoBack = async () => {
+    await guardarTituloPendiente();
+    goToDetalle();
+  };
+
+  const handleGuardarYSalir = async () => {
+    await guardarTituloPendiente();
+    Toast.show({
+      type: 'success',
+      text1: 'Cambios guardados',
+      text2: 'Tu itinerario quedó actualizado.',
+    });
+    goToDetalle();
+  };
+
+  const handleChangeFechaInicio = async (fecha: string) => {
+    if (!id) return;
+    await putItineraryFechaInicio(Number(id), fecha);
+  };
+
+  const totalDias = Math.max(itineraryDetails?.duracionDias ?? 1, 1);
+  const days = Array.from({ length: totalDias }, (_, i) => i + 1);
   const existingPhotos = itineraryDetails?.fotos ?? [];
   const isManagingPhotos = isUploadingPhotos || isMutatingPhotos || isDeletingPhoto;
 
@@ -237,17 +277,43 @@ export default function EdicionItinerarioScreen() {
         ) : (
             <>
                 <View style={styles.titleInputWrapper}>
-                  <CustomInput 
-                    value={title} 
-                    onChangeText={setTitle} 
-                    label="Título del Itinerario" 
+                  <CustomInput
+                    value={title}
+                    onChangeText={setTitle}
+                    label="Título del Itinerario"
                     onBlur={() => {
-                        if (itineraryDetails && title !== itineraryDetails.titulo) {
-                            putItineraryTitle(Number(id), title);
+                        if (itineraryDetails && title.trim() && title.trim() !== itineraryDetails.titulo) {
+                            putItineraryTitle(Number(id), title.trim());
                         }
                     }}
                   />
                 </View>
+
+                {itineraryDetails && (
+                  <View style={styles.fechaWrapper}>
+                    <TouchableOpacity
+                      style={[styles.fechaField, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                      onPress={() => setShowFechaModal(true)}
+                      activeOpacity={0.7}
+                    >
+                      <MaterialIcons name="event" size={22} color={theme.primary} />
+                      <View style={styles.fechaFieldText}>
+                        <Text style={[styles.fechaFieldLabel, { color: theme.textSecondary }]}>
+                          Inicio del viaje
+                        </Text>
+                        <Text style={[styles.fechaFieldValue, { color: theme.text }]}>
+                          {itineraryDetails.fechaInicio ? formatFecha(itineraryDetails.fechaInicio) : 'Elegir fecha'}
+                        </Text>
+                      </View>
+                      <View style={[styles.fechaDuration, { backgroundColor: theme.surfaceNeutral }]}>
+                        <Text style={[styles.fechaDurationText, { color: theme.textSecondary }]}>
+                          {totalDias} {totalDias === 1 ? 'día' : 'días'}
+                        </Text>
+                      </View>
+                      <MaterialIcons name="edit" size={18} color={theme.textSecondary} />
+                    </TouchableOpacity>
+                  </View>
+                )}
 
                 <View style={styles.photoSection}>
                   <ItineraryPhotoPicker
@@ -273,22 +339,26 @@ export default function EdicionItinerarioScreen() {
                     activities={activities}
                     onEdit={handleEditActivity}
                     onDelete={handleDeleteActivity}
-                    onAdd={handleAddActivity}
                     theme={theme}
                   />
                 ))}
 
-                {activities.length === 0 && (
-                  <View style={styles.emptyContainer}>
-                    <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-                      No hay actividades en este itinerario.
+                <View style={styles.addActivityWrapper}>
+                  <TouchableOpacity
+                    style={[styles.addActivityButton, { borderColor: theme.primary }]}
+                    onPress={handleAddActivity}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                  >
+                    <MaterialIcons name="add" size={20} color={theme.primary} />
+                    <Text style={[styles.addActivityText, { color: theme.primary }]}>
+                      Agregar actividad
                     </Text>
-                    <CreateActivityCard onPress={() => handleAddActivity(1)} />
-                  </View>
-                )}
+                  </TouchableOpacity>
+                </View>
 
                 <View style={styles.buttonWrapper}>
-                  <CustomButton title="Volver a Detalles" onPress={handleGoBack} />
+                  <CustomButton title="Guardar y salir" onPress={handleGuardarYSalir} />
                 </View>
             </>
         )}
@@ -316,6 +386,15 @@ export default function EdicionItinerarioScreen() {
         loading={isDeletingPhoto}
         onCancel={() => setPhotoDeleteTarget(null)}
         onConfirm={handleDeletePhoto}
+      />
+
+      <SingleDateModal
+        visible={showFechaModal}
+        initialDate={itineraryDetails?.fechaInicio}
+        title="Inicio del viaje"
+        confirmLabel="Guardar fecha"
+        onClose={() => setShowFechaModal(false)}
+        onConfirm={handleChangeFechaInicio}
       />
     </View>
   );

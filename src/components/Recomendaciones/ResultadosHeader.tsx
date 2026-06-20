@@ -63,13 +63,15 @@ export function ResultadosHeader({
 
         {/* Fila de chips de contexto (fechas y/o categorías) */}
         <View style={styles.chipsRow}>
-          {/* Chip de fechas: muestra la duración si está disponible, sino el rango de fechas */}
-          {Boolean(fechaInicio && fechaFin) && (
+          {/* Chip de duración: ya no se filtra por fecha, así que mostramos la
+              duración del itinerario (lo relevante). Si hubiera un rango de
+              fechas explícito, se muestra como respaldo. */}
+          {Boolean(primeraResultadoDuracion || (fechaInicio && fechaFin)) && (
             <View style={[styles.chip, isDark && { backgroundColor: '#2A303D' }]}>
               <Ionicons name="calendar-outline" size={12} color="#FFFFFF" />
               <Text style={styles.chipTexto}>
                 {primeraResultadoDuracion
-                  ? `${primeraResultadoDuracion} días`
+                  ? `${primeraResultadoDuracion} ${primeraResultadoDuracion === 1 ? 'día' : 'días'}`
                   : `${formatFechaCorta(fechaInicio)} - ${formatFechaCorta(fechaFin)}`}
               </Text>
             </View>

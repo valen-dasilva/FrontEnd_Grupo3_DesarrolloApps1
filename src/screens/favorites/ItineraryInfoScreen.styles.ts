@@ -44,6 +44,11 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 50,
   },
+  emptyDayText: {
+    fontFamily: fonts.family.bodyRegular,
+    fontSize: fonts.size.sm,
+    textAlign: 'center',
+  },
   completarBtnWrapper: {
     marginHorizontal: paddings.spacing.xl,
     marginTop: paddings.spacing.md,

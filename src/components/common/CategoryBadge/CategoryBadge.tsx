@@ -10,9 +10,12 @@ import { paddings } from '@/constants/paddings';
 interface CategoryBadgeProps {
   category: string;
   style?: ViewStyle;
+  /** Modo compacto: muestra solo el ícono (sin texto). Útil cuando hay
+   *  varias categorías y el texto desborda la card. */
+  compact?: boolean;
 }
 
-export const CategoryBadge: React.FC<CategoryBadgeProps> = ({ category, style }) => {
+export const CategoryBadge: React.FC<CategoryBadgeProps> = ({ category, style, compact = false }) => {
   const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === 'dark';
 
@@ -53,15 +56,17 @@ export const CategoryBadge: React.FC<CategoryBadgeProps> = ({ category, style })
       },
       layoutStyle
     ]}>
-      <MaterialIcons 
-        name={iconName as any} 
-        size={fonts.size.md + 1} 
-        color={iconColor} 
-        style={styles.icon} 
+      <MaterialIcons
+        name={iconName as any}
+        size={fonts.size.md + 1}
+        color={iconColor}
+        style={compact ? undefined : styles.icon}
       />
-      <Text style={[styles.text, { color: theme.text }]}>
-        {category}
-      </Text>
+      {!compact && (
+        <Text style={[styles.text, { color: theme.text }]}>
+          {category}
+        </Text>
+      )}
     </View>
   );
 };

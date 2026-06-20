@@ -106,6 +106,7 @@ export function ExploreItineraryCard({
                 <CategoryBadge
                   key={catId}
                   category={label}
+                  compact={categories.length > 2}
                   style={styles.carouselCategoryBadge}
                 />
               );

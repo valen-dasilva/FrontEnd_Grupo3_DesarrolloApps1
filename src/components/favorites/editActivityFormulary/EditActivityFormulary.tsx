@@ -159,7 +159,15 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
                 );
               })}
               <Pressable
-                onPress={() => setLocalDuracionDias(prev => prev + 1)}
+                onPress={() => {
+                  // Crear un día nuevo y dejarlo seleccionado: así "agregar
+                  // actividad → + día" queda en un solo gesto claro.
+                  setLocalDuracionDias(prev => {
+                    const nuevoDia = prev + 1;
+                    setDay(nuevoDia);
+                    return nuevoDia;
+                  });
+                }}
                 style={({ pressed }) => [
                   styles.dayButton,
                   { backgroundColor: theme.surfaceNeutral, borderColor: theme.border },

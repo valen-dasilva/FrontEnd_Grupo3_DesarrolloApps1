@@ -65,9 +65,13 @@ export default function FavoriteItineraryInfoScreen() {
             }
             map.get(item.dia)!.push(item);
         });
-        const sorted = Array.from(map.keys()).sort((a, b) => a - b);
+        // Mostramos TODOS los días según la duración (no solo los que tienen
+        // actividad): un itinerario de 6 días se ve con sus 6 días, vacíos o no.
+        if (!itineraryDetails) return { daysMap: map, sortedDays: [] as number[] };
+        const totalDias = Math.max(itineraryDetails.duracionDias ?? 1, ...Array.from(map.keys()), 1);
+        const sorted = Array.from({ length: totalDias }, (_, i) => i + 1);
         return { daysMap: map, sortedDays: sorted };
-    }, [itineraryDetails?.items]);
+    }, [itineraryDetails]);
 
     // Dynamic props resolving (route params with hook callback)
     const displayTitle = titulo || itineraryDetails?.titulo;
@@ -226,16 +230,22 @@ export default function FavoriteItineraryInfoScreen() {
         return (
             <View style={[styles.dayCard, isLastDay && styles.lastDayCard, { backgroundColor: theme.surface }]}>
                 <Text style={[styles.dayTitle, { color: theme.text }]}>Día {day}</Text>
-                {dayItems.map((item, itemIndex) => (
-                    <ActivityCard
-                        key={item.id}
-                        time={item.hora}
-                        title={item.nombreActividad}
-                        subtitle={item.descripcion}
-                        location={item.localidad || item.direccion}
-                        isLast={itemIndex === dayItems.length - 1}
-                    />
-                ))}
+                {dayItems.length > 0 ? (
+                    dayItems.map((item, itemIndex) => (
+                        <ActivityCard
+                            key={item.id}
+                            time={item.hora}
+                            title={item.nombreActividad}
+                            subtitle={item.descripcion}
+                            location={item.localidad || item.direccion}
+                            isLast={itemIndex === dayItems.length - 1}
+                        />
+                    ))
+                ) : (
+                    <Text style={[styles.emptyDayText, { color: theme.textSecondary }]}>
+                        Sin actividades programadas
+                    </Text>
+                )}
             </View>
         );
     }, [theme, sortedDays, daysMap]);

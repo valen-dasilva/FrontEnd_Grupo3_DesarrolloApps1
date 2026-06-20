@@ -18,10 +18,8 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Header } from '@/components/common/Header/Header';
-import { CalendarioViaje } from '@/components/Preferencias/CalendarioViaje';
 import { CategoriaGrid } from '@/components/Preferencias/CategoriaGrid';
 import { DestinoInput } from '@/components/Preferencias/DestinoInput';
-import { FechaRangeSelector } from '@/components/Preferencias/FechaRangeSelector';
 import { ProvinciaSelector } from '@/components/Preferencias/ProvinciaSelector';
 import { buscarPorPreferencias } from '@/services/itinerarioService';
 import {
@@ -34,16 +32,15 @@ export default function PreferenciasScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  // Estado del formulario de búsqueda
+  // Estado del formulario de búsqueda. No se filtra por fecha: un itinerario
+  // del sistema se define por su duración, no por cuándo se hace (alguien
+  // puede querer el mismo plan en agosto o en diciembre).
   const [provincia, setProvincia] = useState<Provincia | undefined>();
-  const [fechaInicio, setFechaInicio] = useState<string | undefined>();
-  const [fechaFin, setFechaFin] = useState<string | undefined>();
   const [categorias, setCategorias] = useState<Set<CategoriaItinerario>>(
     new Set(),
   );
 
   // Control de visibilidad de los modales
-  const [showCalendario, setShowCalendario] = useState(false);
   const [showProvincia, setShowProvincia] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -69,8 +66,6 @@ export default function PreferenciasScreen() {
       const resultados = await buscarPorPreferencias({
         provincia,
         tags: categorias.size > 0 ? Array.from(categorias) : undefined,
-        fechaInicio,
-        fechaFin,
       });
       router.push({
         pathname: "/(tabs)/inicioApp/recomendaciones",
@@ -78,8 +73,6 @@ export default function PreferenciasScreen() {
           resultados: JSON.stringify(resultados),
           provincia: provincia ?? "",
           etiquetas: JSON.stringify(Array.from(categorias)),
-          fechaInicio: fechaInicio ?? "",
-          fechaFin: fechaFin ?? "",
         },
       });
     } catch (err: unknown) {
@@ -123,22 +116,6 @@ export default function PreferenciasScreen() {
           />
         </View>
 
-        {/* Sección fechas */}
-        <View style={styles.seccion}>
-          <Text style={[styles.labelSeccion, { color: theme.textSecondary }]}>
-            SELECCIONA DIAS
-          </Text>
-          <FechaRangeSelector
-            fechaInicio={fechaInicio}
-            fechaFin={fechaFin}
-            onPress={() => setShowCalendario(true)}
-            onClear={() => {
-              setFechaInicio(undefined);
-              setFechaFin(undefined);
-            }}
-          />
-        </View>
-
         {/* Sección categorías — incluye su propio título y subtítulo */}
         <CategoriaGrid seleccionadas={categorias} onToggle={toggleCategoria} />
       </ScrollView>
@@ -177,18 +154,6 @@ export default function PreferenciasScreen() {
           Podrás editar cada detalle después.
         </Text>
       </View>
-
-      {/* Modal de calendario para seleccionar rango de fechas */}
-      <CalendarioViaje
-        visible={showCalendario}
-        onClose={() => setShowCalendario(false)}
-        onConfirm={(inicio, fin) => {
-          setFechaInicio(inicio);
-          setFechaFin(fin);
-        }}
-        initialStart={fechaInicio}
-        initialEnd={fechaFin}
-      />
 
       {/* Modal de lista de provincias */}
       <ProvinciaSelector

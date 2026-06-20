@@ -1,7 +1,6 @@
 
 import { useTheme } from "@/hooks/useColorScheme";
 import {
-    CATEGORIA_LABEL,
     ItinerarioEnCursoDTO,
     ItemItinerarioUsuarioDTO,
     PROVINCIA_LABEL,
@@ -67,21 +66,23 @@ export default function ActiveItineraryCard({
     itinerarioActivo.items,
   );
 
+  // El "activo" es un itinerario propio del usuario (una copia), no un
+  // template del sistema. Por eso navegamos a su pantalla de detalle
+  // (itinerarioInfoFav, que carga GET /itinerarios/{id}), no a la del
+  // catálogo del sistema — que devolvía 404 al usar el id de usuario.
   const handleEnCursoPress = () => {
     router.push({
-      pathname: "/(tabs)/explorarApp/itinerarioInfo",
+      pathname: "/(tabs)/(favorite)/itinerarioInfoFav",
       params: {
-        idItinerario: (itinerarioActivo.idItinerarioSistema ?? itinerarioActivo.idItinerarioUsuario).toString(),
-        title: itinerarioActivo.titulo,
-        image: itinerarioActivo.fotoPortada ?? "",
-        category: itinerarioActivo.etiquetas?.length > 0
-          ? CATEGORIA_LABEL[itinerarioActivo.etiquetas[0]]
-          : "General",
-        startDate: itinerarioActivo.fechaInicio,
-        endDate: itinerarioActivo.fechaFin,
-        description: itinerarioActivo.descripcion,
-        isFavorite: "true",
-        idFavorito: itinerarioActivo.idItinerarioUsuario.toString(),
+        id: itinerarioActivo.idItinerarioUsuario.toString(),
+        titulo: itinerarioActivo.titulo,
+        provincia: itinerarioActivo.provincia,
+        duracionDias: itinerarioActivo.duracionDias?.toString() ?? "",
+        fotoPortada: itinerarioActivo.fotoPortada ?? "",
+        fechaInicio: itinerarioActivo.fechaInicio,
+        fechaFin: itinerarioActivo.fechaFin,
+        etiquetas: itinerarioActivo.etiquetas?.join(",") ?? "",
+        description: itinerarioActivo.descripcion ?? "",
       },
     });
   };
