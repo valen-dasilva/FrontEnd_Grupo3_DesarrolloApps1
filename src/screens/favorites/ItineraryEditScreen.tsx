@@ -182,25 +182,17 @@ export default function EdicionItinerarioScreen() {
   const handleDeletePhoto = async () => {
     if (!photoDeleteTarget || !id) return;
 
-    const target = photoDeleteTarget;
     setIsDeletingPhoto(true);
     try {
-      await quitPhoto(Number(id), target.id);
-      try {
-        await deleteItineraryPhotoFromStorage(target.url);
-        Toast.show({
-          type: 'success',
-          text1: 'Foto eliminada',
-          text2: 'La foto se quitó correctamente del itinerario.',
-        });
-      } catch (error) {
-        console.warn('No se pudo limpiar la foto de Storage:', error);
-        Toast.show({
-          type: 'info',
-          text1: 'Foto eliminada',
-          text2: 'La imagen se quitó del itinerario, pero su limpieza quedó pendiente.',
-        });
-      }
+      // Solo borramos el registro en DB. El archivo en Storage queda como
+      // huérfano y se limpia cuando se elimina el itinerario completo
+      // (deleteMutation en useItinerarios). Evita parsear URL→path acá.
+      await quitPhoto(Number(id), photoDeleteTarget.id);
+      Toast.show({
+        type: 'success',
+        text1: 'Foto eliminada',
+        text2: 'La foto se quitó del itinerario.',
+      });
     } catch {
       // El hook informa el error y conserva la foto en pantalla.
     } finally {

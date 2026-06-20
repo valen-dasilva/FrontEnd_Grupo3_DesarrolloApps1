@@ -22,7 +22,7 @@ export const saveLocalTitleOverride = async (id: number, title: string): Promise
     }
 };
 import {
-    deleteFotoConfirmada,
+    deleteFoto,
     deleteItem,
     deleteItinerario,
     getItinerarioDetalles,
@@ -139,20 +139,31 @@ export const useItinerariosHook = () => {
     // Mutation: remove itinerary
     const deleteMutation = useMutation({
         mutationFn: async (idItinerario: number) => {
-            const details = await getItinerarioDetalles(idItinerario);
-            const photoUrls = Array.from(new Set([
-                ...(details.fotos ?? []).map((photo) => photo.url),
-                ...(details.fotoPortada ? [details.fotoPortada] : []),
-            ]));
+            // Juntamos las URLs para limpiar Storage. Preferimos el cache; si no
+            // está, un GET best-effort. Es limpieza secundaria: nunca debe
+            // bloquear el borrado del itinerario, por eso va en try/catch.
+            let photoUrls: string[] = [];
+            try {
+                const details = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerario])
+                    ?? await getItinerarioDetalles(idItinerario);
+                photoUrls = Array.from(new Set([
+                    ...(details.fotos ?? []).map((photo) => photo.url),
+                    ...(details.fotoPortada ? [details.fotoPortada] : []),
+                ]));
+            } catch {
+                // Sin conexión o detalle inaccesible: seguimos con el borrado.
+            }
 
             await deleteItinerario(idItinerario);
 
-            const cleanupResults = await Promise.allSettled(
-                photoUrls.map(deleteItineraryPhotoFromStorage)
-            );
-            const failedCleanups = cleanupResults.filter((result) => result.status === 'rejected').length;
-            if (failedCleanups > 0) {
-                console.warn(`No se pudieron limpiar ${failedCleanups} fotos del itinerario ${idItinerario}.`);
+            if (photoUrls.length > 0) {
+                const cleanupResults = await Promise.allSettled(
+                    photoUrls.map(deleteItineraryPhotoFromStorage)
+                );
+                const failedCleanups = cleanupResults.filter((result) => result.status === 'rejected').length;
+                if (failedCleanups > 0) {
+                    console.warn(`No se pudieron limpiar ${failedCleanups} fotos del itinerario ${idItinerario}.`);
+                }
             }
         },
         onSuccess: (data, idItinerario) => {
@@ -682,28 +693,19 @@ export const useItinerariosDetailsHook = () => {
         return await addPhotoMutation.mutateAsync({ idItinerary, url });
     };
 
-    // Mutation: delete a photo and confirm persistence before Storage cleanup.
+    // Mutation: delete a photo. El backend recalcula la portada al borrar, así
+    // que en vez de confirmar con un GET extra dejamos que las invalidaciones
+    // refresquen detalle + lista con los datos ya actualizados del servidor.
     const quitPhotoMutation = useMutation({
-        mutationFn: async ({ idItinerary, idPhoto }: { idItinerary: number; idPhoto: number }) => {
-            return deleteFotoConfirmada(idItinerary, idPhoto);
-        },
-        onSuccess: (confirmedDetails, variables) => {
-            queryClient.setQueryData(
-                ['itineraryDetails', variables.idItinerary],
-                confirmedDetails,
-            );
-            queryClient.setQueryData<ItinerarioResumen[]>(['misItinerarios'], (previous) =>
-                previous?.map((itinerary) => itinerary.id === variables.idItinerary
-                    ? { ...itinerary, fotoPortada: confirmedDetails.fotoPortada }
-                    : itinerary)
-            );
-            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
-        },
+        mutationFn: ({ idItinerary, idPhoto }: { idItinerary: number; idPhoto: number }) =>
+            deleteFoto(idItinerary, idPhoto),
         onError: (err) => {
-            Alert.alert('Error', err instanceof Error ? err.message : 'No se pudo eliminar la foto.');
+            Alert.alert('Error', err instanceof ApiError ? err.message : 'No se pudo eliminar la foto.');
         },
         onSettled: (_data, _error, variables) => {
-            return queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
+            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
+            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
         },
     });
 

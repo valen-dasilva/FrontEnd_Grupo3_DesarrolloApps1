@@ -56,7 +56,6 @@ export function ImageCarousel({ images, fallbackColor, style, children }: Props)
           <ScrollView
             ref={scrollRef}
             horizontal
-            pagingEnabled
             snapToInterval={containerWidth}
             decelerationRate="fast"
             scrollEnabled={validImages.length > 1}
