@@ -18,7 +18,7 @@ function calculateDurationDays(startStr: string, endStr: string): number {
   try {
     const start = new Date(startStr);
     const end = new Date(endStr);
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       return 0;
     }
     const diffTime = Math.abs(end.getTime() - start.getTime());
@@ -56,12 +56,7 @@ export default function ExploreScreen() {
     },
   });
 
-  let error: string | null = null;
-  if (queryError instanceof Error) {
-    error = queryError.message;
-  } else if (queryError) {
-    error = String(queryError);
-  }
+  const error = queryError instanceof Error ? queryError.message : (queryError ? String(queryError) : null);
 
   const renderHeader = useCallback(() => (
     <View>
