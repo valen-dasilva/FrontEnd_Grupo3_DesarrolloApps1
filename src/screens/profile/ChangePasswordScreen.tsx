@@ -1,5 +1,6 @@
 import { Stack, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useState } from 'react';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useAuth } from '@/context/AuthContext';
 import { changePassword } from '@/services/userService';
@@ -8,11 +9,14 @@ import { icons } from '@/constants/icons';
 import Toast from 'react-native-toast-message';
 import { CustomInput } from '@/components/CustomInput';
 import { FormActionButtons } from '@/components/common/FormActionButtons';
-import { SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { Header } from '@/components/common/Header/Header';
+import { ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './ChangePasswordScreen.styles';
 
 export default function CambiarContrasenaScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { theme } = useTheme();
 
@@ -20,6 +24,14 @@ export default function CambiarContrasenaScreen() {
   const [nueva, setNueva] = useState('');
   const [confirmar, setConfirmar] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      setActual('');
+      setNueva('');
+      setConfirmar('');
+    }, [])
+  );
 
   const handleSave = async () => {
     if (!actual.trim() || !nueva.trim() || !confirmar.trim()) {
@@ -52,8 +64,13 @@ export default function CambiarContrasenaScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
+    <View style={[styles.safe, { paddingTop: insets.top, backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
+      <Header
+        title="Cambiar contraseña"
+        showBackButton={true}
+        onBackPress={() => router.navigate('/(tabs)/perfil')}
+      />
       <ScrollView contentContainerStyle={styles.scroll}>
 
         <View style={[styles.lockCircle, { backgroundColor: theme.avatarBg }]}>
@@ -96,6 +113,6 @@ export default function CambiarContrasenaScreen() {
           onCancel={() => router.navigate('/(tabs)/perfil')}
         />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

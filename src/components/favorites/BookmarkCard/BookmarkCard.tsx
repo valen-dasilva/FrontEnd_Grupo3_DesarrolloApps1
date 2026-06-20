@@ -1,5 +1,5 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Animated, ImageBackground, Pressable, Text, View, StyleSheet, TouchableOpacity } from 'react-native';
 
 import { icons } from '@/constants/icons';
@@ -42,7 +42,13 @@ export const BookmarkCard: React.FC<Props> = ({
   onVerDetalle,
 }) => {
   const { theme } = useTheme();
+  const [isFavorite, setIsFavorite] = useState(true);
   const crearScale = useRef(new Animated.Value(1)).current;
+
+  const handleQuitar = () => {
+    setIsFavorite(false);
+    onQuitar?.();
+  };
 
   const handlePressIn = () => {
     Animated.spring(crearScale, { toValue: 0.96, speed: 40, bounciness: 0, useNativeDriver: true }).start();
@@ -64,7 +70,7 @@ export const BookmarkCard: React.FC<Props> = ({
       >
         <View style={styles.topActionsRow}>
           <View />
-          <FavoriteButton isFavorite={true} onPress={onQuitar} />
+          <FavoriteButton isFavorite={isFavorite} onPress={handleQuitar} />
         </View>
       </ImageBackground>
 

@@ -6,12 +6,15 @@ import { getUserProfile, updateUserProfile } from "@/services/userService";
 import { UserAvatar } from "@/components/common/UserAvatar/UserAvatar";
 import { CustomInput } from "@/components/CustomInput";
 import { FormActionButtons } from "@/components/common/FormActionButtons";
+import { Header } from "@/components/common/Header/Header";
 import Toast from 'react-native-toast-message';
-import { SafeAreaView, ScrollView, ActivityIndicator, View } from "react-native";
+import { ScrollView, ActivityIndicator, View } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './EditProfileScreen.styles';
 
 export default function EditarUsuarioScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user, updateUser } = useAuth();
   const { theme } = useTheme();
 
@@ -75,8 +78,13 @@ export default function EditarUsuarioScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
+    <View style={[styles.safe, { paddingTop: insets.top, backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
+      <Header
+        title="Editar Perfil"
+        showBackButton={true}
+        onBackPress={() => router.navigate('/(tabs)/perfil')}
+      />
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.avatarContainer}>
           <UserAvatar uri={fotoPerfil} nombre={nombre} apellido={apellido} size={90} />
@@ -112,6 +120,6 @@ export default function EditarUsuarioScreen() {
           onCancel={() => router.navigate('/(tabs)/perfil')}
         />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

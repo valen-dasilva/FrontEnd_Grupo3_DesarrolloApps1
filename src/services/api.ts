@@ -1,6 +1,15 @@
 import axios from "axios";
+import { Platform } from "react-native";
+import Constants from 'expo-constants'
 
-const BASE_URL = `http://localhost:8080`; // Cambia esto por la URL real de tu backend
+const getHost = (): string => {
+  if (Platform.OS === "web") return "localhost";
+  const expoHost = Constants.expoConfig?.hostUri?.split(":")[0];
+  if (expoHost) return expoHost;
+  return Platform.OS === "android" ? "10.0.2.2" : "localhost";
+};
+
+const BASE_URL = `http://${getHost()}:8080`; // Cambia esto por la URL real de tu backend
 
 // Guardamos el token y el handler de "no autorizado" como variables de módulo
 // (no como estado de React) porque el interceptor de abajo no es un componente:

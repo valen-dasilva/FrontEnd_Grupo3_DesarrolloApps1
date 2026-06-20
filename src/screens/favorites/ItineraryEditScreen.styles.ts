@@ -22,6 +22,7 @@ export const styles = StyleSheet.create({
   },
   titleInputWrapper: {
     marginBottom: paddings.spacing.md,
+    paddingHorizontal: paddings.spacing.lg,
   },
   fechaWrapper: {
     paddingHorizontal: paddings.spacing.lg,

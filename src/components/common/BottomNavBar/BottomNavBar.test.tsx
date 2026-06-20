@@ -1,6 +1,18 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { BottomNavBar } from './BottomNavBar';
+
+const insetValue = 0;
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <SafeAreaProvider initialMetrics={{
+    insets: { top: insetValue, right: insetValue, bottom: insetValue, left: insetValue },
+    frame: { x: 0, y: 0, width: 390, height: 844 },
+  }}>
+    {children}
+  </SafeAreaProvider>
+);
 
 const mockTheme = {
   background: '#ffffff',
@@ -19,7 +31,7 @@ jest.mock('@/hooks/useColorScheme', () => ({
 
 describe('BottomNavBar', () => {
   it('renders all tabs correctly', () => {
-    const { getByText } = render(<BottomNavBar activeTab="Favoritos" />);
+    const { getByText } = render(<BottomNavBar activeTab="Favoritos" />, { wrapper });
     expect(getByText('Inicio')).toBeTruthy();
     expect(getByText('Explorar')).toBeTruthy();
     expect(getByText('Favoritos')).toBeTruthy();
@@ -28,7 +40,7 @@ describe('BottomNavBar', () => {
 
   it('marks the active tab as selected in accessibilityState', () => {
     const { getAllByRole } = render(
-      <BottomNavBar activeTab="Favoritos" />
+      <BottomNavBar activeTab="Favoritos" />, { wrapper }
     );
 
     // Let's query tab items by accessibility role
@@ -47,7 +59,7 @@ describe('BottomNavBar', () => {
   it('triggers onTabPress when a tab is clicked', () => {
     const onTabPress = jest.fn();
     const { getByText } = render(
-      <BottomNavBar activeTab="Favoritos" onTabPress={onTabPress} />
+      <BottomNavBar activeTab="Favoritos" onTabPress={onTabPress} />, { wrapper }
     );
 
     const exploreTab = getByText('Explorar');

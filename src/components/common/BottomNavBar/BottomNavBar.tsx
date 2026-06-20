@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './BottomNavBar.styles';
 import { colors } from '@/constants/colors';
 import { icons } from '@/constants/icons';
@@ -56,6 +57,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
   onTabPress,
 }) => {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <View style={[
@@ -63,6 +65,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
       {
         backgroundColor: theme.surface,
         borderTopColor: theme.border,
+        paddingBottom: styles.navBarContainer.paddingBottom + insets.bottom,
       }
     ]}>
       <TabItem 

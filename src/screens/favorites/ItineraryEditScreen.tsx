@@ -15,6 +15,7 @@ import { useItinerariosDetailsHook } from '@/hooks/useItinerarios';
 import { FotoItinerarioUsuario, ItemItinerarioUsuario } from '@/services/itinerariosService';
 import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
 import { SingleDateModal } from '@/components/common/SingleDateModal/SingleDateModal';
+import { StatusModal } from '@/components/common/StatusModal/StatusModal';
 import {
   ItineraryPhotoPicker,
   SelectedItineraryPhoto,
@@ -101,6 +102,10 @@ export default function EdicionItinerarioScreen() {
   const [isDeletingPhoto, setIsDeletingPhoto] = useState(false);
   const [photoDeleteTarget, setPhotoDeleteTarget] = useState<FotoItinerarioUsuario | null>(null);
   const [showFechaModal, setShowFechaModal] = useState(false);
+  const [fechaModal, setFechaModal] = useState<{ visible: boolean; state: 'loading' | 'success' }>({
+    visible: false,
+    state: 'loading',
+  });
 
   React.useEffect(() => {
       if (itineraryDetails) {
@@ -246,7 +251,13 @@ export default function EdicionItinerarioScreen() {
 
   const handleChangeFechaInicio = async (fecha: string) => {
     if (!id) return;
-    await putItineraryFechaInicio(Number(id), fecha);
+    setFechaModal({ visible: true, state: 'loading' });
+    try {
+      await putItineraryFechaInicio(Number(id), fecha);
+      setFechaModal({ visible: true, state: 'success' });
+    } catch {
+      setFechaModal({ visible: false, state: 'loading' });
+    }
   };
 
   const totalDias = Math.max(itineraryDetails?.duracionDias ?? 1, 1);
@@ -395,6 +406,17 @@ export default function EdicionItinerarioScreen() {
         confirmLabel="Guardar fecha"
         onClose={() => setShowFechaModal(false)}
         onConfirm={handleChangeFechaInicio}
+      />
+
+      <StatusModal
+        visible={fechaModal.visible}
+        state={fechaModal.state}
+        title={fechaModal.state === 'loading' ? 'Actualizando fecha...' : '¡Fecha actualizada!'}
+        message={fechaModal.state === 'loading'
+          ? 'Estamos reprogramando tu itinerario.'
+          : 'El viaje quedó reprogramado correctamente.'}
+        actionLabel="Listo"
+        onAction={() => setFechaModal({ visible: false, state: 'loading' })}
       />
     </View>
   );
