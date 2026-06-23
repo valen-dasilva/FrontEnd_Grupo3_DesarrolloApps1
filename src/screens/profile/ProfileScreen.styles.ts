@@ -9,33 +9,6 @@ export const styles = StyleSheet.create({
     padding: paddings.spacing.xl,
     paddingBottom: paddings.spacing.huge,
   },
-  avatarCard: {
-    borderRadius: paddings.radius.md,
-    padding: paddings.spacing.xxl,
-    alignItems: 'center',
-    marginBottom: paddings.spacing.xl,
-    borderWidth: 1,
-  },
-  avatarTouch: {
-    marginBottom: paddings.spacing.md,
-    borderRadius: 45,
-    overflow: 'hidden',
-  },
-  nombre: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  email: {
-    fontSize: 13,
-    marginTop: paddings.spacing.xs,
-  },
-  uploadButton: {
-    width: 140,
-    height: 38,
-    marginTop: 14,
-    borderRadius: paddings.radius.lg,
-    marginVertical: 0,
-  },
   sectionLabel: {
     fontSize: 12,
     fontWeight: '700',

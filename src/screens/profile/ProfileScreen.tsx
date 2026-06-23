@@ -5,16 +5,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '@/components/common/Header/Header';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useAuth } from '@/context/AuthContext';
-import * as ImagePicker from 'expo-image-picker';
-import { uploadProfilePicture, getUserProfile, updateUserProfile } from '@/services/userService';
-import { CustomButton } from '@/components/CustomButton';
 import { MaterialIcons } from '@expo/vector-icons';
 import { icons } from '@/constants/icons';
-import { UserAvatar } from '@/components/common/UserAvatar/UserAvatar';
-import Toast from 'react-native-toast-message';
 import { styles } from './ProfileScreen.styles';
 import { MapaArgentina } from '@/components/perfil/MapaArgentina/MapaArgentina';
 import { MapaInteractivoModal } from '@/components/perfil/MapaArgentina/MapaInteractivoModal';
+import { AvatarCard } from '@/components/perfil/AvatarCard/AvatarCard';
 import { useEstadisticas } from '@/hooks/useEstadisticas';
 import { useItinerariosHook } from '@/hooks/useItinerarios';
 
@@ -22,86 +18,18 @@ export default function PerfilScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const { user, logout, updateUser } = useAuth();
+  const { logout } = useAuth();
 
-  const [loadingImage, setLoadingImage] = useState(false);
   const [mapaVisible, setMapaVisible] = useState(false);
   const { data: estadisticas } = useEstadisticas();
   const { listItinerarioResumen } = useItinerariosHook();
-
-  const handlePickImage = async () => {
-    if (!user) return;
-
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Toast.show({ type: 'error', text1: 'Permiso requerido', text2: 'Necesitamos acceso a tu galería para cambiar tu foto.' });
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.5,
-    });
-
-    if (!result.canceled && result.assets?.[0]?.uri) {
-      const asset = result.assets[0];
-      const pickedUri = asset.uri;
-
-      if (asset.fileSize && asset.fileSize > 3 * 1024 * 1024) {
-        Toast.show({ type: 'error', text1: 'Imagen muy pesada', text2: 'Elegí una imagen de menos de 3MB.' });
-        return;
-      }
-
-      try {
-        setLoadingImage(true);
-        const uploadedUrl = await uploadProfilePicture(user.idUsuario, pickedUri);
-        const profile = await getUserProfile(user.idUsuario);
-        await updateUserProfile(user.idUsuario, {
-          nombre: profile.nombre,
-          apellido: profile.apellido || '',
-          email: profile.email,
-          fotoPerfil: uploadedUrl,
-        });
-        await updateUser({ fotoPerfil: uploadedUrl });
-      } catch (err: any) {
-        Toast.show({ type: 'error', text1: 'Error', text2: 'No se pudo subir la imagen. Verificá tu conexión.' });
-      } finally {
-        setLoadingImage(false);
-      }
-    }
-  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
       <Header title="Perfil" />
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={[styles.avatarCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <TouchableOpacity
-            onPress={handlePickImage}
-            disabled={loadingImage}
-            activeOpacity={0.8}
-            style={styles.avatarTouch}
-          >
-            <UserAvatar uri={user?.fotoPerfil} nombre={user?.nombre} loading={loadingImage} size={90} />
-          </TouchableOpacity>
-          <Text style={[styles.nombre, { color: theme.text }]}>
-            {user ? user.nombre : 'Usuario'}
-          </Text>
-          <Text style={[styles.email, { color: theme.gray }]}>
-            {user ? user.email : 'correo@ejemplo.com'}
-          </Text>
-
-          <CustomButton
-            title={loadingImage ? 'Subiendo...' : 'Subir foto'}
-            variant="outline"
-            onPress={handlePickImage}
-            disabled={loadingImage}
-            style={styles.uploadButton}
-          />
-        </View>
+        <AvatarCard />
 
         <Text style={[styles.sectionLabel, { color: theme.gray }]}>SEGURIDAD Y CUENTA</Text>
 
