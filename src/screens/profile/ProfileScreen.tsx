@@ -9,6 +9,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { icons } from '@/constants/icons';
 import { styles } from './ProfileScreen.styles';
 import { AvatarCard } from '@/components/perfil/AvatarCard/AvatarCard';
+import { OpcionRow } from '@/components/perfil/OpcionRow/OpcionRow';
 import { SeccionRecorrido } from '@/components/perfil/SeccionRecorrido/SeccionRecorrido';
 import { useEstadisticas } from '@/hooks/useEstadisticas';
 import { useItinerariosHook } from '@/hooks/useItinerarios';
@@ -31,27 +32,16 @@ export default function PerfilScreen() {
 
         <Text style={[styles.sectionLabel, { color: theme.gray }]}>SEGURIDAD Y CUENTA</Text>
 
-        <TouchableOpacity
-          style={[styles.optionRow, { backgroundColor: theme.card, borderColor: theme.border }]}
+        <OpcionRow
+          icono={icons.Person}
+          label="Editar Usuario"
           onPress={() => router.push('/(tabs)/perfilApp/editarUsuario')}
-        >
-          <View style={styles.optionLeft}>
-            <MaterialIcons name={icons.Person} size={20} color={theme.text} />
-            <Text style={[styles.optionText, { color: theme.text }]}>Editar Usuario</Text>
-          </View>
-          <MaterialIcons name={icons['chevron.right']} size={22} color={theme.gray} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.optionRow, { backgroundColor: theme.card, borderColor: theme.border }]}
+        />
+        <OpcionRow
+          icono={icons.Lock}
+          label="Cambiar Contraseña"
           onPress={() => router.push('/(tabs)/perfilApp/cambiarContrasena')}
-        >
-          <View style={styles.optionLeft}>
-            <MaterialIcons name={icons.Lock} size={20} color={theme.text} />
-            <Text style={[styles.optionText, { color: theme.text }]}>Cambiar Contraseña</Text>
-          </View>
-          <MaterialIcons name={icons['chevron.right']} size={22} color={theme.gray} />
-        </TouchableOpacity>
+        />
 
         <Text style={[styles.sectionLabel, { color: theme.gray }]}>MI RECORRIDO POR ARGENTINA</Text>
 

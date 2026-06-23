@@ -16,24 +16,6 @@ export const styles = StyleSheet.create({
     marginBottom: paddings.spacing.sm,
     letterSpacing: 0.5,
   },
-  optionRow: {
-    borderRadius: 12,
-    padding: paddings.spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-    borderWidth: 1,
-  },
-  optionText: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  optionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
   logoutBtn: {
     borderWidth: 1.5,
     borderRadius: 12,
