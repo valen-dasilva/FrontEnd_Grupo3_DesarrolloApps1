@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,9 +8,8 @@ import { useAuth } from '@/context/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { icons } from '@/constants/icons';
 import { styles } from './ProfileScreen.styles';
-import { MapaArgentina } from '@/components/perfil/MapaArgentina/MapaArgentina';
-import { MapaInteractivoModal } from '@/components/perfil/MapaArgentina/MapaInteractivoModal';
 import { AvatarCard } from '@/components/perfil/AvatarCard/AvatarCard';
+import { SeccionRecorrido } from '@/components/perfil/SeccionRecorrido/SeccionRecorrido';
 import { useEstadisticas } from '@/hooks/useEstadisticas';
 import { useItinerariosHook } from '@/hooks/useItinerarios';
 
@@ -20,7 +19,6 @@ export default function PerfilScreen() {
   const { theme } = useTheme();
   const { logout } = useAuth();
 
-  const [mapaVisible, setMapaVisible] = useState(false);
   const { data: estadisticas } = useEstadisticas();
   const { listItinerarioResumen } = useItinerariosHook();
 
@@ -57,63 +55,8 @@ export default function PerfilScreen() {
 
         <Text style={[styles.sectionLabel, { color: theme.gray }]}>MI RECORRIDO POR ARGENTINA</Text>
 
-        <View style={styles.statsRow}>
-          <View style={[styles.statCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.statNumber, { color: theme.primary }]}>
-              {estadisticas?.totalProvincias ?? 0}
-            </Text>
-            <Text style={[styles.statLabel, { color: theme.gray }]}>Provincias</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.statNumber, { color: theme.primary }]}>
-              {estadisticas?.diasTotalesViajados ?? 0}
-            </Text>
-            <Text style={[styles.statLabel, { color: theme.gray }]}>Días viajados</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.statNumber, { color: theme.primary }]}>
-              {estadisticas?.porcentajeArgentina ?? 0}%
-            </Text>
-            <Text style={[styles.statLabel, { color: theme.gray }]}>De Argentina</Text>
-          </View>
-        </View>
-
-        {estadisticas?.provinciaFavorita && (
-          <View style={[styles.favCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <Text style={[styles.favLabel, { color: theme.gray }]}>Provincia favorita</Text>
-            <Text style={[styles.favValue, { color: theme.text }]}>
-              {estadisticas.provinciaFavorita.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
-            </Text>
-          </View>
-        )}
-
-        <TouchableOpacity
-          style={[styles.mapaCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-          onPress={() => setMapaVisible(true)}
-          activeOpacity={0.85}
-        >
-          <View style={styles.mapaTitleRow}>
-            <Text style={[styles.mapaTitle, { color: theme.text }]}>Provincias visitadas</Text>
-            <MaterialIcons name="open-in-full" size={16} color={theme.gray} />
-          </View>
-          <MapaArgentina
-            provinciasVisitadas={estadisticas?.provinciasVisitadas ?? []}
-            colorVisitada={theme.primary}
-            colorNoVisitada={theme.border}
-            strokeColor={theme.background}
-            height={300}
-          />
-          {!estadisticas?.totalProvincias && (
-            <Text style={[styles.mapaEmpty, { color: theme.gray }]}>
-              Completá tus primeros viajes para ver el mapa
-            </Text>
-          )}
-        </TouchableOpacity>
-
-        <MapaInteractivoModal
-          visible={mapaVisible}
-          onClose={() => setMapaVisible(false)}
-          provinciasVisitadas={estadisticas?.provinciasVisitadas ?? []}
+        <SeccionRecorrido
+          estadisticas={estadisticas}
           itinerarios={listItinerarioResumen}
         />
 
