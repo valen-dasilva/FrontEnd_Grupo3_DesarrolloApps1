@@ -10,6 +10,23 @@ import { StatusModal } from '@/components/common/StatusModal/StatusModal';
 import { ItinerarioSistemaResumenDTO, PROVINCIA_LABEL, CATEGORIA_LABEL } from '@/types/itinerario';
 import { paddings } from '@/constants/paddings';
 
+function buildBookmarkParams(item: ItinerarioSistemaResumenDTO) {
+  return {
+    pathname: '/(tabs)/explorarApp/itinerarioInfo' as const,
+    params: {
+      idItinerario: String(item.idItinerario),
+      title: item.titulo,
+      description: item.descripcion,
+      category: item.etiquetas?.length > 0 ? CATEGORIA_LABEL[item.etiquetas[0]] : 'General',
+      image: item.fotoPortada,
+      startDate: item.fechaInicio,
+      endDate: item.fechaFin,
+      isFavorite: 'true',
+      idFavorito: '',
+    },
+  };
+}
+
 interface Props {
   /** Header compartido (título + toggle de vista) que scrollea con la lista */
   header: React.ReactElement;
@@ -58,20 +75,7 @@ export function GuardadosTab({ header, onVerMisViajes }: Props) {
       imageUrl={item.fotoPortada}
       onCrearCopia={() => handleCrearCopia(item.idItinerario)}
       onQuitar={() => quitarFavorito(item.idItinerario)}
-      onVerDetalle={() => router.push({
-        pathname: '/(tabs)/explorarApp/itinerarioInfo',
-        params: {
-          idItinerario: String(item.idItinerario),
-          title: item.titulo,
-          description: item.descripcion,
-          category: item.etiquetas?.length > 0 ? CATEGORIA_LABEL[item.etiquetas[0]] : 'General',
-          image: item.fotoPortada,
-          startDate: item.fechaInicio,
-          endDate: item.fechaFin,
-          isFavorite: 'true',
-          idFavorito: '',
-        },
-      })}
+      onVerDetalle={() => router.push(buildBookmarkParams(item))}
     />
   ), [handleCrearCopia, quitarFavorito, router]);
 

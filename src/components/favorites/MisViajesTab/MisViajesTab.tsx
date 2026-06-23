@@ -10,6 +10,23 @@ import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
 import { ItinerarioResumen } from '@/services/itinerariosService';
 import { paddings } from '@/constants/paddings';
 
+function buildItinerarioParams(itinerary: ItinerarioResumen) {
+  return {
+    pathname: '/(tabs)/(favorite)/itinerarioInfoFav' as const,
+    params: {
+      id: String(itinerary.id),
+      titulo: itinerary.titulo,
+      provincia: itinerary.provincia,
+      duracionDias: String(itinerary.duracionDias),
+      fotoPortada: itinerary.fotoPortada,
+      fechaInicio: itinerary.fechaInicio,
+      fechaFin: itinerary.fechaFin,
+      etiquetas: itinerary.etiquetas?.join(','),
+      description: itinerary.descripcion || '',
+    },
+  };
+}
+
 interface Props {
   /** Header compartido (título + toggle de vista) que scrollea con la lista */
   header: React.ReactElement;
@@ -75,20 +92,7 @@ export function MisViajesTab({ header, onVerGuardados }: Props) {
       isOfflineAvailable={downloadedIds.includes(itinerary.id)}
       isFavorite={true}
       isPinned={itinerary.esPinned}
-      onPressDetail={() => router.push({
-        pathname: '/(tabs)/(favorite)/itinerarioInfoFav',
-        params: {
-          id: String(itinerary.id),
-          titulo: itinerary.titulo,
-          provincia: itinerary.provincia,
-          duracionDias: String(itinerary.duracionDias),
-          fotoPortada: itinerary.fotoPortada,
-          fechaInicio: itinerary.fechaInicio,
-          fechaFin: itinerary.fechaFin,
-          etiquetas: itinerary.etiquetas?.join(','),
-          description: itinerary.descripcion || '',
-        }
-      })}
+      onPressDetail={() => router.push(buildItinerarioParams(itinerary))}
       onDeletePress={() => setConfirmDeleteId(itinerary.id)}
       onPinPress={() => togglePin(itinerary.id)}
       onDownloadPress={() => handleToggleDownload(itinerary.id)}
