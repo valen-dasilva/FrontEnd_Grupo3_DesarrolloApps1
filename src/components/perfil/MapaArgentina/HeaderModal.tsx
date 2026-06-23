@@ -1,14 +1,16 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useTheme } from '@/hooks/useColorScheme';
 
 interface Props {
   titulo: string;
   onCerrar: () => void;
-  theme: Record<string, string>;
 }
 
-export function HeaderModal({ titulo, onCerrar, theme }: Props) {
+export function HeaderModal({ titulo, onCerrar }: Props) {
+  const { theme } = useTheme();
+
   return (
     <View style={[styles.barraHeader, { borderBottomColor: theme.border }]}>
       <Text style={[styles.tituloHeader, { color: theme.text }]}>{titulo}</Text>

@@ -186,11 +186,7 @@ export default function PerfilScreen() {
           visible={mapaVisible}
           onClose={() => setMapaVisible(false)}
           provinciasVisitadas={estadisticas?.provinciasVisitadas ?? []}
-          favoritos={listItinerarioResumen}
-          colorVisitada={theme.primary}
-          colorNoVisitada={theme.border}
-          strokeColor={theme.background}
-          theme={theme as unknown as Record<string, string>}
+          itinerarios={listItinerarioResumen}
         />
 
         <TouchableOpacity
