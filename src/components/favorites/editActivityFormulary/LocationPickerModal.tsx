@@ -17,10 +17,8 @@ import { fonts } from '@/constants/fonts';
 import { paddings } from '@/constants/paddings';
 
 const MAPS_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY ?? '';
-// Mismo endpoint legacy que usaba react-native-google-places-autocomplete.
-// Lo llamamos directo con fetch para controlar nosotros el renderizado y el
-// touch de la lista (el FlatList interno de la librería no propaga el tap bajo
-// la New Architecture de Expo SDK 54).
+// fetch directo: los FlatList internos de librerías de autocomplete no propagan
+// el tap correctamente bajo New Architecture (Expo SDK 54).
 const AUTOCOMPLETE_URL = 'https://maps.googleapis.com/maps/api/place/autocomplete/json';
 
 interface Prediction {
