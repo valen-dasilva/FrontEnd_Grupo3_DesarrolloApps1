@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { PROVINCIA_LABEL, Provincia } from '@/types/itinerario';
+import { useTheme } from '@/hooks/useColorScheme';
 
 interface Props {
   provincia: Provincia;
@@ -9,8 +10,6 @@ interface Props {
   cantidadViajes: number;
   diasTotales: number;
   titulosItinerarios: string[];
-  colorVisitada: string;
-  theme: Record<string, string>;
 }
 
 export function PanelEstadisticasProvincia({
@@ -19,9 +18,10 @@ export function PanelEstadisticasProvincia({
   cantidadViajes,
   diasTotales,
   titulosItinerarios,
-  colorVisitada,
-  theme,
 }: Props) {
+  const { theme } = useTheme();
+  const colorVisitada = theme.primary;
+
   return (
     <View style={[styles.panelEstadisticas, { backgroundColor: theme.card, borderTopColor: theme.border }]}>
       <View style={styles.filaPrincipalPanel}>
