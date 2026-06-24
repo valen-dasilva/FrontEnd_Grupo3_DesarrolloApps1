@@ -270,7 +270,7 @@ export default function FavoriteItineraryInfoScreen() {
                 {dayItems.length > 0 ? (
                     dayItems.map((item, itemIndex) => (
                         <ActivityCard
-                            key={item.id}
+                            key={item.id != null ? `${day}-${item.id}` : `${day}-fallback-${itemIndex}`}
                             time={item.hora}
                             title={item.nombreActividad}
                             subtitle={item.descripcion}

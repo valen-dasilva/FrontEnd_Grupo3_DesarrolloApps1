@@ -20,7 +20,7 @@ export interface ActivityFormValues {
 export interface EditActivityFormularyProps {
   initialValues: ActivityFormValues;
   duracionDias: number;
-  onSave: (values: ActivityFormValues) => void;
+  onSave: (values: ActivityFormValues) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -37,6 +37,7 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
   const [locationModalVisible, setLocationModalVisible] = useState(false);
   const [day, setDay] = useState(initialValues.day || 1);
   const [timeError, setTimeError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [localDuracionDias, setLocalDuracionDias] = useState(Math.max(duracionDias, initialValues.day || 1));
 
   useEffect(() => {
@@ -97,7 +98,7 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
     updateTimeAndValidate(formatted);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim()) {
       Alert.alert('Campo obligatorio', 'Por favor ingresa un título para la actividad.');
       return;
@@ -111,13 +112,18 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
       Alert.alert('Formato de hora inválido', 'Por favor ingresa la hora en formato HH:mm (ej. 09:00).');
       return;
     }
-    onSave({
-      title: title.trim(),
-      description: description.trim(),
-      time: time.trim(),
-      location: location.trim(),
-      day,
-    });
+    setIsSaving(true);
+    try {
+      await onSave({
+        title: title.trim(),
+        description: description.trim(),
+        time: time.trim(),
+        location: location.trim(),
+        day,
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -268,15 +274,18 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
 
           <Pressable
             onPress={handleSave}
+            disabled={isSaving}
             style={({ pressed }) => [
               styles.saveButton,
               { backgroundColor: theme.primary },
-              pressed && styles.pressedState
+              (pressed || isSaving) && styles.pressedState,
             ]}
             accessibilityRole="button"
             accessibilityLabel="Guardar cambios de la actividad"
           >
-            <Text style={[styles.saveButtonText, { color: theme.textInverse }]}>Guardar cambios</Text>
+            <Text style={[styles.saveButtonText, { color: theme.textInverse }]}>
+              {isSaving ? 'Guardando...' : 'Guardar cambios'}
+            </Text>
           </Pressable>
 
           <Pressable
