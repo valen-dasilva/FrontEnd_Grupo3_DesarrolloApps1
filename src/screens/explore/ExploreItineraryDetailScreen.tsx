@@ -12,12 +12,7 @@ import { styles } from './ExploreItineraryDetailScreen.styles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WeatherStrip } from '@/components/common/WeatherStrip/WeatherStrip';
 import { PROVINCIA_COORDS } from '@/utils/provinciaCoords';
-
-/** Convierte "HH:mm:ss" → "HH:mm" */
-function formatHora(hora: string): string {
-  if (!hora) return '';
-  return hora.substring(0, 5);
-}
+import { formatHora } from '@/utils/dateUtils';
 
 export default function ItinerarioInfoScreen() {
   const router = useRouter();
@@ -86,9 +81,9 @@ export default function ItinerarioInfoScreen() {
   const renderEmptyComponent = () => {
     if (loading) {
       return (
-        <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+        <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={theme.primary} />
-          <Text style={{ color: theme.textSecondary, marginTop: 12 }}>
+          <Text style={[styles.emptyLoadingText, { color: theme.textSecondary }]}>
             Cargando actividades...
           </Text>
         </View>
@@ -97,16 +92,16 @@ export default function ItinerarioInfoScreen() {
 
     if (error) {
       return (
-        <View style={{ paddingVertical: 24, alignItems: 'center' }}>
-          <Text style={{ color: theme.danger, textAlign: 'center' }}>{error}</Text>
+        <View style={styles.emptyContainer}>
+          <Text style={[styles.emptyText, { color: theme.danger }]}>{error}</Text>
         </View>
       );
     }
 
     if (itinerario && dias.length === 0) {
       return (
-        <View style={{ paddingVertical: 24, alignItems: 'center' }}>
-          <Text style={{ color: theme.textSecondary }}>
+        <View style={styles.emptyContainer}>
+          <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
             Este itinerario no tiene actividades cargadas.
           </Text>
         </View>

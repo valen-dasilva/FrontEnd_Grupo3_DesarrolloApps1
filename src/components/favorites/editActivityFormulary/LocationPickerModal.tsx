@@ -64,10 +64,7 @@ export function LocationPickerModal({ visible, onSelect, onClose }: LocationPick
   }, [query]);
 
   const fetchPredictions = async (text: string) => {
-    if (!MAPS_KEY) {
-      console.warn('[LocationPicker] MAPS_KEY vacía');
-      return;
-    }
+    if (!MAPS_KEY) return;
     setLoading(true);
     try {
       const url =
@@ -78,13 +75,9 @@ export function LocationPickerModal({ visible, onSelect, onClose }: LocationPick
       if (json.status === 'OK') {
         setPredictions(json.predictions ?? []);
       } else {
-        if (json.status !== 'ZERO_RESULTS') {
-          console.error('[LocationPicker] Places error:', json.status, json.error_message);
-        }
         setPredictions([]);
       }
-    } catch (e) {
-      console.error('[LocationPicker] fetch error:', e);
+    } catch {
     } finally {
       setLoading(false);
     }

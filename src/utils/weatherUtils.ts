@@ -38,13 +38,10 @@ export interface WeatherDay {
   label: string;
 }
 
-/** Devuelve true si el código WMO corresponde a lluvia, nieve o tormenta. */
 export function isBadWeather(code: number): boolean {
   return code >= 51;
 }
 
-/** Dado el fechaInicio del itinerario y el número de día (1-based),
- *  devuelve la fecha absoluta en formato YYYY-MM-DD. */
 export function getDiaDate(fechaInicio: string, dia: number): string {
   const [year, month, day] = fechaInicio.split('-').map(Number);
   const date = new Date(year, month - 1, day);
@@ -55,8 +52,6 @@ export function getDiaDate(fechaInicio: string, dia: number): string {
   return `${y}-${m}-${d}`;
 }
 
-/** Devuelve true si el rango del itinerario tiene algún día dentro
- *  de la ventana de forecast (hoy … hoy + 14 días). */
 export function isInForecastWindow(fechaInicio: string, fechaFin: string): boolean {
   const today = new Date();
   today.setHours(0, 0, 0, 0);

@@ -67,7 +67,7 @@ async function fetchWeather(
 }
 
 export function useWeather({ coords, fechaInicio, fechaFin }: UseWeatherParams) {
-  const enabled = !!fechaInicio && !!fechaFin && !!coords;
+  const enabled = !!fechaInicio && !!fechaFin && !!(coords.lat || coords.lng);
 
   return useQuery<WeatherResult>({
     queryKey: ['weather', coords.lat, coords.lng, fechaInicio, fechaFin],

@@ -5,6 +5,7 @@ import { useWeather } from '@/hooks/useWeather';
 import { Coords } from '@/utils/provinciaCoords';
 import { WeatherDay } from '@/utils/weatherUtils';
 import { styles } from './WeatherStrip.styles';
+import { colors } from '@/constants/colors';
 
 interface WeatherStripProps {
   coords: Coords;
@@ -12,8 +13,9 @@ interface WeatherStripProps {
   fechaFin: string;
 }
 
-function WeatherDayItem({ item }: { item: WeatherDay }) {
-  const { theme } = useTheme();
+type Theme = typeof colors.light;
+
+function WeatherDayItem({ item, theme }: { item: WeatherDay; theme: Theme }) {
   return (
     <View style={[styles.dayItem, { backgroundColor: theme.surfaceNeutral }]}>
       <Text style={[styles.dayName, { color: theme.text }]}>{item.dayName}</Text>
@@ -52,7 +54,7 @@ export function WeatherStrip({ coords, fechaInicio, fechaFin }: WeatherStripProp
       <FlatList
         data={data.days}
         keyExtractor={(item) => item.date}
-        renderItem={({ item }) => <WeatherDayItem item={item} />}
+        renderItem={({ item }) => <WeatherDayItem item={item} theme={theme} />}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
