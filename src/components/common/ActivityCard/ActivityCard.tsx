@@ -4,7 +4,7 @@ import { icons } from '@/constants/icons';
 import { paddings } from '@/constants/paddings';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/hooks/useColorScheme';
 import { formatHora } from '@/utils/dateUtils';
 
@@ -19,15 +19,29 @@ type Props = {
 export function ActivityCard({ time, title, subtitle, location, isLast = false }: Props) {
   const { theme } = useTheme();
 
+  const handleOpenMaps = () => {
+    if (!location?.trim()) return;
+    const query = encodeURIComponent(`${subtitle} ${location}`.trim());
+    Linking.openURL(`https://maps.google.com/?q=${query}`);
+  };
+
+  const hasLocation = !!location?.trim();
+
   return (
     <View style={[styles.activityItem, isLast && styles.activityItemLast]}>
       <Text style={[styles.activityTime, { color: theme.primary }]}>{formatHora(time)}</Text>
       <Text style={[styles.activityTitle, { color: theme.text }]}>{title}</Text>
       <Text style={[styles.activitySubtitle, { color: theme.textSecondary }]}>{subtitle}</Text>
-      <View style={styles.locationRow}>
-        <MaterialIcons name={icons.AddItinerary} size={fonts.size.sm} color={theme.textSecondary} />
-        <Text style={[styles.locationText, { color: theme.textSecondary }]}>{location}</Text>
-      </View>
+      <Pressable
+        onPress={handleOpenMaps}
+        disabled={!hasLocation}
+        style={({ pressed }) => [styles.locationRow, hasLocation && pressed && styles.locationRowPressed]}
+        accessibilityRole={hasLocation ? 'link' : 'text'}
+        accessibilityLabel={hasLocation ? `Abrir ubicación en Maps: ${location}` : location}
+      >
+        <MaterialIcons name={icons.AddItinerary} size={fonts.size.sm} color={hasLocation ? theme.primary : theme.textSecondary} />
+        <Text style={[styles.locationText, { color: hasLocation ? theme.primary : theme.textSecondary }]}>{location}</Text>
+      </Pressable>
     </View>
   );
 }
@@ -61,6 +75,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: paddings.spacing.xs,
+  },
+  locationRowPressed: {
+    opacity: 0.6,
   },
   locationText: {
     fontSize: fonts.size.sm - 1,

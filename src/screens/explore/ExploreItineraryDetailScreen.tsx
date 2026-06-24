@@ -1,7 +1,7 @@
 import { paddings } from '@/constants/paddings';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useItinerarioDetalle } from '@/hooks/useItinerarioDetalle';
-import { ItemItinerarioSistemaDTO } from '@/types/itinerario';
+import { ItemItinerarioSistemaDTO, Provincia } from '@/types/itinerario';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo, useCallback } from 'react';
 import { ActivityIndicator, FlatList, Text, View, Platform } from 'react-native';
@@ -10,6 +10,8 @@ import { Header } from '@/components/common/Header/Header';
 import { ItineraryInfoCard } from '@/components/Explorar/CardItinerarioInfo';
 import { styles } from './ExploreItineraryDetailScreen.styles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { WeatherStrip } from '@/components/common/WeatherStrip/WeatherStrip';
+import { PROVINCIA_COORDS } from '@/utils/provinciaCoords';
 
 /** Convierte "HH:mm:ss" → "HH:mm" */
 function formatHora(hora: string): string {
@@ -52,20 +54,34 @@ export default function ItinerarioInfoScreen() {
     .map(Number)
     .sort((a, b) => a - b);
 
+  const weatherCoords = useMemo(() => {
+    const prov = itinerario?.provincia as Provincia | undefined;
+    return prov ? PROVINCIA_COORDS[prov] ?? null : null;
+  }, [itinerario?.provincia]);
+
   const renderHeader = useCallback(() => (
-    <ItineraryInfoCard
-      idItinerario={params.idItinerario ? Number(params.idItinerario) : undefined}
-      title={params.title}
-      category={params.category}
-      startDate={params.startDate}
-      endDate={params.endDate}
-      description={params.description}
-      image={params.image}
-      isFavorite={params.isFavorite === 'true'}
-      idFavorito={params.idFavorito ? Number(params.idFavorito) : undefined}
-      onBackPress={() => router.back()}
-    />
-  ), [params, router]);
+    <>
+      <ItineraryInfoCard
+        idItinerario={params.idItinerario ? Number(params.idItinerario) : undefined}
+        title={params.title}
+        category={params.category}
+        startDate={params.startDate}
+        endDate={params.endDate}
+        description={params.description}
+        image={params.image}
+        isFavorite={params.isFavorite === 'true'}
+        idFavorito={params.idFavorito ? Number(params.idFavorito) : undefined}
+        onBackPress={() => router.back()}
+      />
+      {weatherCoords && params.startDate && params.endDate && (
+        <WeatherStrip
+          coords={weatherCoords}
+          fechaInicio={params.startDate}
+          fechaFin={params.endDate}
+        />
+      )}
+    </>
+  ), [params, router, weatherCoords]);
 
   const renderEmptyComponent = () => {
     if (loading) {

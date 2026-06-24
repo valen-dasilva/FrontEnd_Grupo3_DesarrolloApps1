@@ -15,6 +15,11 @@ import { StatusModal } from '@/components/common/StatusModal/StatusModal';
 import { useItinerariosDetailsHook } from '@/hooks/useItinerarios';
 import { ItemItinerarioUsuario } from '@/services/itinerariosService';
 import { formatFecha } from '@/utils/dateUtils';
+import { WeatherStrip } from '@/components/common/WeatherStrip/WeatherStrip';
+import { PROVINCIA_COORDS } from '@/utils/provinciaCoords';
+import { Provincia } from '@/types/itinerario';
+import { useWeather } from '@/hooks/useWeather';
+import { isBadWeather, getDiaDate } from '@/utils/weatherUtils';
 
 export default function FavoriteItineraryInfoScreen() {
     const router = useRouter();
@@ -168,6 +173,17 @@ export default function FavoriteItineraryInfoScreen() {
         outputRange: [theme.primary, theme.lightgreen],
     });
 
+    const weatherCoords = useMemo(() => {
+        const prov = (displayProvincia as Provincia) ?? null;
+        return prov ? PROVINCIA_COORDS[prov] ?? null : null;
+    }, [displayProvincia]);
+
+    const { data: weatherData } = useWeather({
+        coords: weatherCoords ?? { lat: 0, lng: 0 },
+        fechaInicio: startDate ?? '',
+        fechaFin: endDate ?? '',
+    });
+
     const renderHeader = useCallback(() => (
         <>
             <CardItinerarioInfoFav
@@ -183,6 +199,13 @@ export default function FavoriteItineraryInfoScreen() {
                 })}
                 onEditPress={() => router.replace({ pathname: '/(tabs)/(favorite)/edicionItinerario', params: { id } })}
             />
+            {weatherCoords && startDate && endDate && (
+                <WeatherStrip
+                    coords={weatherCoords}
+                    fechaInicio={startDate}
+                    fechaFin={endDate}
+                />
+            )}
             <TouchableOpacity
                 style={styles.completarBtnWrapper}
                 onPress={handleCompletarViaje}
@@ -210,7 +233,7 @@ export default function FavoriteItineraryInfoScreen() {
                 </Animated.View>
             </TouchableOpacity>
         </>
-    ), [displayTitle, displayImageUrl, displayImages, displayCategory, displayDateRange, displayDescription, id, router, yaCompletado, isCompletando, handleCompletarViaje, scaleAnim, completarBg, completarBorder, completarIconColor]);
+    ), [displayTitle, displayImageUrl, displayImages, displayCategory, displayDateRange, displayDescription, id, router, yaCompletado, isCompletando, handleCompletarViaje, scaleAnim, completarBg, completarBorder, completarIconColor, weatherCoords, startDate, endDate]);
 
     const renderEmptyComponent = () => {
         if (isLoading) {
@@ -227,9 +250,23 @@ export default function FavoriteItineraryInfoScreen() {
     const renderItem = useCallback(({ item: day, index }: { item: number; index: number }) => {
         const dayItems = daysMap.get(day) || [];
         const isLastDay = index === sortedDays.length - 1;
+
+        const diaDate = startDate ? getDiaDate(startDate, day) : null;
+        const diaWeather = diaDate && weatherData?.available
+            ? weatherData.days.find((d) => d.date === diaDate) ?? null
+            : null;
+        const badWeatherEmoji = diaWeather && isBadWeather(diaWeather.weatherCode)
+            ? diaWeather.emoji
+            : null;
+
         return (
             <View style={[styles.dayCard, isLastDay && styles.lastDayCard, { backgroundColor: theme.surface }]}>
-                <Text style={[styles.dayTitle, { color: theme.text }]}>Día {day}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={[styles.dayTitle, { color: theme.text }]}>Día {day}</Text>
+                    {badWeatherEmoji && (
+                        <Text style={{ fontSize: 16 }}>{badWeatherEmoji}</Text>
+                    )}
+                </View>
                 {dayItems.length > 0 ? (
                     dayItems.map((item, itemIndex) => (
                         <ActivityCard
@@ -248,7 +285,7 @@ export default function FavoriteItineraryInfoScreen() {
                 )}
             </View>
         );
-    }, [theme, sortedDays, daysMap]);
+    }, [theme, sortedDays, daysMap, startDate, weatherData]);
 
     return (
         <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.surfaceNeutral }]}>

@@ -4,6 +4,7 @@ import {
     ItinerarioEnCursoDTO,
     ItemItinerarioUsuarioDTO,
     PROVINCIA_LABEL,
+    Provincia,
 } from "@/types/itinerario";
 import { formatFechaCorta } from "@/utils/dateUtils";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,6 +12,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useWeather } from "@/hooks/useWeather";
+import { PROVINCIA_COORDS } from "@/utils/provinciaCoords";
 
 // Busca la próxima actividad para mostrar en la card:
 // - Si el viaje aún no empezó: primera actividad del día 1
@@ -65,6 +68,20 @@ export default function ActiveItineraryCard({
     itinerarioActivo.fechaInicio,
     itinerarioActivo.items,
   );
+
+  const weatherCoords = PROVINCIA_COORDS[itinerarioActivo.provincia as Provincia] ?? null;
+  const { data: weatherData } = useWeather({
+    coords: weatherCoords ?? { lat: 0, lng: 0 },
+    fechaInicio: itinerarioActivo.fechaInicio,
+    fechaFin: itinerarioActivo.fechaFin,
+  });
+
+  // Determina qué fecha mostrar: hoy si el viaje está en curso, inicio si aún no empezó
+  const todayStr = new Date().toISOString().split('T')[0];
+  const targetDate = todayStr >= itinerarioActivo.fechaInicio ? todayStr : itinerarioActivo.fechaInicio;
+  const todayWeather = weatherCoords && weatherData?.available
+    ? weatherData.days.find((d) => d.date === targetDate) ?? null
+    : null;
 
   // El "activo" es un itinerario propio del usuario (una copia), no un
   // template del sistema. Por eso navegamos a su pantalla de detalle
@@ -165,6 +182,16 @@ export default function ActiveItineraryCard({
           </Text>
         </View>
       </View>
+
+      {/* Clima del día */}
+      {todayWeather && (
+        <View style={[styles.weatherRow, { borderTopColor: isDark ? "#2A303C" : "#F3F4F6" }]}>
+          <Text style={styles.weatherEmoji}>{todayWeather.emoji}</Text>
+          <Text style={[styles.weatherLabel, { color: theme.textSecondary }]}>
+            {todayStr >= itinerarioActivo.fechaInicio ? 'Hoy' : 'Día 1'} · {todayWeather.maxTemp}° / {todayWeather.minTemp}° · {todayWeather.label}
+          </Text>
+        </View>
+      )}
 
       {/* Sub-tarjeta de Próxima Actividad — calculada desde items o en estado de carga optimista */}
       {(proximaActividad || itinerarioActivo.isOptimistic) && (
@@ -291,6 +318,21 @@ const styles = StyleSheet.create({
   },
   dotSeparator: {
     fontSize: 14,
+  },
+  weatherRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    gap: 8,
+    borderTopWidth: 1,
+  },
+  weatherEmoji: {
+    fontSize: 16,
+  },
+  weatherLabel: {
+    fontSize: 13,
+    fontWeight: "500",
   },
   actividadCard: {
     borderRadius: 16,

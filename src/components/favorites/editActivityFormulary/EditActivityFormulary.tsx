@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View, Alert } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View, Alert, StyleSheet } from 'react-native';
 import { styles } from './EditActivityFormulary.styles';
 import { useTheme } from '@/hooks/useColorScheme';
 import { CustomInput } from '@/components/CustomInput';
 import { formatHora } from '@/utils/dateUtils';
+import { Ionicons } from '@expo/vector-icons';
+import { LocationPickerModal } from './LocationPickerModal';
+import { fonts } from '@/constants/fonts';
+import { paddings } from '@/constants/paddings';
 
 export interface ActivityFormValues {
   title: string;
@@ -30,6 +34,7 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
   const [description, setDescription] = useState(initialValues.description);
   const [time, setTime] = useState(formatHora(initialValues.time));
   const [location, setLocation] = useState(initialValues.location);
+  const [locationModalVisible, setLocationModalVisible] = useState(false);
   const [day, setDay] = useState(initialValues.day || 1);
   const [timeError, setTimeError] = useState<string | null>(null);
   const [localDuracionDias, setLocalDuracionDias] = useState(Math.max(duracionDias, initialValues.day || 1));
@@ -217,13 +222,49 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
             ) : null}
           </View>
 
-          <CustomInput
-            label="Ubicación"
-            value={location}
-            onChangeText={setLocation}
-            placeholder="Ej. Parque Nacional Los Glaciares"
-            accessibilityLabel="Ubicación de la actividad"
-          />
+          {/* Campo de ubicación — modal en nativo, texto libre en web */}
+          {Platform.OS !== 'web' ? (
+            <>
+              <View style={locationStyles.wrapper}>
+                <Text style={[locationStyles.label, { color: theme.text }]}>Ubicación</Text>
+                <Pressable
+                  onPress={() => setLocationModalVisible(true)}
+                  style={({ pressed }) => [
+                    locationStyles.field,
+                    { backgroundColor: theme.inputBg, borderColor: theme.border },
+                    pressed && locationStyles.fieldPressed,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Seleccionar ubicación de la actividad"
+                >
+                  <Ionicons name="location-outline" size={20} color={theme.textSecondary} style={locationStyles.pinIcon} />
+                  <Text
+                    style={[
+                      locationStyles.fieldText,
+                      { color: location ? theme.text : theme.textSecondary },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {location || 'Buscar lugar o dirección...'}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={18} color={theme.textSecondary} />
+                </Pressable>
+              </View>
+              <LocationPickerModal
+                visible={locationModalVisible}
+                onSelect={(address) => setLocation(address)}
+                onClose={() => setLocationModalVisible(false)}
+              />
+            </>
+          ) : (
+            <CustomInput
+              label="Ubicación"
+              value={location}
+              onChangeText={setLocation}
+              placeholder="Ej. Parque Nacional Los Glaciares"
+              accessibilityLabel="Ubicación de la actividad"
+            />
+          )}
 
           <Pressable
             onPress={handleSave}
@@ -255,3 +296,34 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
     </KeyboardAvoidingView>
   );
 };
+
+const locationStyles = StyleSheet.create({
+  wrapper: {
+    width: '100%',
+    marginVertical: paddings.spacing.sm,
+  },
+  label: {
+    fontSize: fonts.size.sm,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  field: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 50,
+    borderWidth: 1,
+    borderRadius: paddings.radius.sm,
+    paddingHorizontal: paddings.spacing.sm,
+  },
+  fieldPressed: {
+    opacity: 0.7,
+  },
+  pinIcon: {
+    marginRight: paddings.spacing.xs,
+  },
+  fieldText: {
+    flex: 1,
+    fontSize: fonts.size.md,
+    fontFamily: fonts.family.bodyRegular,
+  },
+});
