@@ -21,7 +21,7 @@ export function ActivityCard({ time, title, subtitle, location, isLast = false }
 
   const handleOpenMaps = () => {
     if (!location?.trim()) return;
-    const query = encodeURIComponent(`${subtitle} ${location}`.trim());
+    const query = encodeURIComponent(location.trim());
     Linking.openURL(`https://maps.google.com/?q=${query}`);
   };
 
