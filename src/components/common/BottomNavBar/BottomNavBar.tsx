@@ -14,7 +14,7 @@ export interface BottomNavBarProps {
   activeTab?: TabName;
   /** Callback fired when a tab is pressed */
   onTabPress?: (tab: TabName) => void;
-}
+} 
 
 interface TabItemProps {
   label: TabName;
@@ -22,7 +22,7 @@ interface TabItemProps {
   isActive: boolean;
   onPress: () => void;
   theme: typeof colors.light;
-}
+} 
 
 const TabItem: React.FC<TabItemProps> = ({ label, iconName, isActive, onPress, theme }) => (
   <Pressable 

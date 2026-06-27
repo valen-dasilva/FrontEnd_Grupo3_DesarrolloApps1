@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
+import * as Notifications from 'expo-notifications';
 import Toast from 'react-native-toast-message';
 import {
   useFonts,
@@ -21,6 +22,15 @@ import { ThemeProvider as CustomThemeProvider, useColorScheme } from '@/hooks/us
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/services/queryClient';
+
+// Le dice al SO cómo mostrar notificaciones cuando la app está en primer plano
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 
 // Evita que el splash se oculte solo antes de que terminen de cargar las fuentes.
@@ -51,6 +61,11 @@ function useProtectedRoute() {
     // El splash (index) no tiene segmento: segments[0] === undefined.
     const onSplash = !segments[0];
 
+    // La pantalla index ahora maneja su propia salida (espera a que termine
+    // la animación de zoom antes de navegar). El guard no debe interferir
+    // mientras el usuario está ahí parado.
+    if (onSplash) return;
+
     if (token && (onAuthScreen || onSplash)) {
       // Logueado pero parado en login/register/splash: lo mandamos a la app.
       // Usamos replace (no push) para que no pueda "volver atrás" al login.
@@ -60,7 +75,7 @@ function useProtectedRoute() {
       router.replace('/login');
     }
   }, [token, isLoading, segments, router]);
-}
+} 
 
 // Define el stack de navegación de nivel raíz. headerShown: false en todas
 // porque cada pantalla maneja su propio header (o no lleva). (tabs) es el grupo
@@ -86,11 +101,11 @@ function RootLayoutNav() {
     'Inter_400Regular': Inter_400Regular,
     'Inter_600SemiBold': Inter_600SemiBold,
     'Inter_700Bold': Inter_700Bold,
-    'PlusJakartaSans_500Medium': PlusJakartaSans_500Medium,
+    'PlusJakartaSans_500Medium': PlusJakartaSans_500Medium, 
     'PlusJakartaSans_700Bold': PlusJakartaSans_700Bold,
     'Inter-Bold': Inter_700Bold, // Alias existente
     ...MaterialIcons.font,
-  });
+  }); 
 
   // Cuando las fuentes terminan de cargar, ocultamos el splash.
   useEffect(() => {

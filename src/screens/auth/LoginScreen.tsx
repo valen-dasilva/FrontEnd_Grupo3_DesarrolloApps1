@@ -65,8 +65,9 @@ export const LoginScreen: React.FC = () => {
         placeholder="********"
         secureTextEntry
         value={password}
+        eyeButtonDisabled = {password.length === 0}
         onChangeText={setPassword}
-      />
+      /> 
 
       <CustomButton
         title={submitting ? 'Ingresando...' : 'Continuar'}
