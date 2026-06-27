@@ -1,9 +1,11 @@
 import { apiClient } from "./api";
 
-// Forma de la respuesta del backend al loguear o registrarse: el token JWT más
-// los datos básicos del usuario. AuthContext la usa para armar el AuthUser.
+// Forma de la respuesta del backend al loguear, registrarse o refrescar: el par
+// de tokens (access corto + refresh largo) más los datos básicos del usuario.
+// AuthContext la usa para armar el AuthUser y persistir la sesión.
 export interface AuthResponse {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
   idUsuario: number;
   nombre: string;
   email: string;
@@ -38,4 +40,13 @@ export function register(payload: RegisterPayload): Promise<AuthResponse> {
   return apiClient
     .post<AuthResponse>("/auth/register", payload)
     .then((r) => r.data);
+}
+
+// Revoca el refresh token en el backend (logout real del lado servidor). El
+// endpoint es público, así que funciona aunque el access token ya haya vencido.
+// Se llama "best effort": si falla, igual limpiamos la sesión local.
+export function logout(refreshToken: string): Promise<void> {
+  return apiClient
+    .post("/auth/logout", { refreshToken })
+    .then(() => undefined);
 }
