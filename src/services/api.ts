@@ -135,15 +135,9 @@ apiClient.interceptors.response.use(
     const status: number = error.response?.status ?? 0;
     const original = error.config;
 
-    // Solo intentamos refrescar si el access token actual está realmente vencido:
-    // así un 401 "de negocio" (ej. contraseña actual incorrecta, con un access
-    // token todavía válido) no dispara una renovación innecesaria.
-    const accessExpired = authToken ? isTokenExpired(authToken) : true;
-
     if (
       (status === 401 || status === 403) &&
       refreshTokenValue &&
-      accessExpired &&
       original &&
       !original._retry
     ) {
