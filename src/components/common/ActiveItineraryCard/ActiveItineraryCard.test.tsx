@@ -38,6 +38,14 @@ jest.mock('@/utils/dateUtils', () => ({
   formatFechaCorta: (d: string) => d,
 }));
 
+jest.mock('@/hooks/useWeather', () => ({
+  useWeather: () => ({ data: null }),
+}));
+
+jest.mock('@/utils/provinciaCoords', () => ({
+  PROVINCIA_COORDS: {},
+}));
+
 describe('ActiveItineraryCard', () => {
   const mockItinerario = {
     idItinerarioUsuario: 12,
@@ -64,6 +72,12 @@ describe('ActiveItineraryCard', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-06-20T08:00:00'));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('renders correctly with itinerary title and info', () => {
