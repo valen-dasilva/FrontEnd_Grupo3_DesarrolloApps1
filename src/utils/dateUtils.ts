@@ -69,3 +69,68 @@ export function formatHora(timeStr: string): string {
   return `${paddedHour}:${paddedMinute}`;
 }
 
+const MESES_COMPLETOS = [
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+];
+
+/**
+ * Convierte una fecha/hora ISO al formato amigable: "25 Jun 2026, 14:30".
+ * Si la entrada no es parseable, retorna el string original.
+ */
+export function formatISODateTime(iso: string): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+
+  const day = date.getDate();
+  const month = MESES[date.getMonth()];
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+
+  return `${day} ${month} ${year}, ${hours}:${minutes}`;
+}
+
+/**
+ * Convierte una fecha ISO al formato amigable: "25 de junio de 2026".
+ */
+export function formatISODate(iso: string): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+
+  const day = date.getDate();
+  const month = MESES_COMPLETOS[date.getMonth()];
+  const year = date.getFullYear();
+
+  return `${day} de ${month} de ${year}`;
+}
+
+/**
+ * Retorna una descripción legible del tiempo restante hasta la fecha dada.
+ * Ejemplos: "2 h 15 min", "1 d 4 h", "Expirado".
+ */
+export function getCountdownText(expirationIso: string): string {
+  if (!expirationIso) return '';
+  const expiration = new Date(expirationIso).getTime();
+  const now = Date.now();
+  const diff = expiration - now;
+
+  if (diff <= 0) return 'Expirado';
+
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) {
+    const remainingHours = hours % 24;
+    return `${days} d ${remainingHours} h`;
+  }
+  if (hours > 0) {
+    const remainingMinutes = minutes % 60;
+    return `${hours} h ${remainingMinutes} min`;
+  }
+  return `${minutes} min`;
+}
+

@@ -26,6 +26,9 @@ type Props = {
   onBackPress?: () => void;
   onEditPress?: () => void;
   onDownloadPress?: () => void;
+  showBackButton?: boolean;
+  showFavoriteButton?: boolean;
+  showCategoryBadge?: boolean;
 };
 
 export function ItineraryInfoCard({
@@ -42,7 +45,10 @@ export function ItineraryInfoCard({
   idFavorito,
   onBackPress,
   onEditPress,
-  onDownloadPress
+  onDownloadPress,
+  showBackButton = true,
+  showFavoriteButton = true,
+  showCategoryBadge = true,
 }: Props) {
   const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === 'dark';
@@ -70,41 +76,47 @@ export function ItineraryInfoCard({
           {/* Back and heart icons */}
           <View pointerEvents="box-none" style={styles.heroTopBar}>
             {/** Back button */}
-            <TouchableOpacity 
-              style={[
-                styles.circularContainer, 
-                { 
-                  backgroundColor: isDark ? theme.background : '#FFFFFF',
-                  borderColor: theme.border,
-                  borderWidth: isDark ? 1 : 0
-                }
-              ]} 
-              onPress={onBackPress}
-            >
-              <MaterialIcons name={icons.ArrowBack} size={fonts.size.xl} color={theme.text} />
-            </TouchableOpacity>
+            {showBackButton && (
+              <TouchableOpacity
+                style={[
+                  styles.circularContainer,
+                  {
+                    backgroundColor: isDark ? theme.background : '#FFFFFF',
+                    borderColor: theme.border,
+                    borderWidth: isDark ? 1 : 0
+                  }
+                ]}
+                onPress={onBackPress}
+              >
+                <MaterialIcons name={icons.ArrowBack} size={fonts.size.xl} color={theme.text} />
+              </TouchableOpacity>
+            )}
             {/** Heart button */}
-            <FavoriteButton
-              isFavorite={isFav}
-              onPress={handleFavoriteToggle}
-              style={[
-                styles.circularContainer,
-                {
-                  backgroundColor: isDark ? theme.background : '#FFFFFF',
-                  borderColor: theme.border,
-                  borderWidth: isDark ? 1 : 0
-                }
-              ]}
-            />
+            {showFavoriteButton && (
+              <FavoriteButton
+                isFavorite={isFav}
+                onPress={handleFavoriteToggle}
+                style={[
+                  styles.circularContainer,
+                  {
+                    backgroundColor: isDark ? theme.background : '#FFFFFF',
+                    borderColor: theme.border,
+                    borderWidth: isDark ? 1 : 0
+                  }
+                ]}
+              />
+            )}
           </View>
 
           {/** Bottom info container */}
           <View pointerEvents="box-none" style={styles.bottomInfoContainer}>
             {/** Category badge */}
-            <CategoryBadge
-              category={category}
-              style={styles.categoryBadge}
-            />
+            {showCategoryBadge && category && (
+              <CategoryBadge
+                category={category}
+                style={styles.categoryBadge}
+              />
+            )}
             <Text style={styles.title}>{title}</Text>
             <View style={[styles.datesRow, { justifyContent: 'space-between', width: '100%', flexDirection: 'row' }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

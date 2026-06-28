@@ -21,15 +21,17 @@ jest.mock('@/hooks/useColorScheme', () => ({
 jest.mock('expo-linear-gradient', () => {
   const React = require('react');
   const { View } = require('react-native');
-  return {
-    LinearGradient: ({ children, style }) => React.createElement(View, { style }, children),
-  };
+  const LinearGradient = ({ children, style }: any) => React.createElement(View, { style }, children);
+  LinearGradient.displayName = 'LinearGradient';
+  return { LinearGradient };
 });
 
 jest.mock('../../assets/images/icono.svg', () => {
   const React = require('react');
   const { View } = require('react-native');
-  return (props: any) => React.createElement(View, props);
+  const IconoSvg = (props: any) => React.createElement(View, props);
+  IconoSvg.displayName = 'IconoSvg';
+  return IconoSvg;
 });
 
 describe('SplashScreen', () => {

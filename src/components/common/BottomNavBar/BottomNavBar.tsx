@@ -7,7 +7,7 @@ import { colors } from '@/constants/colors';
 import { icons } from '@/constants/icons';
 import { useTheme } from '@/hooks/useColorScheme';
 
-export type TabName = 'Inicio' | 'Explorar' | 'Favoritos' | 'Perfil';
+export type TabName = 'Inicio' | 'Explorar' | 'Favoritos' | 'Grupo' | 'Perfil';
 
 export interface BottomNavBarProps {
   /** The currently active tab */
@@ -87,6 +87,13 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
         iconName={icons.Favorite} 
         isActive={activeTab === 'Favoritos'} 
         onPress={() => onTabPress?.('Favoritos')} 
+        theme={theme}
+      />
+      <TabItem 
+        label="Grupo" 
+        iconName={icons.Groups} 
+        isActive={activeTab === 'Grupo'} 
+        onPress={() => onTabPress?.('Grupo')} 
         theme={theme}
       />
       <TabItem 

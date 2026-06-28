@@ -36,7 +36,12 @@ function getProximaActividad(
   }
 
   const itemsHoy = items.filter((item) => item.dia === diaActual);
-  if (!itemsHoy.length) return null;
+  if (!itemsHoy.length) {
+    // Si no hay actividades para el día actual, mostramos la primera actividad
+    // del itinerario para que la card siempre tenga información relevante.
+    const itemsOrdenados = [...items].sort((a, b) => (a.hora ?? "").localeCompare(b.hora ?? ""));
+    return itemsOrdenados[0] ?? null;
+  }
 
   const ahoraMinutos = hoy.getHours() * 60 + hoy.getMinutes();
 

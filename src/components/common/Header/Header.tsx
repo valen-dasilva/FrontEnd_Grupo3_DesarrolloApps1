@@ -77,10 +77,16 @@ export const Header: React.FC<HeaderProps> = ({
             />
           </Pressable>
         )}
-        <Text style={[
-          styles.title,
-          { color: isDark ? theme.text : '#2563eb' }
-        ]}>{title}</Text>
+        <Text
+          style={[
+            styles.title,
+            { color: isDark ? theme.text : '#2563eb' }
+          ]}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {title}
+        </Text>
       </View>
 
       <View style={styles.actionsContainer}>

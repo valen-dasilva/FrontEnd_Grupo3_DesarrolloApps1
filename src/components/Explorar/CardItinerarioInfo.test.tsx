@@ -2,7 +2,7 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { ItineraryInfoCard } from './CardItinerarioInfo';
 import { useFavoriteToggle } from '@/hooks/useFavoriteToggle';
-import { TouchableOpacity } from 'react-native';
+import { Image, TouchableOpacity } from 'react-native';
 import { formatDateRange } from '@/utils/dateUtils';
 
 const mockTheme = {
@@ -66,7 +66,7 @@ describe('ItineraryInfoCard', () => {
     expect(getByText('Descripción detallada de la atracción.')).toBeTruthy();
 
     // Verify it renders Image because image URL is provided
-    const imageComponent = UNSAFE_getByType('Image');
+    const imageComponent = UNSAFE_getByType(Image);
     expect(imageComponent.props.source.uri).toBe('https://example.com/place.jpg');
   });
 
@@ -88,7 +88,7 @@ describe('ItineraryInfoCard', () => {
     // Note: UNSAFE_getAllByType will throw if none found, so we can use a try-catch or test structure:
     let images: any[] = [];
     try {
-      images = UNSAFE_getAllByType('Image');
+      images = UNSAFE_getAllByType(Image);
     } catch (e) {
       images = [];
     }

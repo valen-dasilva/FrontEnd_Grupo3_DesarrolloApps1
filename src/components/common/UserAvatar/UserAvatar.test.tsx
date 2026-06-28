@@ -1,4 +1,6 @@
 import React from 'react';
+import { ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { render } from '@testing-library/react-native';
 import { UserAvatar } from './UserAvatar';
 
@@ -19,7 +21,7 @@ jest.mock('@/hooks/useColorScheme', () => ({
 describe('UserAvatar', () => {
   it('renders ActivityIndicator when loading is true', () => {
     const { UNSAFE_getByType } = render(<UserAvatar loading={true} />);
-    expect(UNSAFE_getByType('ActivityIndicator')).toBeTruthy();
+    expect(UNSAFE_getByType(ActivityIndicator)).toBeTruthy();
   });
 
   it('renders initials when no uri is provided', () => {
@@ -38,7 +40,7 @@ describe('UserAvatar', () => {
     const { UNSAFE_getByType } = render(
       <UserAvatar uri="https://example.com/photo.jpg" />
     );
-    const image = UNSAFE_getByType('Image');
+    const image = UNSAFE_getByType(Image);
     expect(image.props.source.uri).toBe('https://example.com/photo.jpg');
   });
 });

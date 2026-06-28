@@ -57,10 +57,13 @@ export function ConfirmAlert({
               onPress={onConfirm}
               disabled={loading}
             >
-              {loading && <ActivityIndicator color="#FFF" size="small" />}
-              <Text style={[styles.buttonText, { color: '#FFF' }]}>
-                {loading ? 'Eliminando...' : confirmText}
-              </Text>
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" testID="confirm-loading-indicator" />
+              ) : (
+                <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>
+                  {confirmText}
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>

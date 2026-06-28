@@ -35,6 +35,7 @@ describe('BottomNavBar', () => {
     expect(getByText('Inicio')).toBeTruthy();
     expect(getByText('Explorar')).toBeTruthy();
     expect(getByText('Favoritos')).toBeTruthy();
+    expect(getByText('Grupo')).toBeTruthy();
     expect(getByText('Perfil')).toBeTruthy();
   });
 
@@ -45,7 +46,7 @@ describe('BottomNavBar', () => {
 
     // Let's query tab items by accessibility role
     const tabs = getAllByRole('tab');
-    expect(tabs.length).toBe(4);
+    expect(tabs.length).toBe(5);
 
     // Find the one for Favoritos
     const favoritesTab = tabs.find(

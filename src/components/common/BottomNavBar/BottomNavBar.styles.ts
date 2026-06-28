@@ -30,7 +30,7 @@ export const styles = StyleSheet.create({
   contentWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 76,
+    width: 64,
     height: 48,
     overflow: 'hidden',
   },
