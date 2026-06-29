@@ -20,7 +20,7 @@ export default function PerfilScreen() {
   const { theme } = useTheme();
   const { logout } = useAuth();
 
-  const { data: estadisticas } = useEstadisticas();
+  const { data: estadisticas, isLoading: cargandoEstadisticas } = useEstadisticas();
   const { listItinerarioResumen } = useItinerariosHook();
 
   return (
@@ -48,6 +48,7 @@ export default function PerfilScreen() {
         <SeccionRecorrido
           estadisticas={estadisticas}
           itinerarios={listItinerarioResumen}
+          isLoading={cargandoEstadisticas}
         />
 
         <TouchableOpacity
