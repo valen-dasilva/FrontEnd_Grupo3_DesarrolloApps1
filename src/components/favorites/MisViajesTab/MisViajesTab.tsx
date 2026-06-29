@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { FlatList, View, ActivityIndicator, Platform, StyleSheet } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import Toast from 'react-native-toast-message';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTheme } from '@/hooks/useColorScheme';
@@ -83,20 +84,22 @@ export function MisViajesTab({ header, onVerGuardados }: Props) {
     }
   }, [downloadedIds, listItinerarioResumen, downloadItinerary, removeDownload]);
 
-  const renderCopia = useCallback(({ item: itinerary }: { item: ItinerarioResumen }) => (
-    <ItineraryCard
-      title={itinerary.titulo}
-      location={itinerary.provincia}
-      duration={`${itinerary.duracionDias} Días`}
-      imageUrl={itinerary.fotoPortada}
-      isOfflineAvailable={downloadedIds.includes(itinerary.id)}
-      isFavorite={true}
-      isPinned={itinerary.esPinned}
-      onPressDetail={() => router.push(buildItinerarioParams(itinerary))}
-      onDeletePress={() => setConfirmDeleteId(itinerary.id)}
-      onPinPress={() => togglePin(itinerary.id)}
-      onDownloadPress={() => handleToggleDownload(itinerary.id)}
-    />
+  const renderCopia = useCallback(({ item: itinerary, index }: { item: ItinerarioResumen; index: number }) => (
+    <Animated.View entering={FadeInDown.delay(index * 80).duration(300)}>
+      <ItineraryCard
+        title={itinerary.titulo}
+        location={itinerary.provincia}
+        duration={`${itinerary.duracionDias} Días`}
+        imageUrl={itinerary.fotoPortada}
+        isOfflineAvailable={downloadedIds.includes(itinerary.id)}
+        isFavorite={true}
+        isPinned={itinerary.esPinned}
+        onPressDetail={() => router.push(buildItinerarioParams(itinerary))}
+        onDeletePress={() => setConfirmDeleteId(itinerary.id)}
+        onPinPress={() => togglePin(itinerary.id)}
+        onDownloadPress={() => handleToggleDownload(itinerary.id)}
+      />
+    </Animated.View>
   ), [downloadedIds, router, togglePin, handleToggleDownload]);
 
   const renderEmpty = () => {

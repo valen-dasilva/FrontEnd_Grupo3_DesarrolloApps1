@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback, useMemo, useRef, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, Platform, Alert, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, Platform, Alert, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import Toast from 'react-native-toast-message';
 
@@ -107,6 +108,8 @@ export default function FavoriteItineraryInfoScreen() {
         state: 'loading',
     });
 
+    const confettiRef = useRef<any>(null);
+
     // Animaciones del botón "completar": bounce al tocar + relleno verde al completar
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const fillAnim = useRef(new Animated.Value(itineraryDetails?.completado ? 1 : 0)).current;
@@ -152,6 +155,7 @@ export default function FavoriteItineraryInfoScreen() {
             try {
                 await completarViaje(Number(id));
                 setCompletarModal({ visible: true, state: 'success' });
+                confettiRef.current?.start();
             } catch {
                 setCompletarModal({ visible: false, state: 'loading' });
                 Toast.show({
@@ -321,6 +325,13 @@ export default function FavoriteItineraryInfoScreen() {
                     : 'Se sumó a tu recorrido y coloreamos la provincia en el mapa.'}
                 actionLabel="Listo"
                 onAction={() => setCompletarModal({ visible: false, state: 'loading' })}
+            />
+            <ConfettiCannon
+                ref={confettiRef}
+                count={120}
+                origin={{ x: Dimensions.get('window').width / 2, y: -10 }}
+                fallSpeed={2500}
+                autoStart={false}
             />
         </View>
     );

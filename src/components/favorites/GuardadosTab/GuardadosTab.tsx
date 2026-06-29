@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { FlatList, View, ActivityIndicator, Platform, StyleSheet } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useFavoritosHook } from '@/hooks/useFavoritos';
@@ -67,16 +68,18 @@ export function GuardadosTab({ header, onVerMisViajes }: Props) {
     }
   }, [crearCopiaDesdeFavorito]);
 
-  const renderBookmark = useCallback(({ item }: { item: ItinerarioSistemaResumenDTO }) => (
-    <BookmarkCard
-      title={item.titulo}
-      location={PROVINCIA_LABEL[item.provincia] ?? item.provincia}
-      duration={`${item.duracionDias} Días`}
-      imageUrl={item.fotoPortada}
-      onCrearCopia={() => handleCrearCopia(item.idItinerario)}
-      onQuitar={() => quitarFavorito(item.idItinerario)}
-      onVerDetalle={() => router.push(buildBookmarkParams(item))}
-    />
+  const renderBookmark = useCallback(({ item, index }: { item: ItinerarioSistemaResumenDTO; index: number }) => (
+    <Animated.View entering={FadeInDown.delay(index * 80).duration(300)}>
+      <BookmarkCard
+        title={item.titulo}
+        location={PROVINCIA_LABEL[item.provincia] ?? item.provincia}
+        duration={`${item.duracionDias} Días`}
+        imageUrl={item.fotoPortada}
+        onCrearCopia={() => handleCrearCopia(item.idItinerario)}
+        onQuitar={() => quitarFavorito(item.idItinerario)}
+        onVerDetalle={() => router.push(buildBookmarkParams(item))}
+      />
+    </Animated.View>
   ), [handleCrearCopia, quitarFavorito, router]);
 
   const renderEmpty = () => {
