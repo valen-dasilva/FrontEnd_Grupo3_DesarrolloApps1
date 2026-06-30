@@ -1,7 +1,7 @@
 import { paddings } from '@/constants/paddings';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useItinerarioDetalle } from '@/hooks/useItinerarioDetalle';
-import { ItemItinerarioSistemaDTO, Provincia } from '@/types/itinerario';
+import { ItemItinerarioSistemaDTO, Provincia, CATEGORIA_LABEL } from '@/types/itinerario';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo, useCallback } from 'react';
 import { ActivityIndicator, FlatList, Text, View, Platform } from 'react-native';
@@ -54,12 +54,20 @@ export default function ItinerarioInfoScreen() {
     return prov ? PROVINCIA_COORDS[prov] ?? null : null;
   }, [itinerario?.provincia]);
 
+  const detailCategories = useMemo(() => {
+    if (itinerario?.etiquetas) {
+      return itinerario.etiquetas.map((e) => CATEGORIA_LABEL[e] || e);
+    }
+    return params.category ? [params.category] : [];
+  }, [itinerario?.etiquetas, params.category]);
+
   const renderHeader = useCallback(() => (
     <>
       <ItineraryInfoCard
         idItinerario={params.idItinerario ? Number(params.idItinerario) : undefined}
         title={params.title}
         category={params.category}
+        categories={detailCategories}
         startDate={params.startDate}
         endDate={params.endDate}
         description={params.description}
@@ -76,7 +84,7 @@ export default function ItinerarioInfoScreen() {
         />
       )}
     </>
-  ), [params, router, weatherCoords]);
+  ), [params, router, weatherCoords, detailCategories]);
 
   const renderEmptyComponent = () => {
     if (loading) {

@@ -6,6 +6,7 @@ type Props = {
     imageUrl?: string;
     images?: readonly string[];
     category?: string;
+    categories?: string[];
     dateRange?: string;
     description?: string;
     onBackPress?: () => void;
@@ -21,6 +22,7 @@ export function CardItinerarioInfoFav({
     imageUrl,
     images,
     category,
+    categories,
     dateRange,
     description,
     onBackPress,
@@ -37,6 +39,7 @@ export function CardItinerarioInfoFav({
             image={imageUrl}
             images={images}
             category={category}
+            categories={categories}
             dateRange={dateRange}
             description={description}
             onBackPress={onBackPress}

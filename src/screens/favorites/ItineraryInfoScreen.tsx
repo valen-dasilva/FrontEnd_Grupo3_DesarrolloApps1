@@ -17,7 +17,7 @@ import { ItemItinerarioUsuario } from '@/services/itinerariosService';
 import { formatFecha } from '@/utils/dateUtils';
 import { WeatherStrip } from '@/components/common/WeatherStrip/WeatherStrip';
 import { PROVINCIA_COORDS } from '@/utils/provinciaCoords';
-import { Provincia } from '@/types/itinerario';
+import { Provincia, CATEGORIA_LABEL, CategoriaItinerario } from '@/types/itinerario';
 import { useWeather } from '@/hooks/useWeather';
 import { isBadWeather, getDiaDate } from '@/utils/weatherUtils';
 
@@ -86,6 +86,15 @@ export default function FavoriteItineraryInfoScreen() {
         return detailImages.length > 0 ? detailImages : displayImageUrl ? [displayImageUrl] : [];
     }, [displayImageUrl, itineraryDetails?.fotos]);
     const displayCategory = (etiquetas?.split(',')[0]) || itineraryDetails?.etiquetas?.[0];
+    const displayCategories = useMemo(() => {
+        if (etiquetas) {
+            return etiquetas.split(',').map((e) => CATEGORIA_LABEL[e as CategoriaItinerario] || e);
+        }
+        if (itineraryDetails?.etiquetas) {
+            return itineraryDetails.etiquetas.map((e) => CATEGORIA_LABEL[e] || e);
+        }
+        return [];
+    }, [etiquetas, itineraryDetails?.etiquetas]);
     const displayDuration = duracionDias || itineraryDetails?.duracionDias;
     const displayProvincia = provincia || itineraryDetails?.provincia;
 
@@ -191,6 +200,7 @@ export default function FavoriteItineraryInfoScreen() {
                 imageUrl={displayImageUrl}
                 images={displayImages}
                 category={displayCategory}
+                categories={displayCategories}
                 dateRange={displayDateRange}
                 description={displayDescription}
                 onBackPress={() => router.replace({
@@ -233,7 +243,7 @@ export default function FavoriteItineraryInfoScreen() {
                 </Animated.View>
             </TouchableOpacity>
         </>
-    ), [displayTitle, displayImageUrl, displayImages, displayCategory, displayDateRange, displayDescription, id, router, yaCompletado, isCompletando, handleCompletarViaje, scaleAnim, completarBg, completarBorder, completarIconColor, weatherCoords, startDate, endDate]);
+    ), [displayTitle, displayImageUrl, displayImages, displayCategory, displayCategories, displayDateRange, displayDescription, id, router, yaCompletado, isCompletando, handleCompletarViaje, scaleAnim, completarBg, completarBorder, completarIconColor, weatherCoords, startDate, endDate]);
 
     const renderEmptyComponent = () => {
         if (isLoading) {
