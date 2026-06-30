@@ -21,6 +21,7 @@ import { Header } from '@/components/common/Header/Header';
 import { CategoriaGrid } from '@/components/Preferencias/CategoriaGrid';
 import { DestinoInput } from '@/components/Preferencias/DestinoInput';
 import { ProvinciaSelector } from '@/components/Preferencias/ProvinciaSelector';
+import { DuracionCarousel, DuracionRango } from '@/components/Preferencias/DuracionCarousel';
 import { buscarPorPreferencias } from '@/services/itinerarioService';
 import {
   CategoriaItinerario,
@@ -36,6 +37,7 @@ export default function PreferenciasScreen() {
   // del sistema se define por su duración, no por cuándo se hace (alguien
   // puede querer el mismo plan en agosto o en diciembre).
   const [provincia, setProvincia] = useState<Provincia | undefined>();
+  const [duracion, setDuracion] = useState<DuracionRango>();
   const [categorias, setCategorias] = useState<Set<CategoriaItinerario>>(
     new Set(),
   );
@@ -63,10 +65,28 @@ export default function PreferenciasScreen() {
   const handleBuscar = async () => {
     setLoading(true);
     try {
-      const resultados = await buscarPorPreferencias({
+      let resultados = await buscarPorPreferencias({
         provincia,
         tags: categorias.size > 0 ? Array.from(categorias) : undefined,
       });
+
+      if (duracion !== undefined) {
+        let filtrados = [];
+        if (duracion === '1') {
+          filtrados = resultados.filter((itinerary) => itinerary.duracionDias === 1);
+        } else if (duracion === '2-3') {
+          filtrados = resultados.filter((itinerary) => itinerary.duracionDias === 2 || itinerary.duracionDias === 3);
+        } else if (duracion === '4+') {
+          filtrados = resultados.filter((itinerary) => itinerary.duracionDias >= 4);
+        }
+
+        // Si no hay itinerarios en el rango específico, no dejamos la pantalla en blanco
+        // y mostramos todos los disponibles para el destino/categoría.
+        if (filtrados.length > 0) {
+          resultados = filtrados;
+        }
+      }
+
       router.push({
         pathname: "/(tabs)/inicioApp/recomendaciones",
         params: {
@@ -115,6 +135,12 @@ export default function PreferenciasScreen() {
             onClear={() => setProvincia(undefined)}
           />
         </View>
+
+        {/* Sección duración */}
+        <DuracionCarousel
+          seleccionada={duracion}
+          onSelect={setDuracion}
+        />
 
         {/* Sección categorías — incluye su propio título y subtítulo */}
         <CategoriaGrid seleccionadas={categorias} onToggle={toggleCategoria} />
