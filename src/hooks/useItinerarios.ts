@@ -10,6 +10,12 @@ import {
 } from '@/services/titleOverrideStorage';
 import { fetchActiveItinerary } from '@/hooks/useActiveItinerary';
 import {
+    cancelItinerarioCaches,
+    invalidateItinerarioCaches,
+    snapshotItinerarioCaches,
+    restoreItinerarioCaches,
+} from '@/hooks/itinerarioCacheHelpers';
+import {
     deleteFoto,
     deleteItem,
     deleteItinerario,
@@ -366,9 +372,7 @@ export const useItinerariosDetailsHook = () => {
             }
         },
         onMutate: async ({ idItinerary, titulo }) => {
-            await queryClient.cancelQueries({ queryKey: ['itineraryDetails', idItinerary] });
-            await queryClient.cancelQueries({ queryKey: ['misItinerarios'] });
-            await queryClient.cancelQueries({ queryKey: ['activeItinerary'] });
+            await cancelItinerarioCaches(queryClient, idItinerary);
 
             const prevDetails = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary]);
             if (prevDetails) {
@@ -391,22 +395,12 @@ export const useItinerariosDetailsHook = () => {
             return { prevDetails, prevItinerarios, prevActive };
         },
         onError: (err, variables, context) => {
-            if (context?.prevDetails) {
-                queryClient.setQueryData(['itineraryDetails', variables.idItinerary], context.prevDetails);
-            }
-            if (context?.prevItinerarios) {
-                queryClient.setQueryData(['misItinerarios'], context.prevItinerarios);
-            }
-            if (context?.prevActive !== undefined) {
-                queryClient.setQueryData(['activeItinerary'], context.prevActive);
-            }
+            restoreItinerarioCaches(queryClient, variables.idItinerary, context);
             Alert.alert("Error", getErrorMessage(err, "No se pudo modificar el título."));
         },
         onSettled: (data, error, variables) => {
             if (data !== null && !error) {
-                queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
-                queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
-                queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+                invalidateItinerarioCaches(queryClient, variables.idItinerary);
             }
         }
     });
@@ -420,13 +414,9 @@ export const useItinerariosDetailsHook = () => {
         mutationFn: ({ idItinerary, itemData }: { idItinerary: number; itemData: Omit<ItemItinerarioUsuario, 'id'> }) =>
             postItem(idItinerary, itemData),
         onMutate: async ({ idItinerary, itemData }) => {
-            await queryClient.cancelQueries({ queryKey: ['itineraryDetails', idItinerary] });
-            await queryClient.cancelQueries({ queryKey: ['activeItinerary'] });
-            await queryClient.cancelQueries({ queryKey: ['misItinerarios'] });
+            await cancelItinerarioCaches(queryClient, idItinerary);
 
-            const prevDetails = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary]);
-            const prevActive = queryClient.getQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary']);
-            const prevItinerarios = queryClient.getQueryData<ItinerarioResumen[]>(['misItinerarios']);
+            const { prevDetails, prevActive, prevItinerarios } = snapshotItinerarioCaches(queryClient, idItinerary);
 
             const optimisticItem: ItemItinerarioUsuario = {
                 ...itemData,
@@ -485,21 +475,11 @@ export const useItinerariosDetailsHook = () => {
             });
         },
         onError: (err, variables, context) => {
-            if (context?.prevDetails) {
-                queryClient.setQueryData(['itineraryDetails', variables.idItinerary], context.prevDetails);
-            }
-            if (context?.prevActive !== undefined) {
-                queryClient.setQueryData(['activeItinerary'], context.prevActive);
-            }
-            if (context?.prevItinerarios) {
-                queryClient.setQueryData(['misItinerarios'], context.prevItinerarios);
-            }
+            restoreItinerarioCaches(queryClient, variables.idItinerary, context);
             Alert.alert("Error", getErrorMessage(err, "No se pudo crear la actividad"));
         },
         onSettled: (data, error, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
-            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
-            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+            invalidateItinerarioCaches(queryClient, variables.idItinerary);
         }
     });
 
@@ -512,13 +492,9 @@ export const useItinerariosDetailsHook = () => {
         mutationFn: ({ idItinerary, idItem, itemData }: { idItinerary: number; idItem: number; itemData: Omit<ItemItinerarioUsuario, 'id'> }) =>
             putItem(idItinerary, idItem, itemData),
         onMutate: async ({ idItinerary, idItem, itemData }) => {
-            await queryClient.cancelQueries({ queryKey: ['itineraryDetails', idItinerary] });
-            await queryClient.cancelQueries({ queryKey: ['activeItinerary'] });
-            await queryClient.cancelQueries({ queryKey: ['misItinerarios'] });
+            await cancelItinerarioCaches(queryClient, idItinerary);
 
-            const prevDetails = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary]);
-            const prevActive = queryClient.getQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary']);
-            const prevItinerarios = queryClient.getQueryData<ItinerarioResumen[]>(['misItinerarios']);
+            const { prevDetails, prevActive, prevItinerarios } = snapshotItinerarioCaches(queryClient, idItinerary);
 
             if (prevDetails) {
                 const updatedItems = prevDetails.items.map((item) =>
@@ -579,21 +555,11 @@ export const useItinerariosDetailsHook = () => {
             });
         },
         onError: (err, variables, context) => {
-            if (context?.prevDetails) {
-                queryClient.setQueryData(['itineraryDetails', variables.idItinerary], context.prevDetails);
-            }
-            if (context?.prevActive !== undefined) {
-                queryClient.setQueryData(['activeItinerary'], context.prevActive);
-            }
-            if (context?.prevItinerarios) {
-                queryClient.setQueryData(['misItinerarios'], context.prevItinerarios);
-            }
+            restoreItinerarioCaches(queryClient, variables.idItinerary, context);
             Alert.alert("Error", getErrorMessage(err, "No se pudo modificar la actividad"));
         },
         onSettled: (data, error, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
-            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
-            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+            invalidateItinerarioCaches(queryClient, variables.idItinerary);
         }
     });
 
@@ -612,9 +578,7 @@ export const useItinerariosDetailsHook = () => {
             queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', variables.idItinerary], (prev) =>
                 prev ? { ...prev, items: prev.items.filter((item) => item.id !== variables.idItem) } : prev
             );
-            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
-            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
-            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+            invalidateItinerarioCaches(queryClient, variables.idItinerary);
         },
         onError: (err) => {
             Alert.alert("Error", getErrorMessage(err, "No se pudo eliminar la actividad"));
@@ -641,9 +605,7 @@ export const useItinerariosDetailsHook = () => {
             Alert.alert('Error', getErrorMessage(err, 'No se pudo agregar la foto.'));
         },
         onSettled: (_data, _error, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
-            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
-            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+            invalidateItinerarioCaches(queryClient, variables.idItinerary);
         },
     });
 
@@ -661,9 +623,7 @@ export const useItinerariosDetailsHook = () => {
             Alert.alert('Error', getErrorMessage(err, 'No se pudo eliminar la foto.'));
         },
         onSettled: (_data, _error, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['itineraryDetails', variables.idItinerary] });
-            queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
-            queryClient.invalidateQueries({ queryKey: ['activeItinerary'] });
+            invalidateItinerarioCaches(queryClient, variables.idItinerary);
         },
     });
 
