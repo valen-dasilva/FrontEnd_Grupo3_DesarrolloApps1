@@ -11,7 +11,7 @@ import {
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { MapaArgentina } from './MapaArgentina';
 import { HeaderModal } from './HeaderModal';
-import { PanelEstadisticasProvincia } from './PanelEstadisticasProvincia';
+import { ProvinciaDetalleModal } from './ProvinciaDetalleModal';
 import { ItinerarioResumen } from '@/services/itinerariosService';
 import { Provincia } from '@/types/itinerario';
 import { useTheme } from '@/hooks/useColorScheme';
@@ -94,21 +94,21 @@ export function MapaInteractivoModal({
           </Animated.View>
         </ScrollView>
 
-        {provinciaSeleccionada ? (
-          <PanelEstadisticasProvincia
-            provincia={provinciaSeleccionada}
-            fueVisitada={fueVisitada}
-            cantidadViajes={cantidadViajes}
-            diasTotales={diasTotales}
-            titulosItinerarios={itinerariosEnProvincia.map(it => it.titulo)}
-          />
-        ) : (
-          <View style={[styles.panelSugerencia, { borderTopColor: theme.border }]}>
-            <Text style={[styles.textoSugerencia, { color: theme.gray }]}>
-              Tocá una provincia para ver sus estadísticas
-            </Text>
-          </View>
-        )}
+        <View style={[styles.panelSugerencia, { borderTopColor: theme.border }]}>
+          <Text style={[styles.textoSugerencia, { color: theme.gray }]}>
+            Tocá una provincia para ver sus estadísticas
+          </Text>
+        </View>
+
+        <ProvinciaDetalleModal
+          provincia={provinciaSeleccionada}
+          fueVisitada={fueVisitada}
+          cantidadViajes={cantidadViajes}
+          diasTotales={diasTotales}
+          titulosItinerarios={itinerariosEnProvincia.map(it => it.titulo)}
+          colorRegion={COLOR_POR_PROVINCIA[provinciaSeleccionada ?? ''] ?? theme.primary}
+          onClose={() => setProvinciaSeleccionada(null)}
+        />
 
       </SafeAreaView>
     </Modal>

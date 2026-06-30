@@ -85,10 +85,20 @@ export const LOGROS: Logro[] = [
   },
 ];
 
-// Mapa provincia → color de región. Usado por el mapa SVG para colorear por zona.
 export const COLOR_POR_PROVINCIA: Record<string, string> = {};
+export const REGION_LABEL_POR_PROVINCIA: Record<string, string> = {};
+
+const REGION_NOMBRES: Record<string, string> = {
+  noa: 'NOA',
+  litoral: 'Litoral',
+  cuyo: 'Cuyo',
+  centro: 'Pampeana',
+  patagonia: 'Patagonia',
+};
+
 for (const logro of LOGROS.slice(0, 5)) {
   for (const prov of logro.provincias) {
     COLOR_POR_PROVINCIA[prov] = logro.color;
+    REGION_LABEL_POR_PROVINCIA[prov] = REGION_NOMBRES[logro.id] ?? logro.nombre;
   }
 }
