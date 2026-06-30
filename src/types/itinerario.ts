@@ -137,5 +137,6 @@ export interface ItinerarioEnCursoDTO {
   duracionDias: number;
   etiquetas: CategoriaItinerario[];
   items: ItemItinerarioUsuarioDTO[];
+  completado?: boolean;
   isOptimistic?: boolean;
 }

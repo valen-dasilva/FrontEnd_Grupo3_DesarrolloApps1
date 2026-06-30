@@ -116,9 +116,16 @@ export default function ActiveItineraryCard({
           style={styles.gradientOverlay}
         />
 
-        {/* Badge "En curso" */}
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>En curso</Text>
+        {/* Badge "En curso" o "Completado" */}
+        <View
+          style={[
+            styles.badge,
+            itinerarioActivo.completado && { backgroundColor: theme.lightgreen },
+          ]}
+        >
+          <Text style={styles.badgeText}>
+            {itinerarioActivo.completado ? "Completado" : "En curso"}
+          </Text>
         </View>
 
         {/* Título y botón de acción */}

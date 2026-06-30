@@ -71,6 +71,14 @@ describe('ActiveItineraryCard', () => {
     expect(getByText('Fin de semana en Bariloche')).toBeTruthy();
     expect(getByText('Próxima actividad')).toBeTruthy();
     expect(getByText('Trekking Cerro Campanario')).toBeTruthy();
+    expect(getByText('En curso')).toBeTruthy();
+  });
+
+  it('renders completed badge when completado is true', () => {
+    const completedItinerary = { ...mockItinerario, completado: true };
+    const { getByText, queryByText } = render(<ActiveItineraryCard itinerarioActivo={completedItinerary as any} />);
+    expect(getByText('Completado')).toBeTruthy();
+    expect(queryByText('En curso')).toBeNull();
   });
 
   it('navigates when card is pressed', () => {
