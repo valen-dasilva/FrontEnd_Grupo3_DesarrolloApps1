@@ -1,26 +1,14 @@
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { deleteItineraryPhotoFromStorage } from '@/services/itineraryPhotoService';
 import { getErrorMessage, toErrorString } from '@/utils/errorUtils';
-
-// Local title overrides helper functions
-export const getLocalTitleOverride = async (id: number): Promise<string | null> => {
-    try {
-        return await AsyncStorage.getItem(`@turistear/title_override_${id}`);
-    } catch {
-        return null;
-    }
-};
-
-export const saveLocalTitleOverride = async (id: number, title: string): Promise<void> => {
-    try {
-        await AsyncStorage.setItem(`@turistear/title_override_${id}`, title);
-    } catch (e) {
-        console.error("Error saving local title override:", e);
-    }
-};
+import {
+    getLocalTitleOverride,
+    saveLocalTitleOverride,
+    removeLocalTitleOverride,
+} from '@/services/titleOverrideStorage';
+import { fetchActiveItinerary } from '@/hooks/useActiveItinerary';
 import {
     deleteFoto,
     deleteItem,
@@ -42,7 +30,6 @@ import {
     putItinerarioTitulo,
 } from '@/services/itinerariosService';
 import { ItinerarioEnCursoDTO, Provincia, CategoriaItinerario } from '@/types/itinerario';
-import { getItinerarioEnCurso } from '@/services/itinerarioService';
 import {
     getDownloadedIds,
     getOfflineItinerariesList,
@@ -80,19 +67,11 @@ export const useItinerariosHook = () => {
         queryFn: fetchItinerariosWithOfflineFallback,
     });
 
-    // Query for active itinerary (pin / home)
+    // Query for active itinerary (pin / home). Comparte queryFn con HomeScreen
+    // vía useActiveItinerary para que la misma queryKey no tenga dos fuentes.
     const { data: activeItinerary = null } = useQuery({
         queryKey: ['activeItinerary'],
-        queryFn: async () => {
-            const active = await getItinerarioEnCurso();
-            if (active) {
-                const localTitle = await getLocalTitleOverride(active.idItinerarioUsuario);
-                if (localTitle) {
-                    return { ...active, titulo: localTitle };
-                }
-            }
-            return active;
-        },
+        queryFn: fetchActiveItinerary,
     });
 
     // Query for downloaded offline IDs
@@ -173,6 +152,9 @@ export const useItinerariosHook = () => {
             queryClient.invalidateQueries({ queryKey: ['estadisticas'] });
             // Cleanup offline download if it exists
             removeItineraryOffline(idItinerario).catch(console.error);
+            // Limpia el override de título local para no dejar claves huérfanas
+            // en AsyncStorage que pisen títulos de itinerarios futuros.
+            removeLocalTitleOverride(idItinerario).catch(console.error);
             queryClient.invalidateQueries({ queryKey: ['downloadedIds'] });
             queryClient.removeQueries({ queryKey: ['itineraryDetails', idItinerario], exact: true });
         },
