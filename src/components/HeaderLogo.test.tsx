@@ -1,4 +1,5 @@
 import React from 'react';
+import { View } from 'react-native';
 import { render } from '@testing-library/react-native';
 import { HeaderLogo } from './HeaderLogo';
 
@@ -20,7 +21,9 @@ jest.mock('@/hooks/useColorScheme', () => ({
 jest.mock('../../assets/images/icono.svg', () => {
   const React = require('react');
   const { View } = require('react-native');
-  return (props: any) => React.createElement(View, props);
+  const IconoSvg = (props: any) => React.createElement(View, props);
+  IconoSvg.displayName = 'IconoSvg';
+  return IconoSvg;
 });
 
 describe('HeaderLogo', () => {
@@ -35,7 +38,7 @@ describe('HeaderLogo', () => {
   it('renders large logo correct option', () => {
     const { UNSAFE_getAllByType } = render(<HeaderLogo largeLogo={true} />);
     // The SVGMock should be rendered
-    const brandIcons = UNSAFE_getAllByType('View');
+    const brandIcons = UNSAFE_getAllByType(View);
     expect(brandIcons.length).toBeGreaterThan(0);
   });
 });

@@ -35,7 +35,7 @@ export function setRefreshToken(token: string | null): void {
 
 // AuthContext nos inyecta su función logout acá. Es la solución a la dependencia
 // circular: api.ts no puede importar AuthContext, así que recibe la función.
-export function setUnauthorizedHandler(fn: () => void): void {
+export function setUnauthorizedHandler(fn: (() => void) | null): void {
   unauthorizedHandler = fn;
 }
 

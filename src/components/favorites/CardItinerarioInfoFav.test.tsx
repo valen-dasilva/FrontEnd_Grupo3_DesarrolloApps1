@@ -52,7 +52,6 @@ describe('CardItinerarioInfoFav', () => {
     );
 
     expect(getByText('Teatro Colón')).toBeTruthy();
-    expect(getByText('Cultura')).toBeTruthy();
     expect(getByText('15 Oct - 22 Oct')).toBeTruthy();
     expect(getByText('Una visita espectacular')).toBeTruthy();
   });

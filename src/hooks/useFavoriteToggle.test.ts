@@ -36,7 +36,7 @@ describe('useFavoriteToggle', () => {
 
   it('actualiza el estado cuando initialIsFavorite cambia', () => {
     const { result, rerender } = renderHook(
-      ({ initialIsFavorite }) => useFavoriteToggle(1, initialIsFavorite),
+      ({ initialIsFavorite }: { initialIsFavorite: boolean }) => useFavoriteToggle(1, initialIsFavorite),
       { initialProps: { initialIsFavorite: false } }
     );
 

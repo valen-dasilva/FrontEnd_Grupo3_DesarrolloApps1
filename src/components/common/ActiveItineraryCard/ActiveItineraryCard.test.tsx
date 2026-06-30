@@ -30,7 +30,7 @@ jest.mock('expo-linear-gradient', () => {
   const React = require('react');
   const { View } = require('react-native');
   return {
-    LinearGradient: ({ children, style }) => React.createElement(View, { style }, children),
+    LinearGradient: ({ children, style }: any) => React.createElement(View, { style }, children),
   };
 });
 

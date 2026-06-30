@@ -15,6 +15,7 @@ type Props = {
   idItinerario?: number;
   title?: string;
   category?: string;
+  categories?: string[];
   startDate?: string;
   endDate?: string;
   dateRange?: string;
@@ -26,12 +27,16 @@ type Props = {
   onBackPress?: () => void;
   onEditPress?: () => void;
   onDownloadPress?: () => void;
+  showBackButton?: boolean;
+  showFavoriteButton?: boolean;
+  showCategoryBadge?: boolean;
 };
 
 export function ItineraryInfoCard({
   idItinerario,
   title = "Teatro Colón",
   category = "Cultura",
+  categories,
   startDate,
   endDate,
   dateRange,
@@ -42,7 +47,10 @@ export function ItineraryInfoCard({
   idFavorito,
   onBackPress,
   onEditPress,
-  onDownloadPress
+  onDownloadPress,
+  showBackButton = true,
+  showFavoriteButton = true,
+  showCategoryBadge = true,
 }: Props) {
   const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === 'dark';
@@ -53,8 +61,14 @@ export function ItineraryInfoCard({
     idFavorito
   );
 
-  const resolvedDateRange = dateRange || (startDate && endDate 
-    ? formatDateRange(startDate, endDate) 
+  const resolvedCategories = categories && categories.length > 0
+    ? categories
+    : category && showCategoryBadge
+      ? [category]
+      : [];
+
+  const resolvedDateRange = dateRange || (startDate && endDate
+    ? formatDateRange(startDate, endDate)
     : "15 Oct - 22 Oct, 2024");
 
   return (
@@ -70,41 +84,53 @@ export function ItineraryInfoCard({
           {/* Back and heart icons */}
           <View pointerEvents="box-none" style={styles.heroTopBar}>
             {/** Back button */}
-            <TouchableOpacity 
-              style={[
-                styles.circularContainer, 
-                { 
-                  backgroundColor: isDark ? theme.background : '#FFFFFF',
-                  borderColor: theme.border,
-                  borderWidth: isDark ? 1 : 0
-                }
-              ]} 
-              onPress={onBackPress}
-            >
-              <MaterialIcons name={icons.ArrowBack} size={fonts.size.xl} color={theme.text} />
-            </TouchableOpacity>
+            {showBackButton && (
+              <TouchableOpacity
+                style={[
+                  styles.circularContainer,
+                  {
+                    backgroundColor: isDark ? theme.background : '#FFFFFF',
+                    borderColor: theme.border,
+                    borderWidth: isDark ? 1 : 0
+                  }
+                ]}
+                onPress={onBackPress}
+              >
+                <MaterialIcons name={icons.ArrowBack} size={fonts.size.xl} color={theme.text} />
+              </TouchableOpacity>
+            )}
             {/** Heart button */}
-            <FavoriteButton
-              isFavorite={isFav}
-              onPress={handleFavoriteToggle}
-              style={[
-                styles.circularContainer,
-                {
-                  backgroundColor: isDark ? theme.background : '#FFFFFF',
-                  borderColor: theme.border,
-                  borderWidth: isDark ? 1 : 0
-                }
-              ]}
-            />
+            {showFavoriteButton && (
+              <FavoriteButton
+                isFavorite={isFav}
+                onPress={handleFavoriteToggle}
+                style={[
+                  styles.circularContainer,
+                  {
+                    backgroundColor: isDark ? theme.background : '#FFFFFF',
+                    borderColor: theme.border,
+                    borderWidth: isDark ? 1 : 0
+                  }
+                ]}
+              />
+            )}
           </View>
 
           {/** Bottom info container */}
           <View pointerEvents="box-none" style={styles.bottomInfoContainer}>
-            {/** Category badge */}
-            <CategoryBadge
-              category={category}
-              style={styles.categoryBadge}
-            />
+            {/** Category badges */}
+            {showCategoryBadge && resolvedCategories.length > 0 && (
+              <View style={styles.categoriesRow}>
+                {resolvedCategories.map((cat, index) => (
+                  <CategoryBadge
+                    key={index}
+                    category={cat}
+                    compact
+                    style={styles.categoryBadge}
+                  />
+                ))}
+              </View>
+            )}
             <Text style={styles.title}>{title}</Text>
             <View style={[styles.datesRow, { justifyContent: 'space-between', width: '100%', flexDirection: 'row' }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

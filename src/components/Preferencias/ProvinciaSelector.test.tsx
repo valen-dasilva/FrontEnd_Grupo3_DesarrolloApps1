@@ -2,7 +2,8 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { ProvinciaSelector } from './ProvinciaSelector';
 import { Provincia, PROVINCIA_LABEL } from '@/types/itinerario';
-import { TextInput, TouchableOpacity } from 'react-native';
+import { Modal, TextInput, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 // Mock FlatList using ScrollView to bypass react 19 VirtualizedList compatibility issue
 jest.mock('react-native/Libraries/Lists/FlatList', () => {
@@ -28,6 +29,7 @@ jest.mock('react-native/Libraries/Lists/FlatList', () => {
       })
     );
   });
+  Component.displayName = 'FlatListMock';
   return { __esModule: true, default: Component };
 });
 
@@ -57,7 +59,7 @@ describe('ProvinciaSelector', () => {
     // In React Native, the Modal might render its content inside unless visible is false,
     // but in our Jest environment with mocked Modal, let's verify if the Modal prop visible is false.
     const { UNSAFE_getByType } = render(<ProvinciaSelector {...defaultProps} visible={false} />);
-    const modal = UNSAFE_getByType('Modal');
+    const modal = UNSAFE_getByType(Modal);
     expect(modal.props.visible).toBe(false);
   });
 
@@ -83,7 +85,7 @@ describe('ProvinciaSelector', () => {
     // Let's find "checkmark" icon or verify it does not crash.
     // In our jest.setup.js, we mock @expo/vector-icons Ionicons.
     // So we can find 'Ionicons' elements and verify one has name="checkmark"
-    const ionicIcons = UNSAFE_getAllByType('Ionicons');
+    const ionicIcons = UNSAFE_getAllByType(Ionicons);
     const checkmarks = ionicIcons.filter(icon => icon.props.name === 'checkmark');
     expect(checkmarks.length).toBe(1);
   });
@@ -176,7 +178,7 @@ describe('ProvinciaSelector', () => {
   it('calls onClose when Modal triggers onRequestClose', () => {
     const { UNSAFE_getByType } = render(<ProvinciaSelector {...defaultProps} />);
 
-    const modal = UNSAFE_getByType('Modal');
+    const modal = UNSAFE_getByType(Modal);
     // Simulate Android back button / request close
     modal.props.onRequestClose();
 

@@ -55,12 +55,12 @@ describe('ConfirmAlert', () => {
   });
 
   it('disables both actions and shows progress while loading', () => {
-    const { getByText, queryByText } = render(
+    const { getByText, queryByText, getByTestId } = render(
       <ConfirmAlert {...defaultProps} loading />,
     );
 
     expect(queryByText('Aceptar')).toBeNull();
-    fireEvent.press(getByText('Eliminando...'));
+    expect(getByTestId('confirm-loading-indicator')).toBeTruthy();
     fireEvent.press(getByText('Cancelar'));
 
     expect(defaultProps.onConfirm).not.toHaveBeenCalled();

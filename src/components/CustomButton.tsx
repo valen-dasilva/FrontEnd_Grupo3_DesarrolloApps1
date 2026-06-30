@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, TouchableOpacityProps, View } from 'react-native';
+import { ActivityIndicator, TouchableOpacity, Text, StyleSheet, TouchableOpacityProps, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useColorScheme';
 
@@ -7,9 +7,10 @@ interface CustomButtonProps extends TouchableOpacityProps {
   title: string;
   variant?: 'primary' | 'secondary' | 'outline';
   showArrow?: boolean;
+  loading?: boolean;
 }
 
-export const CustomButton: React.FC<CustomButtonProps> = ({ title, variant = 'primary', showArrow = false, style, ...props }) => {
+export const CustomButton: React.FC<CustomButtonProps> = ({ title, variant = 'primary', showArrow = false, loading = false, style, ...props }) => {
   const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === 'dark';
 
@@ -50,11 +51,17 @@ export const CustomButton: React.FC<CustomButtonProps> = ({ title, variant = 'pr
   const textStyle = getTextStyle();
 
   return (
-    <TouchableOpacity style={[styles.button, getBackgroundStyle(), style]} activeOpacity={0.8} {...props}>
+    <TouchableOpacity style={[styles.button, getBackgroundStyle(), style]} activeOpacity={0.8} disabled={loading || props.disabled} {...props}>
       <View style={styles.contentContainer}>
-        <Text style={[styles.text, textStyle]}>{title}</Text>
-        {showArrow && (
-          <Ionicons name="arrow-forward" size={20} color={textStyle.color} style={styles.arrowIcon} />
+        {loading ? (
+          <ActivityIndicator color={textStyle.color} size="small" />
+        ) : (
+          <>
+            <Text style={[styles.text, textStyle]}>{title}</Text>
+            {showArrow && (
+              <Ionicons name="arrow-forward" size={20} color={textStyle.color} style={styles.arrowIcon} />
+            )}
+          </>
         )}
       </View>
     </TouchableOpacity>
@@ -77,6 +84,8 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     fontWeight: '600',
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
   arrowIcon: {
     marginLeft: 8,

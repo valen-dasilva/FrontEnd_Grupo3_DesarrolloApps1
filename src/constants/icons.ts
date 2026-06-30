@@ -46,4 +46,21 @@ export const icons = {
   Explore: 'explore',
   Person: 'person',
   Favorite: 'favorite',
+  Groups: 'groups',
+
+  // Grupos / encuestas
+  Settings: 'settings',
+  Poll: 'how-to-vote',
+  Link: 'link',
+  Timer: 'timer',
+  ContentCopy: 'content-copy',
+  Refresh: 'refresh',
+  Check: 'check',
+  Close: 'close',
+  Add: 'add',
+  People: 'people',
+  ExitToApp: 'exit-to-app',
+  ThumbUp: 'thumb-up',
+  ThumbUpOffAlt: 'thumb-up-off-alt',
+  EmojiEvents: 'emoji-events',
 } as const;

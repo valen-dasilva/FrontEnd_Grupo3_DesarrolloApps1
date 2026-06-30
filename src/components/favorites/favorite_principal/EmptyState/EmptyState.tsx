@@ -12,9 +12,11 @@ export interface EmptyStateProps {
   /** Detailed description explaining the empty state */
   description: string;
   /** Label for the Call-To-Action button */
-  actionLabel: string;
+  actionLabel?: string;
   /** Callback triggered when the CTA button is pressed */
-  onActionPress: () => void;
+  onActionPress?: () => void;
+  /** Ícono del cuadro. Por defecto usa el bookmark de favoritos. */
+  iconName?: string;
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
@@ -22,6 +24,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   description,
   actionLabel,
   onActionPress,
+  iconName = icons.Save,
 }) => {
   const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === 'dark';
@@ -30,7 +33,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     <View style={[styles.container, { backgroundColor: theme.surface, borderColor: theme.border }]}>
       <View style={[styles.iconContainer, { backgroundColor: theme.surfaceHighlight }]}>
         <MaterialIcons
-          name={icons.Save}
+          name={iconName as any}
           size={32}
           color={theme.primary}
         />
@@ -42,23 +45,25 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         {description}
       </Text>
 
-      <Pressable
-        onPress={onActionPress}
-        style={({ pressed }) => [
-          styles.button,
-          { backgroundColor: theme.warning },
-          pressed && styles.pressedState
-        ]}
-        accessibilityRole="button"
-        accessibilityLabel={actionLabel}
-      >
-        <MaterialIcons
-          name={icons.Explore}
-          size={16}
-          color={isDark ? theme.black : colors.black}
-        />
-        <Text style={[styles.buttonText, { color: isDark ? theme.black : colors.black }]}>{actionLabel}</Text>
-      </Pressable>
+      {actionLabel && onActionPress && (
+        <Pressable
+          onPress={onActionPress}
+          style={({ pressed }) => [
+            styles.button,
+            { backgroundColor: theme.warning },
+            pressed && styles.pressedState
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={actionLabel}
+        >
+          <MaterialIcons
+            name={icons.Explore}
+            size={16}
+            color={isDark ? theme.black : colors.black}
+          />
+          <Text style={[styles.buttonText, { color: isDark ? theme.black : colors.black }]}>{actionLabel}</Text>
+        </Pressable>
+      )}
     </View>
   );
 };

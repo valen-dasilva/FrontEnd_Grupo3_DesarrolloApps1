@@ -9,20 +9,23 @@ interface CustomInputProps extends TextInputProps {
   label?: string;
   showEyeButton?: boolean;
   onEyePress?: () => void;
-  eyeButtonDisabled?: boolean; 
+  eyeButtonDisabled?: boolean;
+  /** Si es true, no muestra el mensaje "Máximo de caracteres alcanzado" ni pone rojo el contador. */
+  hideMaxMessage?: boolean;
 }
 
-export const CustomInput: React.FC<CustomInputProps> = ({ 
-  iconName, 
-  label, 
-  style, 
-  onFocus, 
-  onBlur, 
-  secureTextEntry, 
+export const CustomInput: React.FC<CustomInputProps> = ({
+  iconName,
+  label,
+  style,
+  onFocus,
+  onBlur,
+  secureTextEntry,
   showEyeButton = true,
   onEyePress,
   eyeButtonDisabled = false,
-  ...props 
+  hideMaxMessage = false,
+  ...props
 }) => {
   const { theme } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
@@ -48,16 +51,20 @@ export const CustomInput: React.FC<CustomInputProps> = ({
     }
   };
 
+  const maxLength = props.maxLength;
+  const currentLength = typeof props.value === 'string' ? props.value.length : 0;
+  const isMaxReached = maxLength !== undefined && currentLength >= maxLength;
+
   return (
     <View style={styles.wrapper}>
       {label && (
         <Text style={[styles.label, { color: theme.text }]}>{label}</Text>
       )}
       <View style={[
-        styles.container, 
-        { 
-          backgroundColor: theme.inputBg, 
-          borderColor: isFocused ? theme.primary : theme.border 
+        styles.container,
+        {
+          backgroundColor: theme.inputBg,
+          borderColor: isFocused ? theme.primary : theme.border
         },
         props.multiline && { height: undefined, minHeight: 100, alignItems: 'flex-start' }
       ]}>
@@ -66,10 +73,10 @@ export const CustomInput: React.FC<CustomInputProps> = ({
         )}
         <TextInput
           style={[
-            styles.input, 
-            iconName ? styles.inputWithIcon : undefined, 
+            styles.input,
+            iconName ? styles.inputWithIcon : undefined,
             (secureTextEntry !== undefined && showEyeButton) ? styles.inputWithRightButton : undefined,
-            { color: theme.text }, 
+            { color: theme.text },
             props.multiline && { textAlignVertical: 'top', paddingVertical: 12 },
             style
           ]}
@@ -91,6 +98,23 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           </Pressable>
         )}
       </View>
+      {maxLength !== undefined && (
+        <View style={styles.footer}>
+          <Text
+            style={[
+              styles.counter,
+              { color: isMaxReached && !hideMaxMessage ? theme.danger : theme.textSecondary },
+            ]}
+          >
+            {currentLength}/{maxLength}
+          </Text>
+        </View>
+      )}
+      {isMaxReached && !hideMaxMessage && (
+        <Text style={[styles.maxMessage, { color: theme.danger }]}>
+          Máximo de caracteres alcanzado
+        </Text>
+      )}
     </View>
   );
 };
@@ -136,5 +160,19 @@ const styles = StyleSheet.create({
   },
   eyeButtonDisabled: {
     opacity: 0.4,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 4,
+  },
+  counter: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  maxMessage: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 2,
   },
 });
