@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './ExploreScreen.styles';
 import { useFavoritosHook } from '@/hooks/useFavoritos';
 import { useFocusEffect } from 'expo-router';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 function calculateDurationDays(startStr: string, endStr: string): number {
   try {
@@ -96,7 +97,7 @@ export default function ExploreScreen() {
     );
   };
 
-  const renderItem = useCallback(({ item }: { item: ItinerarioSistemaResumenDTO }) => {
+  const renderItem = useCallback(({ item, index }: { item: ItinerarioSistemaResumenDTO; index: number }) => {
     const days = calculateDurationDays(item.fechaInicio, item.fechaFin);
     const durationText = `${days} ${days === 1 ? 'día' : 'días'}`;
 
@@ -104,24 +105,26 @@ export default function ExploreScreen() {
     const idFavorito = undefined; // los bookmarks se operan por idItinerario del sistema
 
     return (
-      <ExploreItineraryCard
-        idItinerario={item.idItinerario}
-        title={item.titulo}
-        description={item.descripcion}
-        category={
-          item.etiquetas && item.etiquetas.length > 0
-            ? CATEGORIA_LABEL[item.etiquetas[0]]
-            : 'General'
-        }
-        categories={item.etiquetas}
-        image={item.fotoPortada}
-        rating={item.likes.toString()}
-        duration={durationText}
-        startDate={item.fechaInicio}
-        endDate={item.fechaFin}
-        isFavorite={isFavorite}
-        idFavorito={idFavorito}
-      />
+      <Animated.View entering={FadeInDown.delay(index * 80).duration(300)}>
+        <ExploreItineraryCard
+          idItinerario={item.idItinerario}
+          title={item.titulo}
+          description={item.descripcion}
+          category={
+            item.etiquetas && item.etiquetas.length > 0
+              ? CATEGORIA_LABEL[item.etiquetas[0]]
+              : 'General'
+          }
+          categories={item.etiquetas}
+          image={item.fotoPortada}
+          rating={item.likes.toString()}
+          duration={durationText}
+          startDate={item.fechaInicio}
+          endDate={item.fechaFin}
+          isFavorite={isFavorite}
+          idFavorito={idFavorito}
+        />
+      </Animated.View>
     );
   }, [favoritos]);
 

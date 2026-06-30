@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   useWindowDimensions,
 } from 'react-native';
+import Animated, { ZoomIn } from 'react-native-reanimated';
 import { MapaArgentina } from './MapaArgentina';
 import { HeaderModal } from './HeaderModal';
 import { PanelEstadisticasProvincia } from './PanelEstadisticasProvincia';
@@ -64,17 +65,20 @@ export function MapaInteractivoModal({
           showsHorizontalScrollIndicator={false}
           centerContent
         >
-          <MapaArgentina
-            provinciasVisitadas={provinciasVisitadas}
-            colorVisitada={theme.primary}
-            colorNoVisitada={theme.border}
-            strokeColor={theme.background}
-            width={width * 1.1}
-            height={height * 0.65}
-            onProvincePress={handleTapEnProvincia}
-            provinciaSeleccionada={provinciaSeleccionada}
-            colorSeleccionada={colorResaltado}
-          />
+          {/* key atado a `visible` para que el ZoomIn se redispare en cada apertura */}
+          <Animated.View key={visible ? 'abierto' : 'cerrado'} entering={ZoomIn.duration(450)}>
+            <MapaArgentina
+              provinciasVisitadas={provinciasVisitadas}
+              colorVisitada={theme.primary}
+              colorNoVisitada={theme.border}
+              strokeColor={theme.background}
+              width={width * 1.1}
+              height={height * 0.65}
+              onProvincePress={handleTapEnProvincia}
+              provinciaSeleccionada={provinciaSeleccionada}
+              colorSeleccionada={colorResaltado}
+            />
+          </Animated.View>
         </ScrollView>
 
         {provinciaSeleccionada ? (

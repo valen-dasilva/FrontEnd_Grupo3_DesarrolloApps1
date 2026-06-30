@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback, useMemo, useRef, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, Platform, Alert, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, Platform, Alert, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import Toast from 'react-native-toast-message';
 
@@ -17,7 +18,7 @@ import { ItemItinerarioUsuario } from '@/services/itinerariosService';
 import { formatFecha } from '@/utils/dateUtils';
 import { WeatherStrip } from '@/components/common/WeatherStrip/WeatherStrip';
 import { PROVINCIA_COORDS } from '@/utils/provinciaCoords';
-import { Provincia } from '@/types/itinerario';
+import { PROVINCIA_LABEL, Provincia } from '@/types/itinerario';
 import { useWeather } from '@/hooks/useWeather';
 import { isBadWeather, getDiaDate } from '@/utils/weatherUtils';
 
@@ -32,6 +33,7 @@ export default function FavoriteItineraryInfoScreen() {
         fechaInicio, 
         fechaFin, 
         etiquetas,
+        completado,
         description
     } = useLocalSearchParams<{ 
         id: string;
@@ -42,6 +44,7 @@ export default function FavoriteItineraryInfoScreen() {
         fechaInicio?: string;
         fechaFin?: string;
         etiquetas?: string;
+        completado?: string;
         description?: string;
     }>();
 
@@ -88,6 +91,9 @@ export default function FavoriteItineraryInfoScreen() {
     const displayCategory = (etiquetas?.split(',')[0]) || itineraryDetails?.etiquetas?.[0];
     const displayDuration = duracionDias || itineraryDetails?.duracionDias;
     const displayProvincia = provincia || itineraryDetails?.provincia;
+    const displayProvinciaLabel = displayProvincia
+        ? PROVINCIA_LABEL[displayProvincia as Provincia] ?? displayProvincia
+        : undefined;
 
     const startDate = fechaInicio || itineraryDetails?.fechaInicio;
     const endDate = fechaFin || itineraryDetails?.fechaFin;
@@ -96,16 +102,18 @@ export default function FavoriteItineraryInfoScreen() {
         ? `${formatFecha(startDate)} - ${formatFecha(endDate)}`
         : undefined;
 
-    const displayDescription = description || itineraryDetails?.descripcion || (displayProvincia
-        ? `Itinerario para explorar ${displayProvincia} en ${displayDuration} Días.`
+    const displayDescription = description || itineraryDetails?.descripcion || (displayProvinciaLabel
+        ? `Itinerario para explorar ${displayProvinciaLabel} en ${displayDuration} Días.`
         : undefined);
 
-    const yaCompletado = itineraryDetails?.completado ?? false;
+    const yaCompletado = itineraryDetails?.completado ?? completado === 'true';
 
     const [completarModal, setCompletarModal] = useState<{ visible: boolean; state: 'loading' | 'success' }>({
         visible: false,
         state: 'loading',
     });
+
+    const confettiRef = useRef<any>(null);
 
     // Animaciones del botón "completar": bounce al tocar + relleno verde al completar
     const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -152,6 +160,7 @@ export default function FavoriteItineraryInfoScreen() {
             try {
                 await completarViaje(Number(id));
                 setCompletarModal({ visible: true, state: 'success' });
+                confettiRef.current?.start();
             } catch {
                 setCompletarModal({ visible: false, state: 'loading' });
                 Toast.show({
@@ -195,7 +204,7 @@ export default function FavoriteItineraryInfoScreen() {
                 description={displayDescription}
                 onBackPress={() => router.replace({
                     pathname: '/(tabs)/favoritos',
-                    params: { vista: 'misViajes' },
+                    params: { vista: yaCompletado ? 'completados' : 'misViajes' },
                 })}
                 onEditPress={() => router.replace({ pathname: '/(tabs)/(favorite)/edicionItinerario', params: { id } })}
             />
@@ -319,8 +328,21 @@ export default function FavoriteItineraryInfoScreen() {
                 message={completarModal.state === 'loading'
                     ? 'Estamos sumándolo a tus estadísticas.'
                     : 'Se sumó a tu recorrido y coloreamos la provincia en el mapa.'}
-                actionLabel="Listo"
-                onAction={() => setCompletarModal({ visible: false, state: 'loading' })}
+                actionLabel="Ver completados"
+                onAction={() => {
+                    setCompletarModal({ visible: false, state: 'loading' });
+                    router.replace({
+                        pathname: '/(tabs)/favoritos',
+                        params: { vista: 'completados' },
+                    });
+                }}
+            />
+            <ConfettiCannon
+                ref={confettiRef}
+                count={120}
+                origin={{ x: Dimensions.get('window').width / 2, y: -10 }}
+                fallSpeed={2500}
+                autoStart={false}
             />
         </View>
     );

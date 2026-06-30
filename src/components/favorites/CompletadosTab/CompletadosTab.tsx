@@ -1,15 +1,15 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { FlatList, View, ActivityIndicator, Platform, StyleSheet } from 'react-native';
+import { ActivityIndicator, FlatList, Platform, StyleSheet, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import Toast from 'react-native-toast-message';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
+import { EmptyState } from '@/components/favorites/favorite_principal/EmptyState/EmptyState';
+import { ItineraryCard } from '@/components/favorites/favorite_principal/ItineraryCard/ItineraryCard';
+import { paddings } from '@/constants/paddings';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useItinerariosHook } from '@/hooks/useItinerarios';
-import { ItineraryCard } from '@/components/favorites/favorite_principal/ItineraryCard/ItineraryCard';
-import { EmptyState } from '@/components/favorites/favorite_principal/EmptyState/EmptyState';
-import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
 import { ItinerarioResumen } from '@/services/itinerariosService';
-import { paddings } from '@/constants/paddings';
 import { PROVINCIA_LABEL, Provincia } from '@/types/itinerario';
 
 function buildItinerarioParams(itinerary: ItinerarioResumen) {
@@ -42,17 +42,13 @@ function getProvinciaLabel(provincia: string) {
 }
 
 interface Props {
-  /** Header compartido (título + toggle de vista) que scrollea con la lista */
   header: React.ReactElement;
-  /** Cambiar a la tab "Guardados" (desde el empty state) */
-  onVerGuardados: () => void;
+  onVerMisViajes: () => void;
 }
 
-/** Tab "Mis viajes": copias propias del usuario + borrar / fijar / descargar. */
-export function MisViajesTab({ header, onVerGuardados }: Props) {
+export function CompletadosTab({ header, onVerMisViajes }: Props) {
   const router = useRouter();
   const { theme } = useTheme();
-
   const {
     listItinerarioResumen,
     isLoading,
@@ -64,19 +60,17 @@ export function MisViajesTab({ header, onVerGuardados }: Props) {
     loadItinerarios,
   } = useItinerariosHook();
 
-  // id pendiente de confirmación de borrado (null = modal cerrado)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
-  const viajesNoCompletados = useMemo(
-    () => ordenarConPinPrimero(listItinerarioResumen.filter(it => !it.completado)),
-    [listItinerarioResumen],
-  );
-
-  // Refresca las copias cada vez que la pantalla recupera foco
   useFocusEffect(
     useCallback(() => {
       loadItinerarios();
-    }, [loadItinerarios])
+    }, [loadItinerarios]),
+  );
+
+  const viajesCompletados = useMemo(
+    () => ordenarConPinPrimero(listItinerarioResumen.filter(it => it.completado)),
+    [listItinerarioResumen],
   );
 
   const confirmDelete = () => {
@@ -127,10 +121,10 @@ export function MisViajesTab({ header, onVerGuardados }: Props) {
     return (
       <View style={local.emptyStateContainer}>
         <EmptyState
-          title="No tenés viajes sin completar"
-          description="Los itinerarios que todavía no completes van a aparecer acá."
-          actionLabel="Ver guardados"
-          onActionPress={onVerGuardados}
+          title="Todavía no completaste viajes"
+          description="Cuando marques un itinerario como completado, lo vas a encontrar en este historial."
+          actionLabel="Ver mis viajes"
+          onActionPress={onVerMisViajes}
         />
       </View>
     );
@@ -139,9 +133,9 @@ export function MisViajesTab({ header, onVerGuardados }: Props) {
   return (
     <>
       <FlatList
-        data={isLoading ? [] : viajesNoCompletados}
+        data={isLoading ? [] : viajesCompletados}
         renderItem={renderCopia}
-        keyExtractor={(item) => `itin-${item.id}`}
+        keyExtractor={(item) => `completed-itin-${item.id}`}
         ListHeaderComponent={header}
         ListEmptyComponent={renderEmpty}
         style={[local.scrollView, { backgroundColor: theme.background }]}
@@ -156,7 +150,7 @@ export function MisViajesTab({ header, onVerGuardados }: Props) {
       <ConfirmAlert
         visible={confirmDeleteId !== null}
         title="Eliminar itinerario"
-        message="¿Estás seguro de que deseas eliminar este itinerario de tus viajes?"
+        message="¿Estás seguro de que deseas eliminar este itinerario completado?"
         onCancel={() => setConfirmDeleteId(null)}
         onConfirm={confirmDelete}
         confirmText="Eliminar"
