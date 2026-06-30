@@ -18,7 +18,7 @@ import { ItemItinerarioUsuario } from '@/services/itinerariosService';
 import { formatFecha } from '@/utils/dateUtils';
 import { WeatherStrip } from '@/components/common/WeatherStrip/WeatherStrip';
 import { PROVINCIA_COORDS } from '@/utils/provinciaCoords';
-import { Provincia } from '@/types/itinerario';
+import { PROVINCIA_LABEL, Provincia } from '@/types/itinerario';
 import { useWeather } from '@/hooks/useWeather';
 import { isBadWeather, getDiaDate } from '@/utils/weatherUtils';
 
@@ -91,6 +91,9 @@ export default function FavoriteItineraryInfoScreen() {
     const displayCategory = (etiquetas?.split(',')[0]) || itineraryDetails?.etiquetas?.[0];
     const displayDuration = duracionDias || itineraryDetails?.duracionDias;
     const displayProvincia = provincia || itineraryDetails?.provincia;
+    const displayProvinciaLabel = displayProvincia
+        ? PROVINCIA_LABEL[displayProvincia as Provincia] ?? displayProvincia
+        : undefined;
 
     const startDate = fechaInicio || itineraryDetails?.fechaInicio;
     const endDate = fechaFin || itineraryDetails?.fechaFin;
@@ -99,8 +102,8 @@ export default function FavoriteItineraryInfoScreen() {
         ? `${formatFecha(startDate)} - ${formatFecha(endDate)}`
         : undefined;
 
-    const displayDescription = description || itineraryDetails?.descripcion || (displayProvincia
-        ? `Itinerario para explorar ${displayProvincia} en ${displayDuration} Días.`
+    const displayDescription = description || itineraryDetails?.descripcion || (displayProvinciaLabel
+        ? `Itinerario para explorar ${displayProvinciaLabel} en ${displayDuration} Días.`
         : undefined);
 
     const yaCompletado = itineraryDetails?.completado ?? completado === 'true';

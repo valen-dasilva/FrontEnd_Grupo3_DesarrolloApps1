@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/favorites/favorite_principal/EmptyState
 import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
 import { ItinerarioResumen } from '@/services/itinerariosService';
 import { paddings } from '@/constants/paddings';
+import { PROVINCIA_LABEL, Provincia } from '@/types/itinerario';
 
 function buildItinerarioParams(itinerary: ItinerarioResumen) {
   return {
@@ -34,6 +35,10 @@ function ordenarConPinPrimero(itinerarios: ItinerarioResumen[]) {
     if (a.esPinned !== b.esPinned) return a.esPinned ? -1 : 1;
     return new Date(a.fechaInicio).getTime() - new Date(b.fechaInicio).getTime();
   });
+}
+
+function getProvinciaLabel(provincia: string) {
+  return PROVINCIA_LABEL[provincia as Provincia] ?? provincia;
 }
 
 interface Props {
@@ -101,7 +106,7 @@ export function MisViajesTab({ header, onVerGuardados }: Props) {
     <Animated.View entering={FadeInDown.delay(index * 80).duration(300)}>
       <ItineraryCard
         title={itinerary.titulo}
-        location={itinerary.provincia}
+        location={getProvinciaLabel(itinerary.provincia)}
         duration={`${itinerary.duracionDias} Días`}
         imageUrl={itinerary.fotoPortada}
         isOfflineAvailable={downloadedIds.includes(itinerary.id)}
