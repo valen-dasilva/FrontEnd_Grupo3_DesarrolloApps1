@@ -33,6 +33,7 @@ export default function FavoriteItineraryInfoScreen() {
         fechaInicio, 
         fechaFin, 
         etiquetas,
+        completado,
         description
     } = useLocalSearchParams<{ 
         id: string;
@@ -43,6 +44,7 @@ export default function FavoriteItineraryInfoScreen() {
         fechaInicio?: string;
         fechaFin?: string;
         etiquetas?: string;
+        completado?: string;
         description?: string;
     }>();
 
@@ -101,7 +103,7 @@ export default function FavoriteItineraryInfoScreen() {
         ? `Itinerario para explorar ${displayProvincia} en ${displayDuration} Días.`
         : undefined);
 
-    const yaCompletado = itineraryDetails?.completado ?? false;
+    const yaCompletado = itineraryDetails?.completado ?? completado === 'true';
 
     const [completarModal, setCompletarModal] = useState<{ visible: boolean; state: 'loading' | 'success' }>({
         visible: false,
@@ -199,7 +201,7 @@ export default function FavoriteItineraryInfoScreen() {
                 description={displayDescription}
                 onBackPress={() => router.replace({
                     pathname: '/(tabs)/favoritos',
-                    params: { vista: 'misViajes' },
+                    params: { vista: yaCompletado ? 'completados' : 'misViajes' },
                 })}
                 onEditPress={() => router.replace({ pathname: '/(tabs)/(favorite)/edicionItinerario', params: { id } })}
             />
@@ -323,8 +325,14 @@ export default function FavoriteItineraryInfoScreen() {
                 message={completarModal.state === 'loading'
                     ? 'Estamos sumándolo a tus estadísticas.'
                     : 'Se sumó a tu recorrido y coloreamos la provincia en el mapa.'}
-                actionLabel="Listo"
-                onAction={() => setCompletarModal({ visible: false, state: 'loading' })}
+                actionLabel="Ver completados"
+                onAction={() => {
+                    setCompletarModal({ visible: false, state: 'loading' });
+                    router.replace({
+                        pathname: '/(tabs)/favoritos',
+                        params: { vista: 'completados' },
+                    });
+                }}
             />
             <ConfettiCannon
                 ref={confettiRef}
