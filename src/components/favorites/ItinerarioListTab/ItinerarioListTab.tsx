@@ -1,11 +1,12 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Platform, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { AnimatedListItem } from '@/components/common/AnimatedListItem/AnimatedListItem';
 import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
 import { EmptyState } from '@/components/favorites/favorite_principal/EmptyState/EmptyState';
 import { ItineraryCard } from '@/components/favorites/favorite_principal/ItineraryCard/ItineraryCard';
 import { paddings } from '@/constants/paddings';
+import { LIST_PERF_PROPS } from '@/constants/listConfig';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useItinerariosHook } from '@/hooks/useItinerarios';
 import { useItineraryDownload } from '@/hooks/useItineraryDownload';
@@ -81,7 +82,7 @@ export function ItinerarioListTab({ header, filter, keyPrefix, emptyState, confi
   };
 
   const renderCopia = useCallback(({ item: itinerary, index }: { item: ItinerarioResumen; index: number }) => (
-    <Animated.View entering={FadeInDown.delay(index * 80).duration(300)}>
+    <AnimatedListItem index={index}>
       <ItineraryCard
         title={itinerary.titulo}
         location={getProvinciaLabel(itinerary.provincia)}
@@ -95,7 +96,7 @@ export function ItinerarioListTab({ header, filter, keyPrefix, emptyState, confi
         onPinPress={() => togglePin(itinerary.id)}
         onDownloadPress={() => handleToggleDownload(itinerary.id)}
       />
-    </Animated.View>
+    </AnimatedListItem>
   ), [downloadedIds, router, togglePin, handleToggleDownload]);
 
   const renderEmpty = () => {
@@ -124,11 +125,7 @@ export function ItinerarioListTab({ header, filter, keyPrefix, emptyState, confi
         ListEmptyComponent={renderEmpty}
         style={[local.scrollView, { backgroundColor: theme.background }]}
         contentContainerStyle={local.scrollContent}
-        showsVerticalScrollIndicator={false}
-        initialNumToRender={5}
-        maxToRenderPerBatch={5}
-        windowSize={3}
-        removeClippedSubviews={Platform.OS === 'android'}
+        {...LIST_PERF_PROPS}
       />
 
       <ConfirmAlert

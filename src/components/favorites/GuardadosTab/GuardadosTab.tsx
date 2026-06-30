@@ -1,15 +1,16 @@
 import React, { useCallback, useState } from 'react';
-import { FlatList, View, ActivityIndicator, Platform, StyleSheet } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { FlatList, View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useFavoritosHook } from '@/hooks/useFavoritos';
 import { useItinerariosHook } from '@/hooks/useItinerarios';
+import { AnimatedListItem } from '@/components/common/AnimatedListItem/AnimatedListItem';
 import { BookmarkCard } from '@/components/favorites/BookmarkCard/BookmarkCard';
 import { EmptyState } from '@/components/favorites/favorite_principal/EmptyState/EmptyState';
 import { StatusModal } from '@/components/common/StatusModal/StatusModal';
 import { ItinerarioSistemaResumenDTO, PROVINCIA_LABEL, CATEGORIA_LABEL } from '@/types/itinerario';
 import { paddings } from '@/constants/paddings';
+import { LIST_PERF_PROPS } from '@/constants/listConfig';
 
 function buildBookmarkParams(item: ItinerarioSistemaResumenDTO) {
   return {
@@ -69,7 +70,7 @@ export function GuardadosTab({ header, onVerMisViajes }: Props) {
   }, [crearCopiaDesdeFavorito]);
 
   const renderBookmark = useCallback(({ item, index }: { item: ItinerarioSistemaResumenDTO; index: number }) => (
-    <Animated.View entering={FadeInDown.delay(index * 80).duration(300)}>
+    <AnimatedListItem index={index}>
       <BookmarkCard
         title={item.titulo}
         location={PROVINCIA_LABEL[item.provincia] ?? item.provincia}
@@ -79,7 +80,7 @@ export function GuardadosTab({ header, onVerMisViajes }: Props) {
         onQuitar={() => quitarFavorito(item.idItinerario)}
         onVerDetalle={() => router.push(buildBookmarkParams(item))}
       />
-    </Animated.View>
+    </AnimatedListItem>
   ), [handleCrearCopia, quitarFavorito, router]);
 
   const renderEmpty = () => {
@@ -108,11 +109,7 @@ export function GuardadosTab({ header, onVerMisViajes }: Props) {
         ListEmptyComponent={renderEmpty}
         style={[local.scrollView, { backgroundColor: theme.background }]}
         contentContainerStyle={local.scrollContent}
-        showsVerticalScrollIndicator={false}
-        initialNumToRender={5}
-        maxToRenderPerBatch={5}
-        windowSize={3}
-        removeClippedSubviews={Platform.OS === 'android'}
+        {...LIST_PERF_PROPS}
       />
 
       <StatusModal
