@@ -14,21 +14,7 @@ import { styles } from './ExploreScreen.styles';
 import { useFavoritosHook } from '@/hooks/useFavoritos';
 import { useFocusEffect } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-
-function calculateDurationDays(startStr: string, endStr: string): number {
-  try {
-    const start = new Date(startStr);
-    const end = new Date(endStr);
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return 0;
-    }
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays === 0 ? 1 : diffDays;
-  } catch {
-    return 0;
-  }
-}
+import { calculateDurationDays, formatDuracion } from '@/utils/dateUtils';
 
 export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
@@ -98,8 +84,7 @@ export default function ExploreScreen() {
   };
 
   const renderItem = useCallback(({ item, index }: { item: ItinerarioSistemaResumenDTO; index: number }) => {
-    const days = calculateDurationDays(item.fechaInicio, item.fechaFin);
-    const durationText = `${days} ${days === 1 ? 'día' : 'días'}`;
+    const durationText = formatDuracion(calculateDurationDays(item.fechaInicio, item.fechaFin));
 
     const isFavorite = favoritos.some(fav => fav.idItinerario === item.idItinerario);
     const idFavorito = undefined; // los bookmarks se operan por idItinerario del sistema
