@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Modal,
   View,
@@ -16,6 +16,7 @@ import { ItinerarioResumen } from '@/services/itinerariosService';
 import { Provincia } from '@/types/itinerario';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useProvinciaStats } from '@/hooks/useProvinciaStats';
+import { COLOR_POR_PROVINCIA } from '@/data/logros';
 
 interface Props {
   visible: boolean;
@@ -37,6 +38,17 @@ export function MapaInteractivoModal({
 
   const { fueVisitada, cantidadViajes, diasTotales, itinerariosEnProvincia, colorResaltado } =
     useProvinciaStats(provinciasVisitadas, itinerarios, provinciaSeleccionada);
+
+  const coloresPorProvincia = useMemo(() => {
+    const visitadasSet = new Set(provinciasVisitadas);
+    const result: Record<string, string> = {};
+    for (const prov of Object.values(Provincia)) {
+      result[prov] = visitadasSet.has(prov)
+        ? (COLOR_POR_PROVINCIA[prov] ?? theme.primary)
+        : theme.border;
+    }
+    return result;
+  }, [provinciasVisitadas, theme.primary, theme.border]);
 
   // Toggle: tocar la misma provincia la deselecciona; tocar otra la selecciona
   const handleTapEnProvincia = useCallback((provincia: string) => {
@@ -69,7 +81,7 @@ export function MapaInteractivoModal({
           <Animated.View key={visible ? 'abierto' : 'cerrado'} entering={ZoomIn.duration(450)}>
             <MapaArgentina
               provinciasVisitadas={provinciasVisitadas}
-              colorVisitada={theme.primary}
+              coloresPorProvincia={coloresPorProvincia}
               colorNoVisitada={theme.border}
               strokeColor={theme.background}
               width={width * 1.1}
@@ -77,6 +89,7 @@ export function MapaInteractivoModal({
               onProvincePress={handleTapEnProvincia}
               provinciaSeleccionada={provinciaSeleccionada}
               colorSeleccionada={colorResaltado}
+              cabaLabelColor={theme.gray}
             />
           </Animated.View>
         </ScrollView>

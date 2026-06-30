@@ -8,7 +8,8 @@ import { LogrosViajero } from './LogrosViajero';
 import { BarraProgreso } from './BarraProgreso';
 import { EstadisticasUsuario } from '@/services/userService';
 import { ItinerarioResumen } from '@/services/itinerariosService';
-import { CATEGORIA_LABEL, CategoriaItinerario } from '@/types/itinerario';
+import { CATEGORIA_LABEL, CategoriaItinerario, Provincia } from '@/types/itinerario';
+import { COLOR_POR_PROVINCIA } from '@/data/logros';
 
 interface Props {
   estadisticas: EstadisticasUsuario | undefined;
@@ -46,6 +47,18 @@ export function SeccionRecorrido({ estadisticas, itinerarios, isLoading }: Props
     : null;
 
   const porcentaje = estadisticas?.porcentajeArgentina ?? 0;
+
+  // Colores regionales para el mapa: visitadas → color de su región, no visitadas → borde.
+  const coloresPorProvincia = useMemo(() => {
+    const visitadasSet = new Set(estadisticas?.provinciasVisitadas ?? []);
+    const result: Record<string, string> = {};
+    for (const prov of Object.values(Provincia)) {
+      result[prov] = visitadasSet.has(prov)
+        ? (COLOR_POR_PROVINCIA[prov] ?? theme.primary)
+        : theme.border;
+    }
+    return result;
+  }, [estadisticas?.provinciasVisitadas, theme.primary, theme.border]);
 
   // Renderiza el número de una stat-card, o un spinner mientras carga.
   const renderNumero = (valor: number, sufijo = '') =>
@@ -133,10 +146,11 @@ export function SeccionRecorrido({ estadisticas, itinerarios, isLoading }: Props
           <>
             <MapaArgentina
               provinciasVisitadas={estadisticas?.provinciasVisitadas ?? []}
-              colorVisitada={theme.primary}
+              coloresPorProvincia={coloresPorProvincia}
               colorNoVisitada={theme.border}
               strokeColor={theme.background}
               height={300}
+              cabaLabelColor={theme.gray}
             />
             {!estadisticas?.totalProvincias && (
               <Text style={[styles.mapaEmpty, { color: theme.gray }]}>
