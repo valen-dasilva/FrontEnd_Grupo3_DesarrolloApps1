@@ -1,7 +1,7 @@
 import { Alert } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ApiError } from '@/services/api';
 import { getFavoritos, guardarFavorito, quitarFavorito } from '@/services/favoritosService';
+import { getErrorMessage, toErrorString } from '@/utils/errorUtils';
 
 /**
  * Hook de FAVORITOS = bookmarks de itinerarios del sistema.
@@ -27,7 +27,7 @@ export const useFavoritosHook = () => {
         mutationFn: (idSistema: number) => guardarFavorito(idSistema),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['favoritos'] }),
         onError: (err) => {
-            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo guardar en favoritos.");
+            Alert.alert("Error", getErrorMessage(err, "No se pudo guardar en favoritos."));
         }
     });
 
@@ -40,7 +40,7 @@ export const useFavoritosHook = () => {
         mutationFn: (idSistema: number) => quitarFavorito(idSistema),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['favoritos'] }),
         onError: (err) => {
-            Alert.alert("Error", err instanceof ApiError ? err.message : "No se pudo quitar de favoritos.");
+            Alert.alert("Error", getErrorMessage(err, "No se pudo quitar de favoritos."));
         }
     });
 
@@ -48,12 +48,7 @@ export const useFavoritosHook = () => {
         await quitarMutation.mutateAsync(idSistema);
     };
 
-    let errorString: string | null = null;
-    if (error instanceof Error) {
-        errorString = error.message;
-    } else if (error) {
-        errorString = String(error);
-    }
+    const errorString = toErrorString(error);
 
     return {
         favoritos,

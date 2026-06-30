@@ -49,6 +49,34 @@ export function formatDateRange(startStr?: string, endStr?: string): string {
 }
 
 /**
+ * Calcula la cantidad de días (inclusive) entre dos fechas ISO. Devuelve 1
+ * cuando inicio y fin son el mismo día, y 0 si alguna fecha es inválida.
+ * Centraliza el cálculo que estaba embebido en ExploreScreen.
+ */
+export function calculateDurationDays(startStr: string, endStr: string): number {
+  try {
+    const start = new Date(startStr);
+    const end = new Date(endStr);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return 0;
+    }
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays === 0 ? 1 : diffDays;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Formatea una cantidad de días a texto amigable: "1 día" / "3 días".
+ * Unifica las variantes inconsistentes ("X Días", "X días") repartidas por las cards.
+ */
+export function formatDuracion(dias: number): string {
+  return `${dias} ${dias === 1 ? 'día' : 'días'}`;
+}
+
+/**
  * Convierte un string de hora (ej. "09:00:00", "9:0", "9:00") al formato fijo: "09:00".
  * Si el formato es totalmente inválido o vacío, retorna el string original.
  */
