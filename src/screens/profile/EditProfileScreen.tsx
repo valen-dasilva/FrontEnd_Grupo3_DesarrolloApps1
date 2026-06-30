@@ -16,7 +16,7 @@ export default function EditarUsuarioScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user, updateUser } = useAuth();
-  const { theme } = useTheme();
+  const { theme } = useTheme(); 
 
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");

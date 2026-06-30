@@ -23,6 +23,19 @@
       "output": "static"
     },
     "plugins": [
+      [
+        "expo-notifications",
+        {
+          "color": "#2563EB"
+        }
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "La app necesita acceso al calendario para agregar tus actividades.",
+          "remindersPermission": "La app necesita acceso a recordatorios."
+        }
+      ], 
       "expo-router",
       [
         "expo-splash-screen",
@@ -54,6 +67,14 @@
       "eas": {
         "projectId": "c30baf96-af84-4130-9cde-16acc168da7e"
       }
+    },
+    "android": {
+      "permissions": [
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR"
+      ]
     }
   }
 }

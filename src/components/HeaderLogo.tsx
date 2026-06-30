@@ -16,7 +16,7 @@ export const HeaderLogo: React.FC<HeaderLogoProps> = ({ title, subtitle, largeLo
     return (
       <View style={styles.container}>
         <BrandIcon 
-          width={180} 
+          width={180}  
           height={180} 
         />
       </View>
