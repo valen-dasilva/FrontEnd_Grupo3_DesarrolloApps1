@@ -10,6 +10,7 @@ import {
   getInvitationCode,
   joinGroup,
   leaveGroup,
+  updateGroup,
 } from '@/services/groupService';
 import { Group, GroupFormValues } from '@/types/grupo';
 
@@ -125,14 +126,14 @@ export const useGroupDetailsHook = (id: number | null) => {
         throw err;
       }
     },
-    enabled: !!id,
+    // El creador debe activar el código explícitamente; no se consulta al entrar.
+    enabled: false,
   });
 
   const regenerateInvitationMutation = useMutation({
     mutationFn: (groupId: number) => generateInvitationCode(groupId),
-    onSuccess: async (data, groupId) => {
+    onSuccess: (data, groupId) => {
       queryClient.setQueryData([INVITATION_QUERY_KEY, groupId], data);
-      await queryClient.invalidateQueries({ queryKey: [INVITATION_QUERY_KEY, groupId] });
     },
     onError: (err) => {
       Alert.alert(
@@ -146,6 +147,22 @@ export const useGroupDetailsHook = (id: number | null) => {
     if (!id) return;
     await regenerateInvitationMutation.mutateAsync(id);
   }, [id, regenerateInvitationMutation]);
+
+  const updateGroupMutation = useMutation({
+    mutationFn: ({ groupId, values }: { groupId: number; values: GroupFormValues }) =>
+      updateGroup(groupId, values),
+    onSuccess: async (_data, { groupId }) => {
+      await queryClient.invalidateQueries({ queryKey: [GROUP_QUERY_KEY, groupId] });
+      await queryClient.invalidateQueries({ queryKey: [GROUPS_QUERY_KEY] });
+    },
+    onError: (err) => {
+      Alert.alert('Error', err instanceof ApiError ? err.message : 'No se pudo actualizar el grupo.');
+    },
+  });
+
+  const editGroup = async (groupId: number, values: GroupFormValues) => {
+    return await updateGroupMutation.mutateAsync({ groupId, values });
+  };
 
   let errorString: string | null = null;
   if (error instanceof Error) {
@@ -172,5 +189,7 @@ export const useGroupDetailsHook = (id: number | null) => {
     refreshInvitation,
     regenerateInvitation,
     isRegenerating: regenerateInvitationMutation.isPending,
+    editGroup,
+    isUpdating: updateGroupMutation.isPending,
   };
 };

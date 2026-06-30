@@ -1,9 +1,9 @@
-import { Stack, useLocalSearchParams, useRouter, type Href } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
+  RefreshControl,
   ScrollView,
   StatusBar,
   Text,
@@ -14,11 +14,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Header } from '@/components/common/Header/Header';
 import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
+import { FullScreenLoader } from '@/components/common/FullScreenLoader/FullScreenLoader';
+import { StatusModal } from '@/components/common/StatusModal/StatusModal';
 import { OptionCard } from '@/components/group/OptionCard';
-import { useAuth } from '@/context/AuthContext';
 
 import { usePollDetailsHook } from '@/hooks/usePolls';
 import { useTheme } from '@/hooks/useColorScheme';
+import { ApiError } from '@/services/api';
 import { icons } from '@/constants/icons';
 import { fonts } from '@/constants/fonts';
 import { paddings } from '@/constants/paddings';
@@ -38,21 +40,26 @@ export default function PollDetailScreen() {
   const pollId = Number(idEncuesta);
   const { colorScheme, theme, toggleColorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
-  const { user } = useAuth();
 
   const {
     poll,
     isLoading,
     error,
+    rawError,
     castVote,
     finalize,
     isFinalizing,
+    finalizeError,
+    resetFinalizeError,
     resolveTie,
     isResolvingTie,
+    breakTieError,
+    resetBreakTieError,
     copyToMyTrips,
     isCopying,
     removePoll,
     isDeleting,
+    loadPoll,
   } = usePollDetailsHook(
     Number.isNaN(groupId) ? null : groupId,
     Number.isNaN(pollId) ? null : pollId,
@@ -60,11 +67,16 @@ export default function PollDetailScreen() {
 
   const [result, setResult] = useState<PollResult | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [copyModal, setCopyModal] = useState<{ visible: boolean; state: 'loading' | 'success' }>({
+    visible: false,
+    state: 'loading',
+  });
 
-  const isCreator = useMemo(() => {
-    if (!user || !poll) return false;
-    return poll.creadorId === user.idUsuario;
-  }, [user, poll]);
+  useFocusEffect(
+    useCallback(() => {
+      loadPoll();
+    }, [loadPoll]),
+  );
 
   useEffect(() => {
     if (poll?.estado === 'FINALIZADA' && poll.opcionGanadora) {
@@ -84,14 +96,20 @@ export default function PollDetailScreen() {
     }
   }, [poll]);
 
+  const isCreator = poll?.puedeFinalizar ?? false;
+
   const handleVote = (option: PollOption) => {
     castVote(option.id);
   };
 
   const handleFinalize = async () => {
-    if (!isCreator || !poll?.puedeFinalizar || isFinalizing) return;
-    const res = await finalize();
-    if (res) setResult(res);
+    if (!isCreator || isFinalizing) return;
+    try {
+      const res = await finalize();
+      if (res) setResult(res);
+    } catch {
+      // El error se muestra via StatusModal con finalizeError.
+    }
   };
 
   const handleBreakTie = async (option: PollOption) => {
@@ -101,8 +119,13 @@ export default function PollDetailScreen() {
   };
 
   const handleCopy = async () => {
-    await copyToMyTrips();
-    Alert.alert('Listo', 'El itinerario ganador se copió a tus viajes.');
+    setCopyModal({ visible: true, state: 'loading' });
+    try {
+      await copyToMyTrips();
+      setCopyModal({ visible: true, state: 'success' });
+    } catch {
+      setCopyModal({ visible: false, state: 'loading' });
+    }
   };
 
   const confirmDelete = () => {
@@ -126,14 +149,38 @@ export default function PollDetailScreen() {
       <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
         <Header title="Encuesta" onThemeTogglePress={toggleColorScheme} />
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={theme.primary} />
-        </View>
+        <FullScreenLoader />
       </View>
     );
   }
 
   if (error || !poll) {
+    const isNotFound = rawError instanceof ApiError && rawError.status === 404;
+    const isDeletedByOther = isNotFound && pollId !== null;
+    if (isDeletedByOther) {
+      return (
+        <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
+          <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
+          <Header title="Encuesta" onThemeTogglePress={toggleColorScheme} />
+          <View style={styles.centered}>
+            <MaterialIcons name={icons.Poll} size={48} color={theme.textSecondary} />
+            <Text style={[styles.error, { color: theme.textSecondary, marginTop: paddings.spacing.md }]}>
+              La encuesta fue eliminada.
+            </Text>
+            <Pressable
+              onPress={() => router.back()}
+              style={({ pressed }) => [
+                styles.primaryButton,
+                { backgroundColor: theme.primary, marginTop: paddings.spacing.lg },
+                pressed && { opacity: 0.8 },
+              ]}
+            >
+              <Text style={[styles.primaryButtonText, { color: theme.textInverse }]}>Volver</Text>
+            </Pressable>
+          </View>
+        </View>
+      );
+    }
     return (
       <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
@@ -148,6 +195,8 @@ export default function PollDetailScreen() {
   }
 
   const totalVotes = poll.opciones.reduce((sum, o) => sum + o.cantidadVotos, 0);
+  const canFinalize = isCreator && totalVotes >= poll.cantidadMiembros;
+  const missingVotes = Math.max(0, poll.cantidadMiembros - totalVotes);
   const statusLabel = STATUS_LABEL[poll.estado];
 
   return (
@@ -162,7 +211,12 @@ export default function PollDetailScreen() {
         onThemeTogglePress={toggleColorScheme}
       />
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={loadPoll} tintColor={theme.primary} />
+        }
+      >
         <View style={styles.statusRow}>
           <View style={[styles.statusBadge, { backgroundColor: theme.surfaceHighlight }]}>
             <Text style={[styles.statusText, { color: theme.primary }]}>{statusLabel}</Text>
@@ -175,7 +229,7 @@ export default function PollDetailScreen() {
         {poll.estado === 'ABIERTA' && (
           <>
             <Text style={[styles.pollName, { color: theme.text }]}>
-              {poll.nombre ?? `Encuesta #${poll.idEncuesta}`}
+              {poll.nombre ?? 'Encuesta de viaje'}
             </Text>
             <Text style={[styles.hint, { color: theme.textSecondary }]}>
               Tocá una opción para ver su detalle. Pulsá el pulgar para votar o cambiar tu voto.
@@ -186,18 +240,22 @@ export default function PollDetailScreen() {
                 option={option}
                 status={poll.estado}
                 totalVotes={totalVotes}
+                totalMembers={poll.cantidadMiembros}
                 hasVotedThis={poll.idOpcionVotada === option.id}
                 onPress={() => handleOptionPress(option)}
                 onVotePress={() => handleVote(option)}
+                disabled={isFinalizing || isDeleting}
               />
             ))}
-            {isCreator && poll.puedeFinalizar && (
+            {canFinalize ? (
               <Pressable
                 onPress={handleFinalize}
+                disabled={isFinalizing || isDeleting}
                 style={({ pressed }) => [
                   styles.primaryButton,
                   { backgroundColor: theme.primary },
                   pressed && { opacity: 0.8 },
+                  (isFinalizing || isDeleting) && { opacity: 0.7 },
                 ]}
               >
                 {isFinalizing ? (
@@ -211,7 +269,11 @@ export default function PollDetailScreen() {
                   </>
                 )}
               </Pressable>
-            )}
+            ) : isCreator ? (
+              <Text style={[styles.hint, { color: theme.textSecondary }]}>
+                Faltan {missingVotes} voto{missingVotes > 1 ? 's' : ''} para finalizar.
+              </Text>
+            ) : null}
           </>
         )}
 
@@ -243,17 +305,21 @@ export default function PollDetailScreen() {
                 option={option}
                 status={poll.estado}
                 totalVotes={totalVotes}
+                totalMembers={poll.cantidadMiembros}
                 hasVotedThis={poll.idOpcionVotada === option.id}
                 onPress={() => handleOptionPress(option)}
+                disabled={isFinalizing || isDeleting || isCopying}
               />
             ))}
 
             <Pressable
               onPress={handleCopy}
+              disabled={isCopying || isFinalizing || isDeleting}
               style={({ pressed }) => [
                 styles.primaryButton,
                 { backgroundColor: theme.primary },
                 pressed && { opacity: 0.8 },
+                (isCopying || isFinalizing || isDeleting) && { opacity: 0.7 },
               ]}
             >
               {isCopying ? (
@@ -272,22 +338,35 @@ export default function PollDetailScreen() {
 
         {poll.estado === 'EMPATE' && (
           <>
-            <Text style={[styles.hint, { color: theme.textSecondary }]}>
-              {isCreator
-                ? 'Hay un empate. Elegí la opción ganadora.'
-                : 'La encuesta está empatada. El creador debe elegir la opción ganadora.'}
-            </Text>
+            {isResolvingTie ? (
+              <View style={styles.resolvingTie}>
+                <FullScreenLoader />
+              </View>
+            ) : (
+              <Text style={[styles.hint, { color: theme.textSecondary }]}>
+                {isCreator
+                  ? 'Hay un empate. Elegí la opción ganadora.'
+                  : 'La encuesta está empatada. El creador debe elegir la opción ganadora.'}
+              </Text>
+            )}
             {poll.opciones.map((option) => {
               const isTied = result?.opcionesEmpatadas.some((g) => g.id === option.id) ?? false;
+              const canBreakTie = isCreator && isTied && !isResolvingTie;
+              const optionDisabled = isResolvingTie || isFinalizing || isDeleting;
               return (
                 <OptionCard
                   key={option.id}
                   option={option}
                   status={poll.estado}
                   totalVotes={totalVotes}
+                  totalMembers={poll.cantidadMiembros}
                   hasVotedThis={poll.idOpcionVotada === option.id}
-                  onPress={() => (isCreator ? handleBreakTie(option) : handleOptionPress(option))}
-                  disabled={!isCreator || isResolvingTie || !isTied}
+                  onPress={
+                    canBreakTie && !optionDisabled
+                      ? () => handleBreakTie(option)
+                      : () => handleOptionPress(option)
+                  }
+                  disabled={(!canBreakTie && isCreator) || optionDisabled}
                 />
               );
             })}
@@ -297,12 +376,12 @@ export default function PollDetailScreen() {
         {isCreator && (
           <Pressable
             onPress={confirmDelete}
-            disabled={isDeleting}
+            disabled={isDeleting || isFinalizing || isResolvingTie || isCopying}
             style={({ pressed }) => [
               styles.deleteButton,
               { backgroundColor: theme.surface, borderColor: theme.danger },
               pressed && { opacity: 0.8 },
-              isDeleting && { opacity: 0.6 },
+              (isDeleting || isFinalizing || isResolvingTie || isCopying) && { opacity: 0.6 },
             ]}
           >
             {isDeleting ? (
@@ -328,6 +407,45 @@ export default function PollDetailScreen() {
         loading={isDeleting}
         onCancel={() => setShowDeleteConfirm(false)}
         onConfirm={handleDelete}
+      />
+
+      <StatusModal
+        visible={finalizeError !== null}
+        state="error"
+        title="No se puede finalizar"
+        message={
+          finalizeError instanceof Error
+            ? finalizeError.message
+            : 'No se pudo finalizar la encuesta.'
+        }
+        actionLabel="Aceptar"
+        onAction={() => resetFinalizeError()}
+      />
+
+      <StatusModal
+        visible={breakTieError !== null}
+        state="error"
+        title="No se pudo resolver el empate"
+        message={
+          breakTieError instanceof Error
+            ? breakTieError.message
+            : 'No se pudo elegir la opción ganadora.'
+        }
+        actionLabel="Aceptar"
+        onAction={() => resetBreakTieError()}
+      />
+
+      <StatusModal
+        visible={copyModal.visible}
+        state={copyModal.state}
+        title={copyModal.state === 'loading' ? 'Copiando itinerario...' : '¡Copia creada!'}
+        message={
+          copyModal.state === 'loading'
+            ? 'Estamos creando tu copia editable.'
+            : 'El itinerario ganador se copió a tus viajes.'
+        }
+        actionLabel="Listo"
+        onAction={() => setCopyModal({ visible: false, state: 'loading' })}
       />
     </View>
   );
@@ -374,6 +492,12 @@ const styles = StyleSheet.create({
     fontSize: fonts.size.md,
     marginBottom: paddings.spacing.md,
   },
+  resolvingTie: {
+    alignItems: 'center',
+    marginBottom: paddings.spacing.md,
+    gap: 8,
+  },
+
   pollName: {
     fontFamily: fonts.family.headingBold,
     fontSize: fonts.size.xl,

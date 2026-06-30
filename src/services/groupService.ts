@@ -37,6 +37,11 @@ export const leaveGroup = async (id: number): Promise<void> => {
   await apiClient.delete<void>(`${GROUPS_PATH}/${id}/salir`);
 };
 
+export const updateGroup = async (id: number, values: GroupFormValues): Promise<Group> => {
+  const response = await apiClient.put<Group>(`${GROUPS_PATH}/${id}`, values);
+  return response.data;
+};
+
 /**
  * Sube una foto de portada para un grupo al bucket público de fotos de usuarios.
  * El filename usa prefijo "grupo_" para distinguirlo de avatares.

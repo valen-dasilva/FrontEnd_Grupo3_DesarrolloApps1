@@ -62,7 +62,6 @@ describe('ItineraryInfoCard', () => {
     const { getByText, UNSAFE_getByType } = render(<ItineraryInfoCard {...defaultProps} />);
 
     expect(getByText('Atracción en Buenos Aires')).toBeTruthy();
-    expect(getByText('Cultura')).toBeTruthy();
     expect(getByText('Descripción detallada de la atracción.')).toBeTruthy();
 
     // Verify it renders Image because image URL is provided

@@ -38,6 +38,11 @@ export const styles = StyleSheet.create({
   bottomInfoContainer: {
     gap: paddings.spacing.sm,
   },
+  categoriesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: paddings.spacing.sm,
+  },
   categoryBadge: {
     alignSelf: 'flex-start',
   },

@@ -1,7 +1,6 @@
-import { Stack, useLocalSearchParams, useRouter, type Href } from 'expo-router';
-import React from 'react';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
+import React, { useCallback } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   StatusBar,
@@ -12,6 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Header } from '@/components/common/Header/Header';
+import { FullScreenLoader } from '@/components/common/FullScreenLoader/FullScreenLoader';
 import { PollCard } from '@/components/group/PollCard';
 import { usePollsHook } from '@/hooks/usePolls';
 import { useTheme } from '@/hooks/useColorScheme';
@@ -30,6 +30,12 @@ export default function PollsListScreen() {
 
   const { polls, isLoading, error, loadPolls } = usePollsHook(
     Number.isNaN(groupId) ? null : groupId,
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      loadPolls();
+    }, [loadPolls]),
   );
 
   const handleCreatePoll = () => {
@@ -64,36 +70,36 @@ export default function PollsListScreen() {
         onThemeTogglePress={toggleColorScheme}
       />
 
-      <Pressable
-        onPress={handleCreatePoll}
-        style={({ pressed }) => [
-          styles.createButton,
-          { backgroundColor: theme.primary },
-          pressed && { opacity: 0.8 },
-        ]}
-      >
-        <MaterialIcons name={icons.Add} size={20} color={theme.textInverse} />
-        <Text style={[styles.createButtonText, { color: theme.textInverse }]}>Nueva encuesta</Text>
-      </Pressable>
-
       {isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={theme.primary} />
-        </View>
+        <FullScreenLoader message="Cargando encuestas..." />
       ) : error ? (
         <View style={styles.centered}>
           <Text style={[styles.error, { color: theme.danger }]}>{error}</Text>
         </View>
       ) : (
-        <FlatList
-          data={polls}
-          keyExtractor={(item) => item.idEncuesta.toString()}
-          renderItem={({ item }) => <PollCard poll={item} onPress={() => handlePollPress(item)} />}
-          contentContainerStyle={styles.list}
-          refreshing={isLoading}
-          onRefresh={loadPolls}
-          ListEmptyComponent={renderEmpty}
-        />
+        <>
+          <Pressable
+            onPress={handleCreatePoll}
+            style={({ pressed }) => [
+              styles.createButton,
+              { backgroundColor: theme.primary },
+              pressed && { opacity: 0.8 },
+            ]}
+          >
+            <MaterialIcons name={icons.Add} size={20} color={theme.textInverse} />
+            <Text style={[styles.createButtonText, { color: theme.textInverse }]}>Nueva encuesta</Text>
+          </Pressable>
+
+          <FlatList
+            data={polls}
+            keyExtractor={(item) => item.idEncuesta.toString()}
+            renderItem={({ item }) => <PollCard poll={item} onPress={() => handlePollPress(item)} />}
+            contentContainerStyle={styles.list}
+            refreshing={isLoading}
+            onRefresh={loadPolls}
+            ListEmptyComponent={renderEmpty}
+          />
+        </>
       )}
     </View>
   );

@@ -35,7 +35,7 @@ describe('BottomNavBar', () => {
     expect(getByText('Inicio')).toBeTruthy();
     expect(getByText('Explorar')).toBeTruthy();
     expect(getByText('Favoritos')).toBeTruthy();
-    expect(getByText('Grupo')).toBeTruthy();
+    expect(getByText('Grupos')).toBeTruthy();
     expect(getByText('Perfil')).toBeTruthy();
   });
 

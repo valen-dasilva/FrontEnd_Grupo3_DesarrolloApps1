@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    height: 64, // Extracted from Figma: 390x64
+    height: 56, // Reduced from 64 to keep compact with multiple right actions
     paddingHorizontal: paddings.spacing.lg, // From frame 'Heading 1' x: 16
     backgroundColor: colors.surface, // Translucent white matching Figma (solid white for colors.ts compliance)
     borderBottomWidth: 1,
@@ -35,29 +35,29 @@ export const styles = StyleSheet.create({
   actionsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: paddings.spacing.md, // Spacing between moon and avatar
+    gap: paddings.spacing.md, // Paragraph spacing between action icons
   },
   iconButton: {
-    width: 49, // Figma size-[49px]
-    height: 49,
+    width: 44, // Reduced but above the minimum recommended touch target
+    height: 44,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 24.5, // Figma rounded-[24.5px]
+    borderRadius: 22, // Half of width/height to keep circle
     backgroundColor: colors.surface, // Figma bg-white
     borderWidth: 1,
     borderColor: colors.border, // Figma border-[#f3f4f6]
   },
   avatarContainer: {
-    width: 49, // Figma size-[49px]
-    height: 49,
+    width: 44, // Matches iconButton to preserve alignment
+    height: 44,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 24.5,
+    borderRadius: 22,
   },
   avatarImage: {
-    width: 49,
-    height: 49,
-    borderRadius: 24.5,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.borderDark, // Fallback color
   },
   pressedState: {

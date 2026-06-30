@@ -11,6 +11,7 @@ interface OptionCardProps {
   option: PollOption;
   status: PollStatus;
   totalVotes: number;
+  totalMembers?: number;
   hasVotedThis?: boolean;
   disabled?: boolean;
   onPress?: () => void;
@@ -21,6 +22,7 @@ export const OptionCard: React.FC<OptionCardProps> = ({
   option,
   status,
   totalVotes,
+  totalMembers,
   hasVotedThis,
   onPress,
   onVotePress,
@@ -30,12 +32,13 @@ export const OptionCard: React.FC<OptionCardProps> = ({
 
   const isWinner = option.esGanadora;
   const voteDisabled = status !== 'ABIERTA' || disabled;
-  const progress = totalVotes > 0 ? (option.cantidadVotos / totalVotes) * 100 : 0;
+  const baseCount = totalMembers && totalMembers > 0 ? totalMembers : totalVotes;
+  const progress = baseCount > 0 ? (option.cantidadVotos / baseCount) * 100 : 0;
 
   return (
     <Pressable
       onPress={onPress}
-      disabled={!onPress}
+      disabled={!onPress || disabled}
       style={({ pressed }) => [
         styles.card,
         {
@@ -44,6 +47,7 @@ export const OptionCard: React.FC<OptionCardProps> = ({
         },
         (hasVotedThis || isWinner) && styles.cardSelected,
         pressed && { opacity: 0.9 },
+        disabled && { opacity: 0.6 },
       ]}
       accessibilityRole="button"
       accessibilityLabel={`Opción ${option.tituloSnapshot}`}

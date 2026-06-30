@@ -1,9 +1,8 @@
-import React, { useMemo } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { FlatList, Platform, Text, View } from 'react-native';
 import { styles } from './OptionItineraryDetail.styles';
 import { useTheme } from '@/hooks/useColorScheme';
 import { ActivityCard } from '@/components/common/ActivityCard/ActivityCard';
-import { CategoryBadge } from '@/components/common/CategoryBadge/CategoryBadge';
 import { ItineraryInfoCard } from '@/components/Explorar/CardItinerarioInfo';
 import {
   CATEGORIA_LABEL,
@@ -72,39 +71,34 @@ export const OptionItineraryDetail: React.FC<OptionItineraryDetailProps> = ({ it
     }));
   }, [itinerary, duration]);
 
-  return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.background }]}
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-    >
-      {tagLabels.length > 0 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tagsContainer}
-        >
-          {tagLabels.map((label, index) => (
-            <CategoryBadge key={index} category={label} />
-          ))}
-        </ScrollView>
-      )}
-
+  const renderHeader = useCallback(
+    () => (
       <ItineraryInfoCard
         title={title}
+        categories={tagLabels}
         startDate={itinerary.fechaInicio}
         endDate={itinerary.fechaFin}
         description={description}
         image={cover}
         showBackButton={false}
         showFavoriteButton={false}
-        showCategoryBadge={false}
+        showCategoryBadge={tagLabels.length > 0}
       />
+    ),
+    [title, tagLabels, itinerary.fechaInicio, itinerary.fechaFin, description, cover],
+  );
 
-      {itemsByDay.map(({ day, items }) => (
+  const renderItem = useCallback(
+    ({ item: { day, items }, index }: { item: { day: number; items: DayItem[] }; index: number }) => {
+      const isLastDay = index === itemsByDay.length - 1;
+      return (
         <View
           key={day}
-          style={[styles.dayCard, { backgroundColor: theme.surface }]}
+          style={[
+            styles.dayCard,
+            { backgroundColor: theme.surface },
+            isLastDay && { marginBottom: 0 },
+          ]}
         >
           <Text style={[styles.dayTitle, { color: theme.text }]}>Día {day}</Text>
           {items.length === 0 ? (
@@ -112,19 +106,37 @@ export const OptionItineraryDetail: React.FC<OptionItineraryDetailProps> = ({ it
               Sin actividades
             </Text>
           ) : (
-            items.map((item, index) => (
+            items.map((item, idx) => (
               <ActivityCard
                 key={item.id}
                 time={item.hora ?? ''}
                 title={getActivityTitle(item)}
                 subtitle={getActivitySubtitle(item)}
                 location={getActivityLocation(item)}
-                isLast={index === items.length - 1}
+                isLast={idx === items.length - 1}
               />
             ))
           )}
         </View>
-      ))}
-    </ScrollView>
+      );
+    },
+    [itemsByDay.length, theme.surface, theme.text, theme.textSecondary],
+  );
+
+  const keyExtractor = useCallback((item: { day: number }) => `day-${item.day}`, []);
+
+  return (
+    <FlatList
+      data={itemsByDay}
+      renderItem={renderItem}
+      keyExtractor={keyExtractor}
+      ListHeaderComponent={renderHeader}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+      initialNumToRender={2}
+      maxToRenderPerBatch={3}
+      windowSize={3}
+      removeClippedSubviews={Platform.OS === 'android'}
+    />
   );
 };

@@ -11,13 +11,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: paddings.spacing.xl,
     paddingBottom: paddings.spacing.huge,
   },
-  tagsContainer: {
-    flexDirection: 'row',
-    gap: paddings.spacing.sm,
-    marginTop: paddings.spacing.lg,
-    marginBottom: paddings.spacing.md,
-    paddingRight: paddings.spacing.xl,
-  },
+
   dayCard: {
     backgroundColor: colors.surface,
     borderRadius: paddings.radius.xxl,

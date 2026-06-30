@@ -9,18 +9,21 @@ interface CustomInputProps extends TextInputProps {
   label?: string;
   showEyeButton?: boolean;
   onEyePress?: () => void;
+  /** Si es true, no muestra el mensaje "Máximo de caracteres alcanzado" ni pone rojo el contador. */
+  hideMaxMessage?: boolean;
 }
 
-export const CustomInput: React.FC<CustomInputProps> = ({ 
-  iconName, 
-  label, 
-  style, 
-  onFocus, 
-  onBlur, 
-  secureTextEntry, 
+export const CustomInput: React.FC<CustomInputProps> = ({
+  iconName,
+  label,
+  style,
+  onFocus,
+  onBlur,
+  secureTextEntry,
   showEyeButton = true,
   onEyePress,
-  ...props 
+  hideMaxMessage = false,
+  ...props
 }) => {
   const { theme } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
@@ -97,14 +100,14 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           <Text
             style={[
               styles.counter,
-              { color: isMaxReached ? theme.danger : theme.textSecondary },
+              { color: isMaxReached && !hideMaxMessage ? theme.danger : theme.textSecondary },
             ]}
           >
             {currentLength}/{maxLength}
           </Text>
         </View>
       )}
-      {isMaxReached && (
+      {isMaxReached && !hideMaxMessage && (
         <Text style={[styles.maxMessage, { color: theme.danger }]}>
           Máximo de caracteres alcanzado
         </Text>

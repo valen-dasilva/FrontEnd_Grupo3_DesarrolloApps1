@@ -1,7 +1,6 @@
 import { Stack, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
@@ -14,9 +13,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Header } from '@/components/common/Header/Header';
+import { FullScreenLoader } from '@/components/common/FullScreenLoader/FullScreenLoader';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/CustomButton';
-import { useFavoritosHook } from '@/hooks/useFavoritos';
 import { useItinerariosHook } from '@/hooks/useItinerarios';
 import { usePollsHook } from '@/hooks/usePolls';
 import { useTheme } from '@/hooks/useColorScheme';
@@ -33,7 +32,6 @@ export default function CreatePollScreen() {
   const { colorScheme, theme, toggleColorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
 
-  const { favoritos, isLoading: loadingFavorites } = useFavoritosHook();
   const { listItinerarioResumen, isLoading: loadingItineraries } = useItinerariosHook();
   const { createPoll, isCreating } = usePollsHook(Number.isNaN(groupId) ? null : groupId);
 
@@ -67,7 +65,7 @@ export default function CreatePollScreen() {
     }
 
     const request = {
-      nombre: pollName.trim() || undefined,
+      nombre: pollName.trim() || 'Encuesta de viaje',
       opciones: selected.map((s) => ({
         idItinerarioSistema: s.type === 'system' ? s.id : null,
         idItinerarioUsuario: s.type === 'user' ? s.id : null,
@@ -87,7 +85,8 @@ export default function CreatePollScreen() {
     return (
       <Pressable
         key={`${option.type}-${option.id}`}
-        onPress={() => toggleOption(option)}
+        onPress={() => !isCreating && toggleOption(option)}
+        disabled={isCreating}
         style={({ pressed }) => [
           styles.optionCard,
           {
@@ -95,7 +94,8 @@ export default function CreatePollScreen() {
             borderColor: selectedFlag ? theme.primary : theme.border,
           },
           selectedFlag && styles.selectedBorder,
-          pressed && { opacity: 0.8 },
+          pressed && !isCreating && { opacity: 0.8 },
+          isCreating && { opacity: 0.5 },
         ]}
       >
         {option.fotoPortada ? (
@@ -130,7 +130,7 @@ export default function CreatePollScreen() {
     );
   };
 
-  const isLoading = loadingFavorites || loadingItineraries;
+  const isLoading = loadingItineraries;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
@@ -145,43 +145,23 @@ export default function CreatePollScreen() {
       />
 
       <View style={styles.summary}>
-        <CustomInput
-          label="Nombre de la encuesta (opcional)"
-          placeholder="Ej: ¿A dónde vamos en julio?"
-          value={pollName}
-          onChangeText={setPollName}
-          maxLength={120}
-        />
+          <CustomInput
+            label="Nombre de la encuesta (opcional)"
+            placeholder="Ej: ¿A dónde vamos?"
+            value={pollName}
+            onChangeText={setPollName}
+            maxLength={35}
+          />
         <Text style={[styles.summaryText, { color: theme.textSecondary, marginTop: paddings.spacing.md }]}>
           Opciones seleccionadas: {selected.length}
         </Text>
       </View>
 
       {isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={theme.primary} />
-        </View>
+        <FullScreenLoader message="Cargando itinerarios..." />
       ) : (
         <ScrollView contentContainerStyle={styles.scroll}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>Favoritos</Text>
-          {favoritos.length === 0 ? (
-            <Text style={[styles.empty, { color: theme.textSecondary }]}>No tenés favoritos guardados.</Text>
-          ) : (
-            favoritos
-              .map((f) => ({
-                id: f.idItinerario,
-                type: 'system' as const,
-                titulo: f.titulo,
-                fotoPortada: f.fotoPortada,
-                provincia: f.provincia,
-                duracionDias: f.duracionDias,
-              }))
-              .map(renderOption)
-          )}
-
-          <Text style={[styles.sectionTitle, { color: theme.text, marginTop: paddings.spacing.lg }]}>
-            Mis viajes
-          </Text>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Mis viajes</Text>
           {listItinerarioResumen.length === 0 ? (
             <Text style={[styles.empty, { color: theme.textSecondary }]}>No tenés itinerarios propios.</Text>
           ) : (

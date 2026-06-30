@@ -13,11 +13,20 @@ interface PollCardProps {
   onPress: () => void;
 }
 
-const STATUS_LABEL: Record<PollStatus, string> = {
-  ABIERTA: 'Abierta',
-  EMPATE: 'Empate',
-  FINALIZADA: 'Finalizada',
-};
+function getStatusLabel(status: PollStatus): string {
+  switch (status) {
+    case 'ABIERTA':
+      return 'Abierta';
+    case 'EMPATE':
+      return 'Empate';
+    case 'FINALIZADA':
+      return 'Finalizada';
+    default:
+      return status;
+  }
+}
+
+
 
 const STATUS_COLOR: Record<PollStatus, string> = {
   ABIERTA: '#2563eb',
@@ -50,7 +59,7 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onPress }) => {
         ) : null}
         <View style={[styles.statusBadge, { backgroundColor: STATUS_COLOR[poll.estado] + '20' }]}>
           <Text style={[styles.statusText, { color: STATUS_COLOR[poll.estado] }]}>
-            {STATUS_LABEL[poll.estado]}
+            {getStatusLabel(poll.estado)}
           </Text>
         </View>
       </View>
@@ -83,7 +92,7 @@ export const PollCard: React.FC<PollCardProps> = ({ poll, onPress }) => {
         <View style={styles.row}>
           <MaterialIcons name={icons.People} size={16} color={theme.textSecondary} />
           <Text style={[styles.meta, { color: theme.textSecondary }]}>
-            {poll.cantidadVotos} votos
+            {poll.cantidadVotos}/{poll.cantidadMiembros} votos
           </Text>
         </View>
       </View>
@@ -114,6 +123,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: paddings.radius.sm,
+    marginLeft: 'auto',
   },
   statusText: {
     fontFamily: fonts.family.bodySemiBold,

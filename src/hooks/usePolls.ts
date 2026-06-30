@@ -1,4 +1,5 @@
 import { Alert } from 'react-native';
+import { useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '@/services/api';
 import {
@@ -87,7 +88,13 @@ export const usePollDetailsHook = (idGrupo: number | null, idEncuesta: number | 
       return await getPoll(idGrupo, idEncuesta);
     },
     enabled: idGrupo !== null && idEncuesta !== null,
+    refetchInterval: (query) => {
+      const data = query.state.data as Poll | undefined;
+      return data?.estado === 'ABIERTA' ? 7000 : false;
+    },
   });
+
+  const pendingVoteRef = useRef<Promise<unknown> | null>(null);
 
   const voteMutation = useMutation({
     mutationFn: (idOpcion: number) => {
@@ -141,22 +148,36 @@ export const usePollDetailsHook = (idGrupo: number | null, idEncuesta: number | 
   });
 
   const castVote = (idOpcion: number) => {
-    voteMutation.mutate(idOpcion);
+    const promise = voteMutation.mutateAsync(idOpcion);
+    pendingVoteRef.current = promise;
+    promise.finally(() => {
+      if (pendingVoteRef.current === promise) {
+        pendingVoteRef.current = null;
+      }
+    });
+    return promise;
+  };
+
+  const awaitPendingVote = async () => {
+    const pending = pendingVoteRef.current;
+    if (pending) {
+      await pending;
+    }
   };
 
   const finalizeMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       if (!idGrupo || !idEncuesta) throw new Error('Encuesta no especificada');
-      return finalizePoll(idGrupo, idEncuesta);
+      await awaitPendingVote();
+      return await finalizePoll(idGrupo, idEncuesta);
     },
     onSuccess: async () => {
       if (idGrupo && idEncuesta) {
         await queryClient.invalidateQueries({ queryKey: [POLL_QUERY_KEY, idGrupo, idEncuesta] });
         await queryClient.invalidateQueries({ queryKey: [POLLS_QUERY_KEY, idGrupo] });
+        await queryClient.invalidateQueries({ queryKey: ['groups'] });
+        await queryClient.invalidateQueries({ queryKey: ['group', idGrupo] });
       }
-    },
-    onError: (err) => {
-      Alert.alert('Error', err instanceof ApiError ? err.message : 'No se pudo finalizar la encuesta.');
     },
   });
 
@@ -169,14 +190,45 @@ export const usePollDetailsHook = (idGrupo: number | null, idEncuesta: number | 
       if (!idGrupo || !idEncuesta) throw new Error('Encuesta no especificada');
       return breakTie(idGrupo, idEncuesta, idOpcionGanadora);
     },
-    onSuccess: async () => {
-      if (idGrupo && idEncuesta) {
-        await queryClient.invalidateQueries({ queryKey: [POLL_QUERY_KEY, idGrupo, idEncuesta] });
-        await queryClient.invalidateQueries({ queryKey: [POLLS_QUERY_KEY, idGrupo] });
+    onMutate: async (idOpcionGanadora) => {
+      if (!idGrupo || !idEncuesta) return;
+      await queryClient.cancelQueries({ queryKey: [POLL_QUERY_KEY, idGrupo, idEncuesta] });
+
+      const previousPoll = queryClient.getQueryData<Poll>([POLL_QUERY_KEY, idGrupo, idEncuesta]);
+      if (!previousPoll) return { previousPoll };
+
+      const ganadora = previousPoll.opciones.find((o) => o.id === idOpcionGanadora) ?? null;
+      const optimisticPoll: Poll = {
+        ...previousPoll,
+        estado: 'FINALIZADA',
+        fechaCierre: new Date().toISOString(),
+        opcionGanadora: ganadora ? { ...ganadora, esGanadora: true } : null,
+        opciones: previousPoll.opciones.map((o) => ({
+          ...o,
+          esGanadora: o.id === idOpcionGanadora,
+        })),
+      };
+      queryClient.setQueryData([POLL_QUERY_KEY, idGrupo, idEncuesta], optimisticPoll);
+
+      return { previousPoll };
+    },
+    onSuccess: () => {
+      if (!idGrupo || !idEncuesta) return;
+      // Invalidaciones en background: no se esperan para que isPending baje rápido.
+      queryClient.invalidateQueries({ queryKey: [POLL_QUERY_KEY, idGrupo, idEncuesta] });
+      queryClient.invalidateQueries({ queryKey: [POLLS_QUERY_KEY, idGrupo] });
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: ['group', idGrupo] });
+    },
+    onError: (err, _idOpcionGanadora, context) => {
+      if (context?.previousPoll) {
+        queryClient.setQueryData([POLL_QUERY_KEY, idGrupo, idEncuesta], context.previousPoll);
       }
     },
-    onError: (err) => {
-      Alert.alert('Error', err instanceof ApiError ? err.message : 'No se pudo desempatar la encuesta.');
+    onSettled: () => {
+      if (!idGrupo || !idEncuesta) return;
+      queryClient.invalidateQueries({ queryKey: [POLL_QUERY_KEY, idGrupo, idEncuesta] });
+      queryClient.invalidateQueries({ queryKey: [POLLS_QUERY_KEY, idGrupo] });
     },
   });
 
@@ -192,8 +244,8 @@ export const usePollDetailsHook = (idGrupo: number | null, idEncuesta: number | 
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['misItinerarios'] });
     },
-    onError: (err) => {
-      Alert.alert('Error', err instanceof ApiError ? err.message : 'No se pudo copiar el itinerario.');
+    onError: () => {
+      // El error se muestra en el contexto de la pantalla si es necesario.
     },
   });
 
@@ -213,8 +265,8 @@ export const usePollDetailsHook = (idGrupo: number | null, idEncuesta: number | 
         await queryClient.invalidateQueries({ queryKey: ['groups'] });
       }
     },
-    onError: (err) => {
-      Alert.alert('Error', err instanceof ApiError ? err.message : 'No se pudo eliminar la encuesta.');
+    onError: () => {
+      // El error se muestra en el contexto de la pantalla si es necesario.
     },
   });
 
@@ -233,13 +285,18 @@ export const usePollDetailsHook = (idGrupo: number | null, idEncuesta: number | 
     poll: poll as Poll | undefined,
     isLoading,
     error: errorString,
+    rawError: error,
     loadPoll,
     castVote,
     isVoting: voteMutation.isPending,
     finalize,
     isFinalizing: finalizeMutation.isPending,
+    finalizeError: finalizeMutation.error,
+    resetFinalizeError: finalizeMutation.reset,
     resolveTie,
     isResolvingTie: breakTieMutation.isPending,
+    breakTieError: breakTieMutation.error,
+    resetBreakTieError: breakTieMutation.reset,
     copyToMyTrips,
     isCopying: copyMutation.isPending,
     removePoll,

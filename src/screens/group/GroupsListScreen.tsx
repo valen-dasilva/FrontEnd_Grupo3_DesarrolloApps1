@@ -1,7 +1,6 @@
 import { Stack, useRouter, type Href } from 'expo-router';
 import React from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   StatusBar,
@@ -12,6 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Header } from '@/components/common/Header/Header';
+import { FullScreenLoader } from '@/components/common/FullScreenLoader/FullScreenLoader';
 import { GroupCard } from '@/components/group/GroupCard';
 import { EmptyState } from '@/components/favorites/favorite_principal/EmptyState/EmptyState';
 import { useGroupsHook } from '@/hooks/useGroups';
@@ -87,9 +87,7 @@ export default function GroupsListScreen() {
       </View>
 
       {isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={theme.primary} />
-        </View>
+        <FullScreenLoader message="Cargando grupos..." />
       ) : error ? (
         <View style={styles.centered}>
           <Text style={[styles.error, { color: theme.danger }]}>{error}</Text>

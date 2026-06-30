@@ -1,8 +1,9 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, StatusBar, Text, View, StyleSheet } from 'react-native';
+import { StatusBar, Text, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '@/components/common/Header/Header';
+import { FullScreenLoader } from '@/components/common/FullScreenLoader/FullScreenLoader';
 import { OptionItineraryDetail } from '@/components/group/OptionItineraryDetail';
 import { usePollOptionDetailHook } from '@/hooks/usePolls';
 import { useTheme } from '@/hooks/useColorScheme';
@@ -33,9 +34,7 @@ export default function OptionDetailScreen() {
       <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
         <Header title="Detalle de opción" onThemeTogglePress={toggleColorScheme} />
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={theme.primary} />
-        </View>
+        <FullScreenLoader />
       </View>
     );
   }

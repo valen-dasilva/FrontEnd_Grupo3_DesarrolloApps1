@@ -15,6 +15,7 @@ type Props = {
   idItinerario?: number;
   title?: string;
   category?: string;
+  categories?: string[];
   startDate?: string;
   endDate?: string;
   dateRange?: string;
@@ -35,6 +36,7 @@ export function ItineraryInfoCard({
   idItinerario,
   title = "Teatro Colón",
   category = "Cultura",
+  categories,
   startDate,
   endDate,
   dateRange,
@@ -59,8 +61,14 @@ export function ItineraryInfoCard({
     idFavorito
   );
 
-  const resolvedDateRange = dateRange || (startDate && endDate 
-    ? formatDateRange(startDate, endDate) 
+  const resolvedCategories = categories && categories.length > 0
+    ? categories
+    : category && showCategoryBadge
+      ? [category]
+      : [];
+
+  const resolvedDateRange = dateRange || (startDate && endDate
+    ? formatDateRange(startDate, endDate)
     : "15 Oct - 22 Oct, 2024");
 
   return (
@@ -110,12 +118,18 @@ export function ItineraryInfoCard({
 
           {/** Bottom info container */}
           <View pointerEvents="box-none" style={styles.bottomInfoContainer}>
-            {/** Category badge */}
-            {showCategoryBadge && category && (
-              <CategoryBadge
-                category={category}
-                style={styles.categoryBadge}
-              />
+            {/** Category badges */}
+            {showCategoryBadge && resolvedCategories.length > 0 && (
+              <View style={styles.categoriesRow}>
+                {resolvedCategories.map((cat, index) => (
+                  <CategoryBadge
+                    key={index}
+                    category={cat}
+                    compact
+                    style={styles.categoryBadge}
+                  />
+                ))}
+              </View>
             )}
             <Text style={styles.title}>{title}</Text>
             <View style={[styles.datesRow, { justifyContent: 'space-between', width: '100%', flexDirection: 'row' }]}>

@@ -9,6 +9,12 @@ import { styles } from './Header.styles';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useAuth } from '@/context/AuthContext';
 
+export interface HeaderAction {
+  icon: string;
+  onPress: () => void;
+  accessibilityLabel?: string;
+}
+
 export interface HeaderProps {
   /** The main title displayed on the left side of the header */
   title: string;
@@ -22,6 +28,8 @@ export interface HeaderProps {
   onBackPress?: () => void;
   /** Option to show back button instead of only title */
   showBackButton?: boolean;
+  /** Optional action icon rendered between theme toggle and avatar */
+  rightAction?: HeaderAction;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -31,6 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
   onAvatarPress,
   onBackPress,
   showBackButton = false,
+  rightAction,
 }) => {
   const router = useRouter();
   const { user } = useAuth();
@@ -83,15 +92,16 @@ export const Header: React.FC<HeaderProps> = ({
             { color: isDark ? theme.text : '#2563eb' }
           ]}
           numberOfLines={1}
-          ellipsizeMode="tail"
+          adjustsFontSizeToFit
+          minimumFontScale={0.6}
         >
           {title}
         </Text>
       </View>
 
       <View style={styles.actionsContainer}>
-        <Pressable 
-          onPress={handleThemeToggle} 
+        <Pressable
+          onPress={handleThemeToggle}
           style={({ pressed }) => [
             styles.iconButton,
             {
@@ -103,14 +113,36 @@ export const Header: React.FC<HeaderProps> = ({
           accessibilityRole="button"
           accessibilityLabel="Toggle Theme"
         >
-          <MaterialIcons 
+          <MaterialIcons
             name={icons.DarkMode}
-            size={33}
+            size={28}
             color={theme.primary}
           />
         </Pressable>
 
-        <Pressable 
+        {rightAction && (
+          <Pressable
+            onPress={rightAction.onPress}
+            style={({ pressed }) => [
+              styles.iconButton,
+              {
+                backgroundColor: isDark ? theme.surface : '#FFFFFF',
+                borderColor: theme.border
+              },
+              pressed && styles.pressedState
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={rightAction.accessibilityLabel ?? 'Action'}
+          >
+            <MaterialIcons
+              name={rightAction.icon as any}
+              size={22}
+              color={theme.primary}
+            />
+          </Pressable>
+        )}
+
+        <Pressable
           onPress={handleAvatarPress}
           style={({ pressed }) => [
             styles.avatarContainer,

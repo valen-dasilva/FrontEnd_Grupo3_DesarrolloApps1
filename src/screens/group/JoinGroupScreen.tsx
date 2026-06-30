@@ -73,14 +73,17 @@ export default function JoinGroupScreen() {
 
           <CustomInput
             label="Código de invitación"
-            placeholder="Ej: ABC123"
+            placeholder="Ej: ABC12345"
             value={code}
             onChangeText={(text) => {
-              setCode(text);
+              const sanitized = text.toUpperCase().replace(/[^0-9A-Z]/g, '');
+              setCode(sanitized);
               setErrorMessage(null);
             }}
             autoCapitalize="characters"
-            maxLength={20}
+            maxLength={8}
+            hideMaxMessage
+            editable={!isJoining}
           />
 
           {errorMessage && (

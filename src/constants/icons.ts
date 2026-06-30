@@ -49,6 +49,7 @@ export const icons = {
   Groups: 'groups',
 
   // Grupos / encuestas
+  Settings: 'settings',
   Poll: 'how-to-vote',
   Link: 'link',
   Timer: 'timer',

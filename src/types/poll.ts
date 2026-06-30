@@ -17,6 +17,7 @@ export interface PollSummary {
   nombre: string | null;
   estado: PollStatus;
   cantidadVotos: number;
+  cantidadMiembros: number;
   ganadorTitulo: string | null;
   ganadorFotoPortada: string | null;
   totalOpciones: number;
@@ -35,6 +36,7 @@ export interface Poll {
   yaVote: boolean;
   puedeFinalizar: boolean;
   idOpcionVotada: number | null;
+  cantidadMiembros: number;
 }
 
 export interface PollResult {

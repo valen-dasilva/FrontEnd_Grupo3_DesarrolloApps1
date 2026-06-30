@@ -1,12 +1,13 @@
-import { Stack, useLocalSearchParams, useRouter, type Href } from 'expo-router';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   Image,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   StatusBar,
   Text,
@@ -18,8 +19,8 @@ import Toast from 'react-native-toast-message';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Header } from '@/components/common/Header/Header';
 import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
+import { FullScreenLoader } from '@/components/common/FullScreenLoader/FullScreenLoader';
 import { useGroupDetailsHook, useGroupsHook } from '@/hooks/useGroups';
-import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useColorScheme';
 import { icons } from '@/constants/icons';
 import { fonts } from '@/constants/fonts';
@@ -35,20 +36,25 @@ export default function GroupDetailScreen() {
   const { colorScheme, theme, toggleColorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
 
-  const { user } = useAuth();
   const {
     group,
     isLoading,
     error,
     invitation,
     regenerateInvitation,
-    isLoadingInvitation,
     isRegenerating,
+    loadGroup,
   } = useGroupDetailsHook(Number.isNaN(groupId) ? null : groupId);
   const { leaveGroup, isLeaving } = useGroupsHook();
 
   const [countdown, setCountdown] = useState('');
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadGroup();
+    }, [loadGroup]),
+  );
 
   useEffect(() => {
     if (!invitation) return;
@@ -76,7 +82,7 @@ export default function GroupDetailScreen() {
     Toast.show({
       type: 'success',
       text1: 'Código copiado',
-      position: 'bottom',
+      position: 'top',
     });
   };
 
@@ -126,9 +132,7 @@ export default function GroupDetailScreen() {
       <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
         <Header title="Grupo" onThemeTogglePress={toggleColorScheme} />
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={theme.primary} />
-        </View>
+        <FullScreenLoader />
       </View>
     );
   }
@@ -147,7 +151,7 @@ export default function GroupDetailScreen() {
     );
   }
 
-  const isCreator = group.creadorId === user?.idUsuario;
+  const isCreator = group.soyCreador;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
@@ -159,9 +163,23 @@ export default function GroupDetailScreen() {
         showBackButton
         onBackPress={() => router.back()}
         onThemeTogglePress={toggleColorScheme}
+        rightAction={
+          isCreator
+            ? {
+                icon: icons.Settings,
+                onPress: () => router.push(`/(tabs)/(group)/editarGrupo?idGrupo=${groupId}` as Href),
+                accessibilityLabel: 'Configuración del grupo',
+              }
+            : undefined
+        }
       />
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={loadGroup} tintColor={theme.primary} />
+        }
+      >
         {group.fotoPortada ? (
           <Image source={{ uri: group.fotoPortada }} style={styles.cover} />
         ) : (
@@ -176,10 +194,10 @@ export default function GroupDetailScreen() {
           </Text>
         ) : null}
 
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>Código de invitación</Text>
+        {isCreator && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>Código de invitación</Text>
 
-          {isCreator && (
             <Pressable
               onPress={regenerateInvitation}
               disabled={isRegenerating}
@@ -200,46 +218,36 @@ export default function GroupDetailScreen() {
                 </>
               )}
             </Pressable>
-          )}
 
-          {isLoadingInvitation ? (
-            <View style={styles.invitationLoader}>
-              <ActivityIndicator color={theme.primary} />
-            </View>
-          ) : invitation ? (
-            <View style={[styles.codeCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <View style={styles.codeRow}>
-                <MaterialIcons name={icons.Link} size={20} color={theme.primary} />
-                <Text style={[styles.code, { color: theme.text }]}>{invitation.codigo}</Text>
+            {invitation ? (
+              <View style={[styles.codeCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                <View style={styles.codeRow}>
+                  <MaterialIcons name={icons.Link} size={20} color={theme.primary} />
+                  <Text style={[styles.code, { color: theme.text }]}>{invitation.codigo}</Text>
+                </View>
+                <View style={styles.codeActions}>
+                  <Pressable
+                    onPress={handleCopyCode}
+                    style={({ pressed }) => [
+                      styles.codeAction,
+                      { backgroundColor: theme.surfaceHighlight },
+                      pressed && { opacity: 0.8 },
+                    ]}
+                  >
+                    <MaterialIcons name={icons.ContentCopy} size={18} color={theme.primary} />
+                    <Text style={[styles.codeActionText, { color: theme.primary }]}>Copiar</Text>
+                  </Pressable>
+                </View>
+                <View style={styles.timerRow}>
+                  <MaterialIcons name={icons.Timer} size={14} color={theme.textSecondary} />
+                  <Text style={[styles.timerText, { color: theme.textSecondary }]}>
+                    Expira en {countdown || getCountdownText(invitation.fechaExpiracion)}
+                  </Text>
+                </View>
               </View>
-              <View style={styles.codeActions}>
-                <Pressable
-                  onPress={handleCopyCode}
-                  style={({ pressed }) => [
-                    styles.codeAction,
-                    { backgroundColor: theme.surfaceHighlight },
-                    pressed && { opacity: 0.8 },
-                  ]}
-                >
-                  <MaterialIcons name={icons.ContentCopy} size={18} color={theme.primary} />
-                  <Text style={[styles.codeActionText, { color: theme.primary }]}>Copiar</Text>
-                </Pressable>
-              </View>
-              <View style={styles.timerRow}>
-                <MaterialIcons name={icons.Timer} size={14} color={theme.textSecondary} />
-                <Text style={[styles.timerText, { color: theme.textSecondary }]}>
-                  Expira en {countdown || getCountdownText(invitation.fechaExpiracion)}
-                </Text>
-              </View>
-            </View>
-          ) : (
-            !isCreator && (
-              <Text style={[styles.error, { color: theme.textSecondary }]}>
-                No hay un código activo.
-              </Text>
-            )
-          )}
-        </View>
+            ) : null}
+          </View>
+        )}
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.text }]}>Miembros</Text>
