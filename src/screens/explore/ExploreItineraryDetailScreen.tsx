@@ -1,7 +1,7 @@
 import { paddings } from '@/constants/paddings';
 import { useTheme } from '@/hooks/useColorScheme';
 import { useItinerarioDetalle } from '@/hooks/useItinerarioDetalle';
-import { ItemItinerarioSistemaDTO } from '@/types/itinerario';
+import { ItemItinerarioSistemaDTO, Provincia } from '@/types/itinerario';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo, useCallback } from 'react';
 import { ActivityIndicator, FlatList, Text, View, Platform } from 'react-native';
@@ -10,12 +10,9 @@ import { Header } from '@/components/common/Header/Header';
 import { ItineraryInfoCard } from '@/components/Explorar/CardItinerarioInfo';
 import { styles } from './ExploreItineraryDetailScreen.styles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-/** Convierte "HH:mm:ss" → "HH:mm" */
-function formatHora(hora: string): string {
-  if (!hora) return '';
-  return hora.substring(0, 5);
-}
+import { WeatherStrip } from '@/components/common/WeatherStrip/WeatherStrip';
+import { PROVINCIA_COORDS } from '@/utils/provinciaCoords';
+import { formatHora } from '@/utils/dateUtils';
 
 export default function ItinerarioInfoScreen() {
   const router = useRouter();
@@ -52,27 +49,41 @@ export default function ItinerarioInfoScreen() {
     .map(Number)
     .sort((a, b) => a - b);
 
+  const weatherCoords = useMemo(() => {
+    const prov = itinerario?.provincia as Provincia | undefined;
+    return prov ? PROVINCIA_COORDS[prov] ?? null : null;
+  }, [itinerario?.provincia]);
+
   const renderHeader = useCallback(() => (
-    <ItineraryInfoCard
-      idItinerario={params.idItinerario ? Number(params.idItinerario) : undefined}
-      title={params.title}
-      category={params.category}
-      startDate={params.startDate}
-      endDate={params.endDate}
-      description={params.description}
-      image={params.image}
-      isFavorite={params.isFavorite === 'true'}
-      idFavorito={params.idFavorito ? Number(params.idFavorito) : undefined}
-      onBackPress={() => router.back()}
-    />
-  ), [params, router]);
+    <>
+      <ItineraryInfoCard
+        idItinerario={params.idItinerario ? Number(params.idItinerario) : undefined}
+        title={params.title}
+        category={params.category}
+        startDate={params.startDate}
+        endDate={params.endDate}
+        description={params.description}
+        image={params.image}
+        isFavorite={params.isFavorite === 'true'}
+        idFavorito={params.idFavorito ? Number(params.idFavorito) : undefined}
+        onBackPress={() => router.back()}
+      />
+      {weatherCoords && params.startDate && params.endDate && (
+        <WeatherStrip
+          coords={weatherCoords}
+          fechaInicio={params.startDate}
+          fechaFin={params.endDate}
+        />
+      )}
+    </>
+  ), [params, router, weatherCoords]);
 
   const renderEmptyComponent = () => {
     if (loading) {
       return (
-        <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+        <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color={theme.primary} />
-          <Text style={{ color: theme.textSecondary, marginTop: 12 }}>
+          <Text style={[styles.emptyLoadingText, { color: theme.textSecondary }]}>
             Cargando actividades...
           </Text>
         </View>
@@ -81,16 +92,16 @@ export default function ItinerarioInfoScreen() {
 
     if (error) {
       return (
-        <View style={{ paddingVertical: 24, alignItems: 'center' }}>
-          <Text style={{ color: theme.danger, textAlign: 'center' }}>{error}</Text>
+        <View style={styles.emptyContainer}>
+          <Text style={[styles.emptyText, { color: theme.danger }]}>{error}</Text>
         </View>
       );
     }
 
     if (itinerario && dias.length === 0) {
       return (
-        <View style={{ paddingVertical: 24, alignItems: 'center' }}>
-          <Text style={{ color: theme.textSecondary }}>
+        <View style={styles.emptyContainer}>
+          <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
             Este itinerario no tiene actividades cargadas.
           </Text>
         </View>

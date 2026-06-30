@@ -30,4 +30,18 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: paddings.spacing.xxl,
   },
+  emptyContainer: {
+    paddingVertical: paddings.spacing.huge,
+    alignItems: 'center',
+  },
+  emptyLoadingText: {
+    marginTop: paddings.spacing.md,
+    fontFamily: fonts.family.bodyRegular,
+    fontSize: fonts.size.sm,
+  },
+  emptyText: {
+    fontFamily: fonts.family.bodyRegular,
+    fontSize: fonts.size.sm,
+    textAlign: 'center',
+  },
 });
