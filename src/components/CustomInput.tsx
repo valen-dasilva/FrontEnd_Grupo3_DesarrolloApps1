@@ -9,6 +9,7 @@ interface CustomInputProps extends TextInputProps {
   label?: string;
   showEyeButton?: boolean;
   onEyePress?: () => void;
+  eyeButtonDisabled?: boolean; 
 }
 
 export const CustomInput: React.FC<CustomInputProps> = ({ 
@@ -20,6 +21,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   secureTextEntry, 
   showEyeButton = true,
   onEyePress,
+  eyeButtonDisabled = false,
   ...props 
 }) => {
   const { theme } = useTheme();
@@ -79,11 +81,12 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           {...props}
         />
         {secureTextEntry !== undefined && showEyeButton && (
-          <Pressable onPress={toggleSecureEntry} style={styles.eyeButton} accessibilityRole="button" accessibilityLabel={isSecure ? "Mostrar contraseña" : "Ocultar contraseña"}>
+          <Pressable onPress={toggleSecureEntry} style={styles.eyeButton} disabled = {eyeButtonDisabled} accessibilityRole="button" accessibilityLabel={isSecure ? "Mostrar contraseña" : "Ocultar contraseña"}>
             <MaterialIcons
               name={isSecure ? (icons.VisibilityOff as any) : (icons.Visibility as any)}
               size={22}
               color={theme.textSecondary}
+              style={{ opacity: eyeButtonDisabled ? 0.3 : 1 }}
             />
           </Pressable>
         )}
@@ -130,5 +133,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     height: '100%',
+  },
+  eyeButtonDisabled: {
+    opacity: 0.4,
   },
 });
