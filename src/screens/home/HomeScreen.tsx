@@ -1,4 +1,3 @@
-import { ItinerarioEnCursoDTO } from "@/types/itinerario";
 import ActiveItineraryCard from "@/components/common/ActiveItineraryCard/ActiveItineraryCard";
 import { Header } from "@/components/common/Header/Header";
 
