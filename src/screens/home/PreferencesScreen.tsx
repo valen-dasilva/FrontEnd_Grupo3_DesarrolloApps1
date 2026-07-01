@@ -71,19 +71,12 @@ export default function PreferenciasScreen() {
       });
 
       if (duracion !== undefined) {
-        let filtrados = [];
         if (duracion === '1') {
-          filtrados = resultados.filter((itinerary) => itinerary.duracionDias === 1);
+          resultados = resultados.filter((itinerary) => itinerary.duracionDias === 1);
         } else if (duracion === '2-3') {
-          filtrados = resultados.filter((itinerary) => itinerary.duracionDias === 2 || itinerary.duracionDias === 3);
+          resultados = resultados.filter((itinerary) => itinerary.duracionDias === 2 || itinerary.duracionDias === 3);
         } else if (duracion === '4+') {
-          filtrados = resultados.filter((itinerary) => itinerary.duracionDias >= 4);
-        }
-
-        // Si no hay itinerarios en el rango específico, no dejamos la pantalla en blanco
-        // y mostramos todos los disponibles para el destino/categoría.
-        if (filtrados.length > 0) {
-          resultados = filtrados;
+          resultados = resultados.filter((itinerary) => itinerary.duracionDias >= 4);
         }
       }
 
@@ -93,6 +86,7 @@ export default function PreferenciasScreen() {
           resultados: JSON.stringify(resultados),
           provincia: provincia ?? "",
           etiquetas: JSON.stringify(Array.from(categorias)),
+          duracion: duracion ?? '',
         },
       });
     } catch (err: unknown) {

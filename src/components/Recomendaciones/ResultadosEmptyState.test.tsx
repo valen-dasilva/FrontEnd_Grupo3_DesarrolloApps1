@@ -30,4 +30,28 @@ describe('ResultadosEmptyState', () => {
     fireEvent.press(button);
     expect(handleBack).toHaveBeenCalledTimes(1);
   });
+
+  it('shows 1-day message when duracion is "1"', () => {
+    const { getByText } = render(
+      <ResultadosEmptyState onBack={jest.fn()} duracion="1" />
+    );
+
+    expect(getByText('No hay itinerarios de 1 día. Probá con otra duración.')).toBeTruthy();
+  });
+
+  it('shows 2-3 days message when duracion is "2-3"', () => {
+    const { getByText } = render(
+      <ResultadosEmptyState onBack={jest.fn()} duracion="2-3" />
+    );
+
+    expect(getByText('No hay itinerarios de 2-3 días. Probá con otra duración.')).toBeTruthy();
+  });
+
+  it('shows 4+ days message when duracion is "4+"', () => {
+    const { getByText } = render(
+      <ResultadosEmptyState onBack={jest.fn()} duracion="4+" />
+    );
+
+    expect(getByText('No hay itinerarios de 4 o más días. Probá con otra duración.')).toBeTruthy();
+  });
 });
