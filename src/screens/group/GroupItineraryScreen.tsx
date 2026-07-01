@@ -79,6 +79,190 @@ function AttendanceRow({
   );
 }
 
+interface GroupItineraryItemCardProps {
+  item: GroupItineraryItem;
+  index: number;
+  theme: any;
+  soyCreador: boolean;
+  myId: number | undefined;
+  busy: boolean;
+  toggleAttendance: (id: number, attend: boolean) => Promise<void>;
+  isTogglingAttendanceFor: (id: number) => boolean;
+  openEdit: (item: GroupItineraryItem) => void;
+  setConfirmActionId: (id: number) => void;
+  setConfirmDeleteId: (id: number) => void;
+}
+
+const GroupItineraryItemCard: React.FC<GroupItineraryItemCardProps> = ({
+  item,
+  index,
+  theme,
+  soyCreador,
+  myId,
+  busy,
+  toggleAttendance,
+  isTogglingAttendanceFor,
+  openEdit,
+  setConfirmActionId,
+  setConfirmDeleteId,
+}) => {
+  const van = item.asistencias.filter((a) => a.asiste === true);
+  const noVan = item.asistencias.filter((a) => a.asiste === false);
+  const sinResponder = item.asistencias.filter((a) => a.asiste === null);
+  const esPropuesta = item.estado === 'PROPUESTO';
+
+  const editAllowed = (item.estado === 'CONFIRMADO' && soyCreador) ||
+    (item.estado === 'PROPUESTO' && item.propuestoPorId === myId);
+
+  const deleteAllowed = soyCreador || (item.estado === 'PROPUESTO' && item.propuestoPorId === myId);
+
+  return (
+    <Animated.View
+      entering={FadeInDown.delay(Math.min(index, 6) * 60).duration(280)}
+      layout={LinearTransition.springify().damping(18)}
+      style={[styles.card, { backgroundColor: theme.surface, borderColor: esPropuesta ? theme.primary : theme.border }]}
+    >
+      <View style={styles.cardHeader}>
+        <View style={styles.cardHeaderLeft}>
+          {item.hora ? (
+            <View style={styles.horaRow}>
+              <MaterialIcons name={icons.Schedule} size={14} color={theme.primary} />
+              <Text style={[styles.hora, { color: theme.primary }]}>{formatHora(item.hora)}</Text>
+            </View>
+          ) : null}
+          <Text style={[styles.actividad, { color: theme.text }]}>{item.nombreActividad}</Text>
+        </View>
+        {esPropuesta && (
+          <View style={[styles.badge, { backgroundColor: theme.surfaceHighlight }]}>
+            <MaterialIcons name={icons.Schedule} size={12} color={theme.primary} />
+            <Text style={[styles.badgeText, { color: theme.primary }]}>Propuesta</Text>
+          </View>
+        )}
+      </View>
+
+      {item.localidad ? (
+        <Pressable
+          onPress={() => {
+            const query = encodeURIComponent(item.localidad!.trim());
+            Linking.openURL(`https://maps.google.com/?q=${query}`);
+          }}
+          style={({ pressed }) => [styles.metaRow, pressed && { opacity: 0.65 }]}
+          accessibilityRole="link"
+          accessibilityLabel={`Abrir ubicación en Maps: ${item.localidad}`}
+        >
+          <MaterialIcons name={icons.Location} size={14} color={theme.primary} />
+          <Text style={[styles.localidad, { color: theme.primary }]} numberOfLines={1}>
+            {item.localidad}
+          </Text>
+        </Pressable>
+      ) : null}
+      {item.descripcion ? (
+        <Text style={[styles.descripcion, { color: theme.textSecondary }]}>{item.descripcion}</Text>
+      ) : null}
+
+      {esPropuesta && (
+        <Text style={[styles.propuestaPor, { color: theme.textSecondary }]}>
+          Propuesta por {item.nombrePropuestoPor}
+        </Text>
+      )}
+
+      {/* Asistencia (solo actividades confirmadas) */}
+      {!esPropuesta && (
+        <View style={styles.attendanceBlock}>
+          <View style={styles.attendanceButtons}>
+            <Pressable
+              onPress={() => toggleAttendance(item.id, true)}
+              disabled={isTogglingAttendanceFor(item.id)}
+              style={({ pressed }) => [
+                styles.attBtn,
+                {
+                  backgroundColor: item.miAsistencia === true ? theme.lightgreen : theme.surfaceHighlight,
+                  borderColor: item.miAsistencia === true ? theme.lightgreen : theme.border,
+                },
+                (pressed || isTogglingAttendanceFor(item.id)) && { opacity: 0.75 },
+              ]}
+            >
+              <MaterialIcons
+                name={icons.ThumbUp}
+                size={16}
+                color={item.miAsistencia === true ? theme.textInverse : theme.primary}
+              />
+              <Text style={[styles.attBtnText, { color: item.miAsistencia === true ? theme.textInverse : theme.primary }]}>
+                Voy
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => toggleAttendance(item.id, false)}
+              disabled={isTogglingAttendanceFor(item.id)}
+              style={({ pressed }) => [
+                styles.attBtn,
+                {
+                  backgroundColor: item.miAsistencia === false ? theme.danger : theme.surfaceHighlight,
+                  borderColor: item.miAsistencia === false ? theme.danger : theme.border,
+                },
+                (pressed || isTogglingAttendanceFor(item.id)) && { opacity: 0.75 },
+              ]}
+            >
+              <MaterialIcons
+                name={icons.ThumbUpOffAlt}
+                size={16}
+                color={item.miAsistencia === false ? theme.textInverse : theme.textSecondary}
+              />
+              <Text style={[styles.attBtnText, { color: item.miAsistencia === false ? theme.textInverse : theme.textSecondary }]}>
+                No voy
+              </Text>
+            </Pressable>
+          </View>
+
+          <View style={[styles.attLists, { borderTopColor: theme.border }]}>
+            <AttendanceRow tone="green" label="Van" people={van} theme={theme} />
+            <AttendanceRow tone="red" label="No van" people={noVan} theme={theme} />
+            <AttendanceRow tone="neutral" label="Sin responder" people={sinResponder} theme={theme} />
+          </View>
+        </View>
+      )}
+
+      {/* Acciones */}
+      {(editAllowed || deleteAllowed || (soyCreador && esPropuesta)) && (
+        <View style={styles.actions}>
+          {soyCreador && esPropuesta && (
+            <Pressable
+              onPress={() => setConfirmActionId(item.id)}
+              disabled={busy}
+              style={({ pressed }) => [styles.actionChip, { backgroundColor: theme.primary }, (pressed || busy) && { opacity: 0.7 }]}
+            >
+              <MaterialIcons name={icons.Check} size={16} color={theme.textInverse} />
+              <Text style={[styles.actionChipText, { color: theme.textInverse }]}>Confirmar</Text>
+            </Pressable>
+          )}
+          {editAllowed && (
+            <Pressable
+              onPress={() => openEdit(item)}
+              disabled={busy}
+              style={({ pressed }) => [styles.actionChip, { backgroundColor: theme.surfaceHighlight }, (pressed || busy) && { opacity: 0.7 }]}
+            >
+              <MaterialIcons name={icons.Edit} size={16} color={theme.primary} />
+              <Text style={[styles.actionChipText, { color: theme.primary }]}>Editar</Text>
+            </Pressable>
+          )}
+          {deleteAllowed && (
+            <Pressable
+              onPress={() => setConfirmDeleteId(item.id)}
+              disabled={busy}
+              style={({ pressed }) => [styles.actionChip, { backgroundColor: theme.surfaceHighlight }, (pressed || busy) && { opacity: 0.7 }]}
+            >
+              <MaterialIcons name={icons.Delete} size={16} color={theme.danger} />
+              <Text style={[styles.actionChipText, { color: theme.danger }]}>
+                {soyCreador && esPropuesta ? 'Rechazar' : 'Eliminar'}
+              </Text>
+            </Pressable>
+          )}
+        </View>
+      )}
+    </Animated.View>
+  );
+};
+
 export default function GroupItineraryScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -197,166 +381,7 @@ export default function GroupItineraryScreen() {
     }
   };
 
-  const canEdit = (item: GroupItineraryItem) =>
-    (item.estado === 'CONFIRMADO' && soyCreador) ||
-    (item.estado === 'PROPUESTO' && item.propuestoPorId === myId);
-
-  const canDelete = (item: GroupItineraryItem) =>
-    soyCreador || (item.estado === 'PROPUESTO' && item.propuestoPorId === myId);
-
-  const renderItem = (item: GroupItineraryItem, index: number) => {
-    const van = item.asistencias.filter((a) => a.asiste === true);
-    const noVan = item.asistencias.filter((a) => a.asiste === false);
-    const sinResponder = item.asistencias.filter((a) => a.asiste === null);
-    const esPropuesta = item.estado === 'PROPUESTO';
-
-    return (
-      <Animated.View
-        key={item.id}
-        entering={FadeInDown.delay(Math.min(index, 6) * 60).duration(280)}
-        layout={LinearTransition.springify().damping(18)}
-        style={[styles.card, { backgroundColor: theme.surface, borderColor: esPropuesta ? theme.primary : theme.border }]}
-      >
-        <View style={styles.cardHeader}>
-          <View style={styles.cardHeaderLeft}>
-            {item.hora ? (
-              <View style={styles.horaRow}>
-                <MaterialIcons name={icons.Schedule} size={14} color={theme.primary} />
-                <Text style={[styles.hora, { color: theme.primary }]}>{formatHora(item.hora)}</Text>
-              </View>
-            ) : null}
-            <Text style={[styles.actividad, { color: theme.text }]}>{item.nombreActividad}</Text>
-          </View>
-          {esPropuesta && (
-            <View style={[styles.badge, { backgroundColor: theme.surfaceHighlight }]}>
-              <MaterialIcons name={icons.Schedule} size={12} color={theme.primary} />
-              <Text style={[styles.badgeText, { color: theme.primary }]}>Propuesta</Text>
-            </View>
-          )}
-        </View>
-
-        {item.localidad ? (
-          <Pressable
-            onPress={() => {
-              const query = encodeURIComponent(item.localidad!.trim());
-              Linking.openURL(`https://maps.google.com/?q=${query}`);
-            }}
-            style={({ pressed }) => [styles.metaRow, pressed && { opacity: 0.65 }]}
-            accessibilityRole="link"
-            accessibilityLabel={`Abrir ubicación en Maps: ${item.localidad}`}
-          >
-            <MaterialIcons name={icons.Location} size={14} color={theme.primary} />
-            <Text style={[styles.localidad, { color: theme.primary }]} numberOfLines={1}>
-              {item.localidad}
-            </Text>
-          </Pressable>
-        ) : null}
-        {item.descripcion ? (
-          <Text style={[styles.descripcion, { color: theme.textSecondary }]}>{item.descripcion}</Text>
-        ) : null}
-
-        {esPropuesta && (
-          <Text style={[styles.propuestaPor, { color: theme.textSecondary }]}>
-            Propuesta por {item.nombrePropuestoPor}
-          </Text>
-        )}
-
-        {/* Asistencia (solo actividades confirmadas) */}
-        {!esPropuesta && (
-          <View style={styles.attendanceBlock}>
-            <View style={styles.attendanceButtons}>
-              <Pressable
-                onPress={() => toggleAttendance(item.id, true)}
-                disabled={isTogglingAttendanceFor(item.id)}
-                style={({ pressed }) => [
-                  styles.attBtn,
-                  {
-                    backgroundColor: item.miAsistencia === true ? theme.lightgreen : theme.surfaceHighlight,
-                    borderColor: item.miAsistencia === true ? theme.lightgreen : theme.border,
-                  },
-                  (pressed || isTogglingAttendanceFor(item.id)) && { opacity: 0.75 },
-                ]}
-              >
-                <MaterialIcons
-                  name={icons.ThumbUp}
-                  size={16}
-                  color={item.miAsistencia === true ? theme.textInverse : theme.primary}
-                />
-                <Text style={[styles.attBtnText, { color: item.miAsistencia === true ? theme.textInverse : theme.primary }]}>
-                  Voy
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => toggleAttendance(item.id, false)}
-                disabled={isTogglingAttendanceFor(item.id)}
-                style={({ pressed }) => [
-                  styles.attBtn,
-                  {
-                    backgroundColor: item.miAsistencia === false ? theme.danger : theme.surfaceHighlight,
-                    borderColor: item.miAsistencia === false ? theme.danger : theme.border,
-                  },
-                  (pressed || isTogglingAttendanceFor(item.id)) && { opacity: 0.75 },
-                ]}
-              >
-                <MaterialIcons
-                  name={icons.ThumbUpOffAlt}
-                  size={16}
-                  color={item.miAsistencia === false ? theme.textInverse : theme.textSecondary}
-                />
-                <Text style={[styles.attBtnText, { color: item.miAsistencia === false ? theme.textInverse : theme.textSecondary }]}>
-                  No voy
-                </Text>
-              </Pressable>
-            </View>
-
-            <View style={[styles.attLists, { borderTopColor: theme.border }]}>
-              <AttendanceRow tone="green" label="Van" people={van} theme={theme} />
-              <AttendanceRow tone="red" label="No van" people={noVan} theme={theme} />
-              <AttendanceRow tone="neutral" label="Sin responder" people={sinResponder} theme={theme} />
-            </View>
-          </View>
-        )}
-
-        {/* Acciones */}
-        {(canEdit(item) || canDelete(item) || (soyCreador && esPropuesta)) && (
-          <View style={styles.actions}>
-            {soyCreador && esPropuesta && (
-              <Pressable
-                onPress={() => setConfirmActionId(item.id)}
-                disabled={busy}
-                style={({ pressed }) => [styles.actionChip, { backgroundColor: theme.primary }, (pressed || busy) && { opacity: 0.7 }]}
-              >
-                <MaterialIcons name={icons.Check} size={16} color={theme.textInverse} />
-                <Text style={[styles.actionChipText, { color: theme.textInverse }]}>Confirmar</Text>
-              </Pressable>
-            )}
-            {canEdit(item) && (
-              <Pressable
-                onPress={() => openEdit(item)}
-                disabled={busy}
-                style={({ pressed }) => [styles.actionChip, { backgroundColor: theme.surfaceHighlight }, (pressed || busy) && { opacity: 0.7 }]}
-              >
-                <MaterialIcons name={icons.Edit} size={16} color={theme.primary} />
-                <Text style={[styles.actionChipText, { color: theme.primary }]}>Editar</Text>
-              </Pressable>
-            )}
-            {canDelete(item) && (
-              <Pressable
-                onPress={() => setConfirmDeleteId(item.id)}
-                disabled={busy}
-                style={({ pressed }) => [styles.actionChip, { backgroundColor: theme.surfaceHighlight }, (pressed || busy) && { opacity: 0.7 }]}
-              >
-                <MaterialIcons name={icons.Delete} size={16} color={theme.danger} />
-                <Text style={[styles.actionChipText, { color: theme.danger }]}>
-                  {soyCreador && esPropuesta ? 'Rechazar' : 'Eliminar'}
-                </Text>
-              </Pressable>
-            )}
-          </View>
-        )}
-      </Animated.View>
-    );
-  };
+  // canEdit, canDelete, and renderItem extracted to GroupItineraryItemCard subcomponent
 
   const badgeForModal = editingItem
     ? editingItem.estado === 'PROPUESTO'
@@ -463,7 +488,22 @@ export default function GroupItineraryScreen() {
               {items.length === 0 ? (
                 <Text style={[styles.emptyDay, { color: theme.textSecondary }]}>Sin actividades aún.</Text>
               ) : (
-                items.map(renderItem)
+                items.map((item, index) => (
+                  <GroupItineraryItemCard
+                    key={item.id}
+                    item={item}
+                    index={index}
+                    theme={theme}
+                    soyCreador={soyCreador}
+                    myId={myId}
+                    busy={busy}
+                    toggleAttendance={toggleAttendance}
+                    isTogglingAttendanceFor={isTogglingAttendanceFor}
+                    openEdit={openEdit}
+                    setConfirmActionId={setConfirmActionId}
+                    setConfirmDeleteId={setConfirmDeleteId}
+                  />
+                ))
               )}
             </View>
           );

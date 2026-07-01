@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
+import { Modal } from 'react-native';
 import { EditModal } from './EditModal';
 
 const mockTheme = {
@@ -45,12 +46,8 @@ describe('EditModal', () => {
   });
 
   it('does not render when visible is false', () => {
-    // Note: Modal component behavior in React Native Testing Library can vary depending on standard mock.
-    // In React Native, Modal might still render its children depending on the environment,
-    // but the visible prop is passed down.
-    render(<EditModal {...defaultProps} visible={false} />);
-    // Since jest-expo mocks Modal, it might check whether it is visible or not.
-    // Let's make sure it handles visibility.
+    const { UNSAFE_getByType } = render(<EditModal {...defaultProps} visible={false} />);
+    expect(UNSAFE_getByType(Modal).props.visible).toBe(false);
   });
 
   it('calls onClose when Cancelar button is pressed', () => {

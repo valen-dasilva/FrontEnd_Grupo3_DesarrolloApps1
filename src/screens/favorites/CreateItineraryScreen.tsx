@@ -61,23 +61,28 @@ export default function CreateItineraryScreen() {
     });
   };
 
-  const handleCrear = async () => {
+  const validateForm = (): boolean => {
     if (!titulo.trim()) {
       Toast.show({ type: 'error', text1: 'Falta el título', text2: 'Ponele un nombre a tu itinerario.' });
-      return;
+      return false;
     }
     if (!provincia) {
       Toast.show({ type: 'error', text1: 'Falta la provincia', text2: 'Elegí a dónde vas a viajar.' });
-      return;
+      return false;
     }
     if (!fechaInicio || !fechaFin) {
       Toast.show({ type: 'error', text1: 'Faltan las fechas', text2: 'Elegí el rango de fechas del viaje.' });
-      return;
+      return false;
     }
     if (!user) {
       Toast.show({ type: 'error', text1: 'Sesión no disponible', text2: 'Volvé a iniciar sesión para crear el itinerario.' });
-      return;
+      return false;
     }
+    return true;
+  };
+
+  const handleCrear = async () => {
+    if (!validateForm()) return;
 
     const uploadedUrls: string[] = [];
     let creationRequested = false;

@@ -64,6 +64,74 @@ function getProximaActividad(
   return proxima ?? itemsHoy.at(-1) ?? null;
 }
 
+interface WeatherRowProps {
+  todayWeather: any;
+  theme: any;
+  todayStr: string;
+  fechaInicio: string;
+}
+
+const WeatherRow: React.FC<WeatherRowProps> = ({
+  todayWeather,
+  theme,
+  todayStr,
+  fechaInicio,
+}) => {
+  if (!todayWeather) return null;
+  return (
+    <View style={[styles.weatherRow, { borderTopColor: theme.border }]}>
+      <Text style={styles.weatherEmoji}>{todayWeather.emoji}</Text>
+      <Text style={[styles.weatherLabel, { color: theme.textSecondary }]}>
+        {todayStr >= fechaInicio ? 'Hoy' : 'Día 1'} · {todayWeather.maxTemp}° / {todayWeather.minTemp}° · {todayWeather.label}
+      </Text>
+    </View>
+  );
+};
+
+interface NextActivitySectionProps {
+  isOptimistic?: boolean;
+  proximaActividad: any;
+  theme: any;
+}
+
+const NextActivitySection: React.FC<NextActivitySectionProps> = ({
+  isOptimistic,
+  proximaActividad,
+  theme,
+}) => {
+  if (!proximaActividad && !isOptimistic) return null;
+  return (
+    <View
+      style={[
+        styles.actividadCard,
+        {
+          backgroundColor: theme.surfaceNeutral,
+          borderColor: theme.border,
+        },
+      ]}
+    >
+      <Text style={[styles.actividadHeader, { color: theme.primary }]}>Próxima actividad</Text>
+      <View style={styles.actividadDetailsRow}>
+        <Text
+          style={[styles.actividadTitle, { color: theme.text }]}
+          numberOfLines={1}
+        >
+          {isOptimistic ? "..." : proximaActividad?.nombreActividad}
+        </Text>
+        {isOptimistic ? (
+          <Text style={[styles.actividadTime, { color: theme.primary }]}>...</Text>
+        ) : (
+          proximaActividad?.hora && (
+            <Text style={[styles.actividadTime, { color: theme.primary }]}>
+              {proximaActividad.hora.substring(0, 5)}
+            </Text>
+          )
+        )}
+      </View>
+    </View>
+  );
+};
+
 export default function ActiveItineraryCard({
   itinerarioActivo,
 }: Readonly<{
@@ -216,46 +284,19 @@ export default function ActiveItineraryCard({
       </View>
 
       {/* Clima del día */}
-      {todayWeather && (
-        <View style={[styles.weatherRow, { borderTopColor: theme.border }]}>
-          <Text style={styles.weatherEmoji}>{todayWeather.emoji}</Text>
-          <Text style={[styles.weatherLabel, { color: theme.textSecondary }]}>
-            {todayStr >= itinerarioActivo.fechaInicio ? 'Hoy' : 'Día 1'} · {todayWeather.maxTemp}° / {todayWeather.minTemp}° · {todayWeather.label}
-          </Text>
-        </View>
-      )}
+      <WeatherRow
+        todayWeather={todayWeather}
+        theme={theme}
+        todayStr={todayStr}
+        fechaInicio={itinerarioActivo.fechaInicio}
+      />
 
       {/* Sub-tarjeta de Próxima Actividad — calculada desde items o en estado de carga optimista */}
-      {(proximaActividad || itinerarioActivo.isOptimistic) && (
-        <View
-          style={[
-            styles.actividadCard,
-            {
-              backgroundColor: theme.surfaceNeutral,
-              borderColor: theme.border,
-            },
-          ]}
-        >
-          <Text style={[styles.actividadHeader, { color: theme.primary }]}>Próxima actividad</Text>
-          <View style={styles.actividadDetailsRow}>
-            <Text
-              style={[styles.actividadTitle, { color: theme.text }]}
-              numberOfLines={1}
-            >
-              {itinerarioActivo.isOptimistic ? "..." : proximaActividad?.nombreActividad}
-            </Text>
-            {itinerarioActivo.isOptimistic ? (
-              <Text style={[styles.actividadTime, { color: theme.primary }]}>...</Text>
-            ) : (
-              proximaActividad?.hora && (
-                <Text style={[styles.actividadTime, { color: theme.primary }]}>
-                  {proximaActividad.hora.substring(0, 5)}
-                </Text>
-              )
-            )}
-          </View>
-        </View>
-      )}
+      <NextActivitySection
+        isOptimistic={itinerarioActivo.isOptimistic}
+        proximaActividad={proximaActividad}
+        theme={theme}
+      />
       <TouchableOpacity
         style={[styles.calendarButton, { borderTopColor: theme.border }]}
         onPress={handleAddToCalendar}

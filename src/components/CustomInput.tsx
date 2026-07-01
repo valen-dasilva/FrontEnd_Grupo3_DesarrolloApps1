@@ -16,6 +16,45 @@ interface CustomInputProps extends TextInputProps {
   hideCounter?: boolean;
 }
 
+interface CharacterCounterProps {
+  maxLength?: number;
+  currentLength: number;
+  hideCounter: boolean;
+  hideMaxMessage: boolean;
+  theme: any;
+}
+
+const CharacterCounter: React.FC<CharacterCounterProps> = ({
+  maxLength,
+  currentLength,
+  hideCounter,
+  hideMaxMessage,
+  theme,
+}) => {
+  if (maxLength === undefined || hideCounter) return null;
+  const isMaxReached = currentLength >= maxLength;
+  
+  return (
+    <>
+      <View style={styles.footer}>
+        <Text
+          style={[
+            styles.counter,
+            { color: isMaxReached && !hideMaxMessage ? theme.danger : theme.textSecondary },
+          ]}
+        >
+          {currentLength}/{maxLength}
+        </Text>
+      </View>
+      {isMaxReached && !hideMaxMessage && (
+        <Text style={[styles.maxMessage, { color: theme.danger }]}>
+          Máximo de caracteres alcanzado
+        </Text>
+      )}
+    </>
+  );
+};
+
 export const CustomInput: React.FC<CustomInputProps> = ({
   iconName,
   label,
@@ -56,45 +95,57 @@ export const CustomInput: React.FC<CustomInputProps> = ({
 
   const maxLength = props.maxLength;
   const currentLength = typeof props.value === 'string' ? props.value.length : 0;
-  const isMaxReached = maxLength !== undefined && currentLength >= maxLength;
+
+  const containerStyle = [
+    styles.container,
+    {
+      backgroundColor: theme.inputBg,
+      borderColor: isFocused ? theme.primary : theme.border,
+    },
+    props.multiline ? { height: undefined, minHeight: 100, alignItems: 'flex-start' as const } : undefined,
+  ];
+
+  const iconStyle = [
+    styles.icon,
+    props.multiline ? { marginTop: 12 } : undefined,
+  ];
+
+  const textInputStyle = [
+    styles.input,
+    iconName ? styles.inputWithIcon : undefined,
+    (secureTextEntry !== undefined && showEyeButton) ? styles.inputWithRightButton : undefined,
+    { color: theme.text },
+    props.multiline ? { textAlignVertical: 'top' as const, paddingVertical: 12 } : undefined,
+    style,
+  ];
+
+  const autoCompleteValue = secureTextEntry !== undefined ? 'off' as const : props.autoComplete;
+  const textContentTypeValue = secureTextEntry !== undefined ? 'none' as const : props.textContentType;
+  const importantForAutofillValue = secureTextEntry !== undefined ? 'no' as const : props.importantForAutofill;
 
   return (
     <View style={styles.wrapper}>
       {label && (
         <Text style={[styles.label, { color: theme.text }]}>{label}</Text>
       )}
-      <View style={[
-        styles.container,
-        {
-          backgroundColor: theme.inputBg,
-          borderColor: isFocused ? theme.primary : theme.border
-        },
-        props.multiline && { height: undefined, minHeight: 100, alignItems: 'flex-start' }
-      ]}>
+      <View style={containerStyle}>
         {iconName && (
-          <Ionicons name={iconName} size={20} color={theme.textSecondary} style={[styles.icon, props.multiline && { marginTop: 12 }]} />
+          <Ionicons name={iconName} size={20} color={theme.textSecondary} style={iconStyle} />
         )}
         <TextInput
           {...props}
-          style={[
-            styles.input,
-            iconName ? styles.inputWithIcon : undefined,
-            (secureTextEntry !== undefined && showEyeButton) ? styles.inputWithRightButton : undefined,
-            { color: theme.text },
-            props.multiline && { textAlignVertical: 'top', paddingVertical: 12 },
-            style
-          ]}
+          style={textInputStyle}
           placeholderTextColor={theme.textSecondary}
           onFocus={handleFocus}
           onBlur={handleBlur}
           secureTextEntry={isSecure}
           underlineColorAndroid="transparent"
-          autoComplete={secureTextEntry !== undefined ? "off" : props.autoComplete}
-          textContentType={secureTextEntry !== undefined ? "none" : props.textContentType}
-          importantForAutofill={secureTextEntry !== undefined ? "no" : props.importantForAutofill}
+          autoComplete={autoCompleteValue}
+          textContentType={textContentTypeValue}
+          importantForAutofill={importantForAutofillValue}
         />
         {secureTextEntry !== undefined && showEyeButton && (
-          <Pressable onPress={toggleSecureEntry} style={styles.eyeButton} disabled = {eyeButtonDisabled} accessibilityRole="button" accessibilityLabel={isSecure ? "Mostrar contraseña" : "Ocultar contraseña"}>
+          <Pressable onPress={toggleSecureEntry} style={styles.eyeButton} disabled={eyeButtonDisabled} accessibilityRole="button" accessibilityLabel={isSecure ? "Mostrar contraseña" : "Ocultar contraseña"}>
             <MaterialIcons
               name={isSecure ? (icons.VisibilityOff as any) : (icons.Visibility as any)}
               size={22}
@@ -104,23 +155,13 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           </Pressable>
         )}
       </View>
-      {maxLength !== undefined && !hideCounter && (
-        <View style={styles.footer}>
-          <Text
-            style={[
-              styles.counter,
-              { color: isMaxReached && !hideMaxMessage ? theme.danger : theme.textSecondary },
-            ]}
-          >
-            {currentLength}/{maxLength}
-          </Text>
-        </View>
-      )}
-      {isMaxReached && !hideMaxMessage && !hideCounter && (
-        <Text style={[styles.maxMessage, { color: theme.danger }]}>
-          Máximo de caracteres alcanzado
-        </Text>
-      )}
+      <CharacterCounter
+        maxLength={maxLength}
+        currentLength={currentLength}
+        hideCounter={hideCounter}
+        hideMaxMessage={hideMaxMessage}
+        theme={theme}
+      />
     </View>
   );
 };

@@ -24,12 +24,259 @@ import { ApiError } from '@/services/api';
 import { icons } from '@/constants/icons';
 import { fonts } from '@/constants/fonts';
 import { paddings } from '@/constants/paddings';
-import { PollOption, PollResult, PollStatus } from '@/types/poll';
+import { PollOption, PollResult, PollStatus, Poll } from '@/types/poll';
 
 const STATUS_LABEL: Record<PollStatus, string> = {
   ABIERTA: 'Abierta',
   EMPATE: 'Empate',
   FINALIZADA: 'Finalizada',
+};
+
+}
+
+interface OpenPollSectionProps {
+  poll: Poll;
+  theme: any;
+  totalVotes: number;
+  isCreator: boolean;
+  canFinalize: boolean;
+  missingVotes: number;
+  isFinalizing: boolean;
+  isDeleting: boolean;
+  handleOptionPress: (option: PollOption) => void;
+  handleVote: (option: PollOption) => void;
+  handleFinalize: () => void;
+}
+
+const OpenPollSection: React.FC<OpenPollSectionProps> = ({
+  poll,
+  theme,
+  totalVotes,
+  isCreator,
+  canFinalize,
+  missingVotes,
+  isFinalizing,
+  isDeleting,
+  handleOptionPress,
+  handleVote,
+  handleFinalize,
+}) => {
+  return (
+    <>
+      <Text style={[styles.pollName, { color: theme.text }]}>
+        {poll.nombre ?? 'Encuesta de viaje'}
+      </Text>
+      <Text style={[styles.hint, { color: theme.textSecondary }]}>
+        Tocá una opción para ver su detalle. Pulsá el pulgar para votar o cambiar tu voto.
+      </Text>
+      {poll.opciones.map((option) => (
+        <OptionCard
+          key={option.id}
+          option={option}
+          status={poll.estado}
+          totalVotes={totalVotes}
+          totalMembers={poll.cantidadMiembros}
+          hasVotedThis={poll.idOpcionVotada === option.id}
+          onPress={() => handleOptionPress(option)}
+          onVotePress={() => handleVote(option)}
+          disabled={isFinalizing || isDeleting}
+        />
+      ))}
+      {canFinalize ? (
+        <Pressable
+          onPress={handleFinalize}
+          disabled={isFinalizing || isDeleting}
+          style={({ pressed }) => [
+            styles.primaryButton,
+            { backgroundColor: theme.primary },
+            pressed && { opacity: 0.8 },
+            (isFinalizing || isDeleting) && { opacity: 0.7 },
+          ]}
+        >
+          {isFinalizing ? (
+            <ActivityIndicator color={theme.textInverse} />
+          ) : (
+            <>
+              <MaterialIcons name={icons.Poll} size={20} color={theme.textInverse} />
+              <Text style={[styles.primaryButtonText, { color: theme.textInverse }]}>
+                Finalizar encuesta
+              </Text>
+            </>
+          )}
+        </Pressable>
+      ) : isCreator ? (
+        <Text style={[styles.hint, { color: theme.textSecondary }]}>
+          Faltan {missingVotes} voto{missingVotes > 1 ? 's' : ''} para finalizar.
+        </Text>
+      ) : null}
+    </>
+  );
+};
+
+interface FinalizedPollSectionProps {
+  poll: Poll;
+  theme: any;
+  totalVotes: number;
+  result: PollResult | null;
+  isCopying: boolean;
+  isFinalizing: boolean;
+  isDeleting: boolean;
+  groupId: number;
+  handleOptionPress: (option: PollOption) => void;
+  handleCopy: () => void;
+  router: any;
+}
+
+const FinalizedPollSection: React.FC<FinalizedPollSectionProps> = ({
+  poll,
+  theme,
+  totalVotes,
+  result,
+  isCopying,
+  isFinalizing,
+  isDeleting,
+  groupId,
+  handleOptionPress,
+  handleCopy,
+  router,
+}) => {
+  return (
+    <>
+      {result?.ganador ? (
+        <View style={[styles.winnerCard, { backgroundColor: theme.surface, borderColor: theme.lightgreen }]}>
+          <MaterialIcons name={icons.Star} size={28} color={theme.lightgreen} />
+          <View style={styles.winnerInfo}>
+            <Text style={[styles.winnerLabel, { color: theme.lightgreen }]}>Ganadora</Text>
+            <Text style={[styles.winnerTitle, { color: theme.text }]}>
+              {result.ganador.tituloSnapshot}
+            </Text>
+            <Text style={[styles.winnerVotes, { color: theme.textSecondary }]}>
+              {result.ganador.cantidadVotos} votos
+            </Text>
+          </View>
+        </View>
+      ) : (
+        <Text style={[styles.hint, { color: theme.textSecondary }]}>
+          La encuesta finalizó sin opciones ganadoras.
+        </Text>
+      )}
+
+      <Text style={[styles.sectionTitle, { color: theme.text }]}>Resultados</Text>
+      {poll.opciones.map((option) => (
+        <OptionCard
+          key={option.id}
+          option={option}
+          status={poll.estado}
+          totalVotes={totalVotes}
+          totalMembers={poll.cantidadMiembros}
+          hasVotedThis={poll.idOpcionVotada === option.id}
+          onPress={() => handleOptionPress(option)}
+          disabled={isFinalizing || isDeleting || isCopying}
+        />
+      ))}
+
+      <Pressable
+        onPress={handleCopy}
+        disabled={isCopying || isFinalizing || isDeleting}
+        style={({ pressed }) => [
+          styles.primaryButton,
+          { backgroundColor: theme.primary },
+          pressed && { opacity: 0.8 },
+          (isCopying || isFinalizing || isDeleting) && { opacity: 0.7 },
+        ]}
+      >
+        {isCopying ? (
+          <ActivityIndicator color={theme.textInverse} />
+        ) : (
+          <>
+            <MaterialIcons name={icons.ContentCopy} size={20} color={theme.textInverse} />
+            <Text style={[styles.primaryButtonText, { color: theme.textInverse }]}>
+              Copiar a mis viajes
+            </Text>
+          </>
+        )}
+      </Pressable>
+
+      <Pressable
+        onPress={() =>
+          router.push(`/(tabs)/(group)/itinerarioGrupo?idGrupo=${groupId}` as Href)
+        }
+        style={({ pressed }) => [
+          styles.primaryButton,
+          { backgroundColor: theme.surfaceHighlight },
+          pressed && { opacity: 0.8 },
+        ]}
+      >
+        <MaterialIcons name={icons.FullCalendar} size={20} color={theme.primary} />
+        <Text style={[styles.primaryButtonText, { color: theme.primary }]}>
+          Ver itinerario del grupo
+        </Text>
+      </Pressable>
+    </>
+  );
+};
+
+interface TiedPollSectionProps {
+  poll: Poll;
+  theme: any;
+  totalVotes: number;
+  isCreator: boolean;
+  isResolvingTie: boolean;
+  isFinalizing: boolean;
+  isDeleting: boolean;
+  result: PollResult | null;
+  handleBreakTie: (option: PollOption) => void;
+  handleOptionPress: (option: PollOption) => void;
+}
+
+const TiedPollSection: React.FC<TiedPollSectionProps> = ({
+  poll,
+  theme,
+  totalVotes,
+  isCreator,
+  isResolvingTie,
+  isFinalizing,
+  isDeleting,
+  result,
+  handleBreakTie,
+  handleOptionPress,
+}) => {
+  return (
+    <>
+      {isResolvingTie ? (
+        <View style={styles.resolvingTie}>
+          <FullScreenLoader />
+        </View>
+      ) : (
+        <Text style={[styles.hint, { color: theme.textSecondary }]}>
+          {isCreator
+            ? 'Hay un empate. Elegí la opción ganadora.'
+            : 'La encuesta está empatada. El creador debe elegir la opción ganadora.'}
+        </Text>
+      )}
+      {poll.opciones.map((option) => {
+        const isTied = result?.opcionesEmpatadas.some((g) => g.id === option.id) ?? false;
+        const canBreakTie = isCreator && isTied && !isResolvingTie;
+        const optionDisabled = isResolvingTie || isFinalizing || isDeleting;
+        return (
+          <OptionCard
+            key={option.id}
+            option={option}
+            status={poll.estado}
+            totalVotes={totalVotes}
+            totalMembers={poll.cantidadMiembros}
+            hasVotedThis={poll.idOpcionVotada === option.id}
+            onPress={
+              canBreakTie && !optionDisabled
+                ? () => handleBreakTie(option)
+                : () => handleOptionPress(option)
+            }
+            disabled={(!canBreakTie && isCreator) || optionDisabled}
+          />
+        );
+      })}
+    </>
+  );
 };
 
 export default function PollDetailScreen() {
@@ -227,166 +474,50 @@ export default function PollDetailScreen() {
         </View>
 
         {poll.estado === 'ABIERTA' && (
-          <>
-            <Text style={[styles.pollName, { color: theme.text }]}>
-              {poll.nombre ?? 'Encuesta de viaje'}
-            </Text>
-            <Text style={[styles.hint, { color: theme.textSecondary }]}>
-              Tocá una opción para ver su detalle. Pulsá el pulgar para votar o cambiar tu voto.
-            </Text>
-            {poll.opciones.map((option) => (
-              <OptionCard
-                key={option.id}
-                option={option}
-                status={poll.estado}
-                totalVotes={totalVotes}
-                totalMembers={poll.cantidadMiembros}
-                hasVotedThis={poll.idOpcionVotada === option.id}
-                onPress={() => handleOptionPress(option)}
-                onVotePress={() => handleVote(option)}
-                disabled={isFinalizing || isDeleting}
-              />
-            ))}
-            {canFinalize ? (
-              <Pressable
-                onPress={handleFinalize}
-                disabled={isFinalizing || isDeleting}
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  { backgroundColor: theme.primary },
-                  pressed && { opacity: 0.8 },
-                  (isFinalizing || isDeleting) && { opacity: 0.7 },
-                ]}
-              >
-                {isFinalizing ? (
-                  <ActivityIndicator color={theme.textInverse} />
-                ) : (
-                  <>
-                    <MaterialIcons name={icons.Poll} size={20} color={theme.textInverse} />
-                    <Text style={[styles.primaryButtonText, { color: theme.textInverse }]}>
-                      Finalizar encuesta
-                    </Text>
-                  </>
-                )}
-              </Pressable>
-            ) : isCreator ? (
-              <Text style={[styles.hint, { color: theme.textSecondary }]}>
-                Faltan {missingVotes} voto{missingVotes > 1 ? 's' : ''} para finalizar.
-              </Text>
-            ) : null}
-          </>
+          <OpenPollSection
+            poll={poll}
+            theme={theme}
+            totalVotes={totalVotes}
+            isCreator={isCreator}
+            canFinalize={canFinalize}
+            missingVotes={missingVotes}
+            isFinalizing={isFinalizing}
+            isDeleting={isDeleting}
+            handleOptionPress={handleOptionPress}
+            handleVote={handleVote}
+            handleFinalize={handleFinalize}
+          />
         )}
 
         {poll.estado === 'FINALIZADA' && (
-          <>
-            {result?.ganador ? (
-              <View style={[styles.winnerCard, { backgroundColor: theme.surface, borderColor: theme.lightgreen }]}>
-                <MaterialIcons name={icons.Star} size={28} color={theme.lightgreen} />
-                <View style={styles.winnerInfo}>
-                  <Text style={[styles.winnerLabel, { color: theme.lightgreen }]}>Ganadora</Text>
-                  <Text style={[styles.winnerTitle, { color: theme.text }]}>
-                    {result.ganador.tituloSnapshot}
-                  </Text>
-                  <Text style={[styles.winnerVotes, { color: theme.textSecondary }]}>
-                    {result.ganador.cantidadVotos} votos
-                  </Text>
-                </View>
-              </View>
-            ) : (
-              <Text style={[styles.hint, { color: theme.textSecondary }]}>
-                La encuesta finalizó sin opciones ganadoras.
-              </Text>
-            )}
-
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>Resultados</Text>
-            {poll.opciones.map((option) => (
-              <OptionCard
-                key={option.id}
-                option={option}
-                status={poll.estado}
-                totalVotes={totalVotes}
-                totalMembers={poll.cantidadMiembros}
-                hasVotedThis={poll.idOpcionVotada === option.id}
-                onPress={() => handleOptionPress(option)}
-                disabled={isFinalizing || isDeleting || isCopying}
-              />
-            ))}
-
-            <Pressable
-              onPress={handleCopy}
-              disabled={isCopying || isFinalizing || isDeleting}
-              style={({ pressed }) => [
-                styles.primaryButton,
-                { backgroundColor: theme.primary },
-                pressed && { opacity: 0.8 },
-                (isCopying || isFinalizing || isDeleting) && { opacity: 0.7 },
-              ]}
-            >
-              {isCopying ? (
-                <ActivityIndicator color={theme.textInverse} />
-              ) : (
-                <>
-                  <MaterialIcons name={icons.ContentCopy} size={20} color={theme.textInverse} />
-                  <Text style={[styles.primaryButtonText, { color: theme.textInverse }]}>
-                    Copiar a mis viajes
-                  </Text>
-                </>
-              )}
-            </Pressable>
-
-            <Pressable
-              onPress={() =>
-                router.push(`/(tabs)/(group)/itinerarioGrupo?idGrupo=${groupId}` as Href)
-              }
-              style={({ pressed }) => [
-                styles.primaryButton,
-                { backgroundColor: theme.surfaceHighlight },
-                pressed && { opacity: 0.8 },
-              ]}
-            >
-              <MaterialIcons name={icons.FullCalendar} size={20} color={theme.primary} />
-              <Text style={[styles.primaryButtonText, { color: theme.primary }]}>
-                Ver itinerario del grupo
-              </Text>
-            </Pressable>
-          </>
+          <FinalizedPollSection
+            poll={poll}
+            theme={theme}
+            totalVotes={totalVotes}
+            result={result}
+            isCopying={isCopying}
+            isFinalizing={isFinalizing}
+            isDeleting={isDeleting}
+            groupId={groupId}
+            handleOptionPress={handleOptionPress}
+            handleCopy={handleCopy}
+            router={router}
+          />
         )}
 
         {poll.estado === 'EMPATE' && (
-          <>
-            {isResolvingTie ? (
-              <View style={styles.resolvingTie}>
-                <FullScreenLoader />
-              </View>
-            ) : (
-              <Text style={[styles.hint, { color: theme.textSecondary }]}>
-                {isCreator
-                  ? 'Hay un empate. Elegí la opción ganadora.'
-                  : 'La encuesta está empatada. El creador debe elegir la opción ganadora.'}
-              </Text>
-            )}
-            {poll.opciones.map((option) => {
-              const isTied = result?.opcionesEmpatadas.some((g) => g.id === option.id) ?? false;
-              const canBreakTie = isCreator && isTied && !isResolvingTie;
-              const optionDisabled = isResolvingTie || isFinalizing || isDeleting;
-              return (
-                <OptionCard
-                  key={option.id}
-                  option={option}
-                  status={poll.estado}
-                  totalVotes={totalVotes}
-                  totalMembers={poll.cantidadMiembros}
-                  hasVotedThis={poll.idOpcionVotada === option.id}
-                  onPress={
-                    canBreakTie && !optionDisabled
-                      ? () => handleBreakTie(option)
-                      : () => handleOptionPress(option)
-                  }
-                  disabled={(!canBreakTie && isCreator) || optionDisabled}
-                />
-              );
-            })}
-          </>
+          <TiedPollSection
+            poll={poll}
+            theme={theme}
+            totalVotes={totalVotes}
+            isCreator={isCreator}
+            isResolvingTie={isResolvingTie}
+            isFinalizing={isFinalizing}
+            isDeleting={isDeleting}
+            result={result}
+            handleBreakTie={handleBreakTie}
+            handleOptionPress={handleOptionPress}
+          />
         )}
 
         {isCreator && (

@@ -127,6 +127,8 @@ describe('ItineraryCard', () => {
     fireEvent(pinBtn, 'pressIn');
     fireEvent(pinBtn, 'pressOut');
 
-    // These events trigger Animated.spring. Since we mock or run them, they should not crash.
+    expect(detailBtn).toBeTruthy();
+    expect(downloadBtn).toBeTruthy();
+    expect(pinBtn).toBeTruthy();
   });
 });

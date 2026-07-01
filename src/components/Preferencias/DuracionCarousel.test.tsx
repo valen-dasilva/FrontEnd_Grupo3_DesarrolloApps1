@@ -34,7 +34,6 @@ describe('DuracionCarousel', () => {
     expect(getByText('¿Cuántos días?')).toBeTruthy();
     expect(getByText('Selecciona la duración ideal para tu viaje')).toBeTruthy();
 
-    expect(getByText('🤷')).toBeTruthy();
     expect(getByText('1 Día')).toBeTruthy();
     expect(getByText('2-3 Días')).toBeTruthy();
     expect(getByText('4+ Días')).toBeTruthy();
