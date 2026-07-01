@@ -7,14 +7,14 @@ import {
   FlatList,
   StyleSheet,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useColorScheme';
 import { Provincia, PROVINCIA_LABEL } from '@/types/itinerario';
 import { BarraProgreso } from './BarraProgreso';
 
 export interface LogroDetalle {
   nombre: string;
-  emoji: string;
+  icono: any;
   color: string;
   descripcion: string;
   provincias: Provincia[];
@@ -59,7 +59,7 @@ export function LogroDetalleModal({ logro, visitadasSet, onClose }: Props) {
                 ]}
               >
                 {logro.desbloqueado ? (
-                  <Text style={styles.emoji}>{logro.emoji}</Text>
+                  <MaterialIcons name={logro.icono} size={36} color={theme.textInverse} />
                 ) : (
                   <Ionicons name="lock-closed" size={30} color={theme.gray} />
                 )}
@@ -191,9 +191,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
-  },
-  emoji: {
-    fontSize: 36,
   },
   nombre: {
     fontSize: 20,

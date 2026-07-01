@@ -8,6 +8,8 @@ import { OfflineBadge } from '../../../common/OfflineBadge/OfflineBadge';
 import { styles } from './ItineraryCard.styles';
 import { useTheme } from '@/hooks/useColorScheme';
 
+const defaultImage = require('@/assets/images/minimun_logo.png');
+
 export interface ItineraryCardProps {
   /** The main title of the itinerary */
   title: string;
@@ -78,9 +80,9 @@ export const ItineraryCard: React.FC<ItineraryCardProps> = ({
   return (
     <View style={[styles.cardContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
       <ImageBackground
-        source={{ uri: imageUrl }}
-        style={styles.imageBackground}
-        imageStyle={styles.imageStyle}
+        source={imageUrl ? { uri: imageUrl } : defaultImage}
+        style={[styles.imageBackground, !imageUrl && { backgroundColor: theme.surfaceNeutral }]}
+        imageStyle={[styles.imageStyle, !imageUrl && { resizeMode: 'contain', transform: [{ scale: 0.6 }] }]}
       >
         <View style={styles.topActionsRow}>
           {isOfflineAvailable ? (
@@ -142,7 +144,7 @@ export const ItineraryCard: React.FC<ItineraryCardProps> = ({
           <View style={styles.rightActionsGroup}>
             <Pressable
               onPress={onDownloadPress}
-              onPressIn={() => handlePressIn(downloadScale, 0.90)}
+              onPressIn={() => handlePressIn(downloadScale, 0.9)}
               onPressOut={() => handlePressOut(downloadScale)}
               style={[
                 styles.downloadButton,
@@ -162,7 +164,7 @@ export const ItineraryCard: React.FC<ItineraryCardProps> = ({
 
             <Pressable
               onPress={onPinPress}
-              onPressIn={() => handlePressIn(pinScale, 0.90)}
+              onPressIn={() => handlePressIn(pinScale, 0.9)}
               onPressOut={() => handlePressOut(pinScale)}
               style={[styles.pinButton, { backgroundColor: theme.background }]}
               accessibilityRole="button"

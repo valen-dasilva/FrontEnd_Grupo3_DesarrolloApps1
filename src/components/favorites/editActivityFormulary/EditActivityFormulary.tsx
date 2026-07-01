@@ -20,6 +20,8 @@ export interface ActivityFormValues {
 export interface EditActivityFormularyProps {
   initialValues: ActivityFormValues;
   duracionDias: number;
+  existingActivities?: Array<{ id: number; dia: number; hora: string }>;
+  currentActivityId?: number;
   onSave: (values: ActivityFormValues) => Promise<void>;
   onCancel: () => void;
 }
@@ -27,6 +29,8 @@ export interface EditActivityFormularyProps {
 export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
   initialValues,
   duracionDias,
+  existingActivities = [],
+  currentActivityId,
   onSave,
   onCancel,
 }) => {
@@ -47,7 +51,7 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
   const { theme } = useTheme();
 
   const isTimeValid = (t: string) => {
-    const regex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+    const regex = /^([0-1]\d|2[0-3]):[0-5]\d$/;
     return regex.test(t);
   };
 
@@ -64,7 +68,7 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
     const mm = cleaned.slice(2, 4);
 
     const valHH = Number.parseInt(hh, 10);
-    const formattedHH = (valHH > 23 ? 23 : valHH).toString().padStart(2, '0');
+    const formattedHH = Math.min(valHH, 23).toString().padStart(2, '0');
 
     if (mm.length === 0) {
       return formattedHH;
@@ -93,7 +97,7 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
       return;
     }
 
-    const cleaned = text.replace(/[^0-9]/g, '');
+    const cleaned = text.replace(/\D/g, '');
     const formatted = formatCleanedDigits(cleaned);
     updateTimeAndValidate(formatted);
   };
@@ -112,6 +116,20 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
       Alert.alert('Formato de hora inválido', 'Por favor ingresa la hora en formato HH:mm (ej. 09:00).');
       return;
     }
+    
+    // Verificar que la hora no pise otra actividad en el mismo día
+    const conflict = existingActivities.find(
+      (act) => act.dia === day && act.hora && act.hora.substring(0, 5) === time && act.id !== currentActivityId
+    );
+    if (conflict) {
+      setTimeError('Horario ocupado');
+      Alert.alert(
+        'Conflicto de horario',
+        'Ya tienes otra actividad programada a esta misma hora en este día. Por favor elige un horario distinto.'
+      );
+      return;
+    }
+
     setIsSaving(true);
     try {
       await onSave({

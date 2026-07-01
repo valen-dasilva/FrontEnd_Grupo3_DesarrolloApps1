@@ -63,4 +63,12 @@ export const icons = {
   ThumbUp: 'thumb-up',
   ThumbUpOffAlt: 'thumb-up-off-alt',
   EmojiEvents: 'emoji-events',
+
+  // Logros
+  LogroNorte: 'terrain',
+  LogroLitoral: 'nature',
+  LogroCuyo: 'wine-bar',
+  LogroCentro: 'grass',
+  LogroPatagonia: 'ac-unit',
+  LogroArgentina: 'flag',
 } as const;

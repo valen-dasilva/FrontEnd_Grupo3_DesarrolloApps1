@@ -11,7 +11,7 @@ import { CustomInput } from '@/components/CustomInput';
 import { colors } from '@/constants/colors';
 import { styles } from './ItineraryEditScreen.styles';
 import { useTheme } from '@/hooks/useColorScheme';
-import { useItinerariosDetailsHook } from '@/hooks/useItinerarios';
+import { useItinerariosDetailsHook, useItinerariosHook } from '@/hooks/useItinerarios';
 import { FotoItinerarioUsuario, ItemItinerarioUsuario } from '@/services/itinerariosService';
 import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
 import { SingleDateModal } from '@/components/common/SingleDateModal/SingleDateModal';
@@ -21,7 +21,6 @@ import {
   SelectedItineraryPhoto,
 } from '@/components/favorites/itinerary_photos/ItineraryPhotoPicker/ItineraryPhotoPicker';
 import { useAuth } from '@/context/AuthContext';
-import { ApiError } from '@/services/api';
 import {
   deleteItineraryPhotoFromStorage,
   uploadItineraryPhoto,
@@ -34,19 +33,30 @@ type DaySectionProps = Readonly<{
   activities: readonly ItemItinerarioUsuario[];
   onEdit: (activity: ItemItinerarioUsuario) => void;
   onDelete: (id: number, title: string) => void;
+  onDeleteDay: (dayNum: number) => void;
   theme: typeof colors.light;
 }>;
 
-function DaySection({ dayNum, activities, onEdit, onDelete, theme }: DaySectionProps) {
+function DaySection({ dayNum, activities, onEdit, onDelete, onDeleteDay, theme }: DaySectionProps) {
   const dayActivities = activities.filter((act) => act.dia === dayNum);
   return (
     <View style={styles.daySection}>
-      <Text style={[styles.dayTitle, { color: theme.textSecondary }]}>{`Día ${dayNum}`}</Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Text style={[styles.dayTitle, { color: theme.textSecondary }]}>{`Día ${dayNum}`}</Text>
+        <TouchableOpacity
+          onPress={() => onDeleteDay(dayNum)}
+          style={{ padding: 4 }}
+          accessibilityRole="button"
+          accessibilityLabel={`Eliminar Día ${dayNum}`}
+        >
+          <MaterialIcons name="delete" size={20} color={theme.danger} />
+        </TouchableOpacity>
+      </View>
       <View style={styles.activityList}>
         {dayActivities.length > 0 ? (
           dayActivities.map((activity, actIdx) => (
             <EditableActivityCard
-              key={activity.id != null ? `${dayNum}-${activity.id}` : `${dayNum}-fallback-${actIdx}`}
+              key={activity.id == null ? `${dayNum}-fallback-${actIdx}` : `${dayNum}-${activity.id}`}
               time={activity.hora}
               title={activity.nombreActividad}
               description={activity.descripcion}
@@ -79,12 +89,16 @@ export default function EdicionItinerarioScreen() {
       itineraryDetails,
       isLoading,
       quitItem,
+      editItem,
       putItineraryTitle,
       putItineraryFechaInicio,
       addPhoto,
       quitPhoto,
       isMutatingPhotos,
+      reduceItineraryDuration,
   } = useItinerariosDetailsHook();
+
+  const { quitItinerary } = useItinerariosHook();
 
   useFocusEffect(
     useCallback(() => {
@@ -97,16 +111,20 @@ export default function EdicionItinerarioScreen() {
   const activities = itineraryDetails?.items || [];
   const [title, setTitle] = useState(itineraryDetails?.titulo || 'Cargando...');
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; title: string } | null>(null);
+  const [deleteDayTarget, setDeleteDayTarget] = useState<number | null>(null);
   const [pendingPhotos, setPendingPhotos] = useState<SelectedItineraryPhoto[]>([]);
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
   const [isDeletingPhoto, setIsDeletingPhoto] = useState(false);
   const [photoDeleteTarget, setPhotoDeleteTarget] = useState<FotoItinerarioUsuario | null>(null);
   const [showFechaModal, setShowFechaModal] = useState(false);
-  const [fechaModal, setFechaModal] = useState<{ visible: boolean; state: 'loading' | 'success' }>({
+  const [statusModal, setStatusModal] = useState<{ visible: boolean; state: 'loading' | 'success'; type: 'fecha' | 'deleteDay' }>({
     visible: false,
     state: 'loading',
+    type: 'fecha'
   });
 
+  const [showDeleteItineraryAlert, setShowDeleteItineraryAlert] = useState(false);
+  
   React.useEffect(() => {
       if (itineraryDetails) {
           setTitle(itineraryDetails.titulo);
@@ -133,6 +151,64 @@ export default function EdicionItinerarioScreen() {
     setDeleteTarget({ id: idItem, title: activityTitle });
   };
 
+  const handleDeleteDay = async (dayNum: number) => {
+    if (totalDias === 1) {
+      setShowDeleteItineraryAlert(true);
+      return;
+    }
+    const dayActivities = activities.filter(act => act.dia === dayNum);
+    if (dayActivities.length > 0) {
+      setDeleteDayTarget(dayNum);
+    } else {
+      await processDeleteDay(dayNum);
+    }
+  };
+
+  const processDeleteDay = async (dayNum: number) => {
+    if (!id) return;
+    setStatusModal({ visible: true, state: 'loading', type: 'deleteDay' });
+    try {
+      const activitiesToDelete = activities.filter(act => act.dia === dayNum);
+      const activitiesToMove = activities.filter(act => act.dia > dayNum);
+
+      if (activitiesToDelete.length > 0) {
+        await Promise.allSettled(activitiesToDelete.map(act => quitItem(Number(id), act.id)));
+      }
+
+      if (activitiesToMove.length > 0) {
+        await Promise.allSettled(activitiesToMove.map(act => 
+          editItem(Number(id), act.id, {
+            nombreActividad: act.nombreActividad,
+            descripcion: act.descripcion,
+            localidad: act.localidad,
+            direccion: act.direccion,
+            dia: act.dia - 1,
+            hora: act.hora
+          })
+        ));
+      }
+
+      await reduceItineraryDuration(Number(id));
+
+      setStatusModal({ visible: false, state: 'success', type: 'deleteDay' });
+      Toast.show({
+        type: 'success',
+        text1: 'Día eliminado',
+        text2: `El Día ${dayNum} fue eliminado correctamente.`,
+      });
+    } catch (err) {
+      console.error('Error al procesar eliminación del día:', err);
+      setStatusModal({ visible: false, state: 'loading', type: 'deleteDay' });
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'No se pudo eliminar el día por completo.',
+      });
+    } finally {
+      setDeleteDayTarget(null);
+    }
+  };
+
   // Botón único a nivel itinerario: abre el formulario sin un día prefijado.
   // Ahí el usuario elige un día existente o crea uno nuevo (lo pidió la
   // cátedra: que agregar actividad no quede atado a un día puntual).
@@ -151,6 +227,21 @@ export default function EdicionItinerarioScreen() {
     });
   };
 
+  const processSinglePhotoUpload = async (photo: SelectedItineraryPhoto) => {
+    let uploadedUrl: string | null = null;
+    try {
+      const uploaded = await uploadItineraryPhoto(user!.idUsuario, photo);
+      uploadedUrl = uploaded.url;
+      await addPhoto(Number(id), uploadedUrl);
+      return true;
+    } catch (error) {
+      if (uploadedUrl) {
+        await deleteItineraryPhotoFromStorage(uploadedUrl).catch(console.warn);
+      }
+      throw error;
+    }
+  };
+
   const handleUploadPhotos = async () => {
     if (!user || !id || pendingPhotos.length === 0) return;
 
@@ -158,27 +249,16 @@ export default function EdicionItinerarioScreen() {
     setIsUploadingPhotos(true);
     try {
       for (const photo of pendingPhotos) {
-        let uploadedUrl: string;
         try {
-          const uploaded = await uploadItineraryPhoto(user.idUsuario, photo);
-          uploadedUrl = uploaded.url;
+          await processSinglePhotoUpload(photo);
+          uploadedCount += 1;
+          setPendingPhotos((current) => current.filter((item) => item.key !== photo.key));
         } catch (error) {
           Toast.show({
             type: 'error',
             text1: 'No se pudo subir una foto',
             text2: error instanceof Error ? error.message : 'Revisá tu conexión e intentá nuevamente.',
           });
-          break;
-        }
-
-        try {
-          await addPhoto(Number(id), uploadedUrl);
-          uploadedCount += 1;
-          setPendingPhotos((current) => current.filter((item) => item.key !== photo.key));
-        } catch (error) {
-          if (error instanceof ApiError && error.status > 0) {
-            await deleteItineraryPhotoFromStorage(uploadedUrl).catch(console.warn);
-          }
           break;
         }
       }
@@ -200,17 +280,14 @@ export default function EdicionItinerarioScreen() {
 
     setIsDeletingPhoto(true);
     try {
-      // Solo borramos el registro en DB. El archivo en Storage queda como
-      // huérfano y se limpia cuando se elimina el itinerario completo
-      // (deleteMutation en useItinerarios). Evita parsear URL→path acá.
       await quitPhoto(Number(id), photoDeleteTarget.id);
       Toast.show({
         type: 'success',
         text1: 'Foto eliminada',
         text2: 'La foto se quitó del itinerario.',
       });
-    } catch {
-      // El hook informa el error y conserva la foto en pantalla.
+    } catch (err) {
+      console.error('Error al eliminar foto:', err);
     } finally {
       setIsDeletingPhoto(false);
       setPhotoDeleteTarget(null);
@@ -251,12 +328,12 @@ export default function EdicionItinerarioScreen() {
 
   const handleChangeFechaInicio = async (fecha: string) => {
     if (!id) return;
-    setFechaModal({ visible: true, state: 'loading' });
+    setStatusModal({ visible: true, state: 'loading', type: 'fecha' });
     try {
       await putItineraryFechaInicio(Number(id), fecha);
-      setFechaModal({ visible: true, state: 'success' });
+      setStatusModal({ visible: true, state: 'success', type: 'fecha' });
     } catch {
-      setFechaModal({ visible: false, state: 'loading' });
+      setStatusModal({ visible: false, state: 'loading', type: 'fecha' });
     }
   };
 
@@ -264,6 +341,20 @@ export default function EdicionItinerarioScreen() {
   const days = Array.from({ length: totalDias }, (_, i) => i + 1);
   const existingPhotos = itineraryDetails?.fotos ?? [];
   const isManagingPhotos = isUploadingPhotos || isMutatingPhotos || isDeletingPhoto;
+
+  const getStatusModalTitle = () => {
+    if (statusModal.state === 'loading') {
+      return statusModal.type === 'fecha' ? 'Actualizando fecha...' : 'Eliminando día...';
+    }
+    return statusModal.type === 'fecha' ? '¡Fecha actualizada!' : '¡Día eliminado!';
+  };
+
+  const getStatusModalMessage = () => {
+    if (statusModal.state === 'loading') {
+      return statusModal.type === 'fecha' ? 'Estamos reprogramando tu itinerario.' : 'Eliminando actividades y reordenando tu viaje...';
+    }
+    return statusModal.type === 'fecha' ? 'El viaje quedó reprogramado correctamente.' : 'El día fue eliminado correctamente.';
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
@@ -350,6 +441,7 @@ export default function EdicionItinerarioScreen() {
                     activities={activities}
                     onEdit={handleEditActivity}
                     onDelete={handleDeleteActivity}
+                    onDeleteDay={handleDeleteDay}
                     theme={theme}
                   />
                 ))}
@@ -390,6 +482,19 @@ export default function EdicionItinerarioScreen() {
       />
 
       <ConfirmAlert
+        visible={deleteDayTarget !== null}
+        title="Eliminar Día"
+        message={`¿Estás seguro de que deseas eliminar el Día ${deleteDayTarget}? Todas las actividades asociadas se perderán y los días posteriores se reajustarán.`}
+        confirmText="Eliminar Día"
+        onCancel={() => setDeleteDayTarget(null)}
+        onConfirm={async () => {
+          if (deleteDayTarget !== null) {
+            await processDeleteDay(deleteDayTarget);
+          }
+        }}
+      />
+
+      <ConfirmAlert
         visible={photoDeleteTarget !== null}
         title="Eliminar Foto"
         message="¿Estás seguro de que deseas eliminar esta foto del itinerario?"
@@ -397,6 +502,36 @@ export default function EdicionItinerarioScreen() {
         loading={isDeletingPhoto}
         onCancel={() => setPhotoDeleteTarget(null)}
         onConfirm={handleDeletePhoto}
+      />
+
+      <ConfirmAlert
+        visible={showDeleteItineraryAlert}
+        title="¿Eliminar itinerario?"
+        message="No pueden haber itinerarios sin días. ¿Quieres eliminar el itinerario completo?"
+        confirmText="Sí"
+        cancelText="No"
+        onCancel={() => setShowDeleteItineraryAlert(false)}
+        onConfirm={async () => {
+          setShowDeleteItineraryAlert(false);
+          if (id) {
+            try {
+              await quitItinerary(Number(id));
+              Toast.show({
+                type: 'success',
+                text1: 'Itinerario eliminado',
+                text2: 'El itinerario fue eliminado por completo.',
+              });
+              router.replace('/(tabs)/favoritos');
+            } catch (err) {
+              console.error('Error al eliminar itinerario completo:', err);
+              Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'No se pudo eliminar el itinerario.',
+              });
+            }
+          }
+        }}
       />
 
       <SingleDateModal
@@ -409,14 +544,12 @@ export default function EdicionItinerarioScreen() {
       />
 
       <StatusModal
-        visible={fechaModal.visible}
-        state={fechaModal.state}
-        title={fechaModal.state === 'loading' ? 'Actualizando fecha...' : '¡Fecha actualizada!'}
-        message={fechaModal.state === 'loading'
-          ? 'Estamos reprogramando tu itinerario.'
-          : 'El viaje quedó reprogramado correctamente.'}
+        visible={statusModal.visible}
+        state={statusModal.state}
+        title={getStatusModalTitle()}
+        message={getStatusModalMessage()}
         actionLabel="Listo"
-        onAction={() => setFechaModal({ visible: false, state: 'loading' })}
+        onAction={() => setStatusModal({ ...statusModal, visible: false })}
       />
     </View>
   );
