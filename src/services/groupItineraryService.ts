@@ -19,6 +19,14 @@ export const patchFechaInicio = async (
   return response.data;
 };
 
+/** Elimina un día completo del itinerario (solo creador). */
+export const deleteDay = async (idGrupo: number, dia: number): Promise<GroupItinerary> => {
+  const response = await apiClient.delete<GroupItinerary>(
+    `${GROUPS_PATH}/${idGrupo}/itinerario/dias/${dia}`,
+  );
+  return response.data;
+};
+
 /** Itinerario compartido del grupo (el del último ganador de una encuesta). */
 export const getGroupItinerary = async (idGrupo: number): Promise<GroupItinerary> => {
   const response = await apiClient.get<GroupItinerary>(`${GROUPS_PATH}/${idGrupo}/itinerario`);

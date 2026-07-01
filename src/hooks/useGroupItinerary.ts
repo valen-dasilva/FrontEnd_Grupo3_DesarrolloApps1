@@ -3,6 +3,7 @@ import { Alert, AppState } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   confirmItem,
+  deleteDay,
   deleteItem,
   getGroupItinerary,
   patchFechaInicio,
@@ -114,6 +115,17 @@ export const useGroupItineraryHook = (idGrupo: number | null) => {
     onError: (err) => Alert.alert('Error', getErrorMessage(err, 'No se pudo eliminar la actividad.')),
   });
 
+  const deleteDayMutation = useMutation({
+    mutationFn: (dia: number) => {
+      if (!idGrupo) throw new Error('Grupo no especificado');
+      return deleteDay(idGrupo, dia);
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData<GroupItinerary>(key, data);
+    },
+    onError: (err) => Alert.alert('Error', getErrorMessage(err, 'No se pudo eliminar el día.')),
+  });
+
   const updateDateMutation = useMutation({
     mutationFn: (fechaInicio: string) => {
       if (!idGrupo) throw new Error('Grupo no especificado');
@@ -189,6 +201,8 @@ export const useGroupItineraryHook = (idGrupo: number | null) => {
     isConfirming: confirmMutation.isPending,
     removeItem: (idItem: number) => deleteMutation.mutateAsync(idItem),
     isDeleting: deleteMutation.isPending,
+    deleteDay: (dia: number) => deleteDayMutation.mutateAsync(dia),
+    isDeletingDay: deleteDayMutation.isPending,
     toggleAttendance: toggleAttendanceWithRef,
     isTogglingAttendance: attendanceMutation.isPending,
     isTogglingAttendanceFor,

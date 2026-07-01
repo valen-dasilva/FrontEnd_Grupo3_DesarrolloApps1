@@ -100,20 +100,23 @@ export default function GroupItineraryScreen() {
     removeItem,
     toggleAttendance,
     patchFechaInicio,
+    deleteDay,
     isProposing,
     isUpdating,
     isConfirming,
     isDeleting,
+    isDeletingDay,
     isPatchingFechaInicio,
     isTogglingAttendanceFor,
   } = useGroupItineraryHook(validGroupId);
 
   const soyCreador = itinerary?.soyCreador ?? false;
-  const busy = isProposing || isUpdating || isConfirming || isDeleting || isPatchingFechaInicio;
+  const busy = isProposing || isUpdating || isConfirming || isDeleting || isDeletingDay || isPatchingFechaInicio;
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingItem, setEditingItem] = useState<GroupItineraryItem | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [confirmDeleteDay, setConfirmDeleteDay] = useState<number | null>(null);
   const [confirmActionId, setConfirmActionId] = useState<number | null>(null);
   const [dateModalVisible, setDateModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -178,6 +181,18 @@ export default function GroupItineraryScreen() {
     if (confirmDeleteId !== null) {
       await removeItem(confirmDeleteId);
       setConfirmDeleteId(null);
+    }
+  };
+
+  const handleDeleteDay = async () => {
+    if (confirmDeleteDay !== null) {
+      try {
+        await deleteDay(confirmDeleteDay);
+      } catch {
+        // el hook ya muestra el Alert de error
+      } finally {
+        setConfirmDeleteDay(null);
+      }
     }
   };
 
@@ -430,7 +445,20 @@ export default function GroupItineraryScreen() {
             .sort((a, b) => (a.hora ?? '').localeCompare(b.hora ?? ''));
           return (
             <View key={dia} style={styles.daySection}>
-              <Text style={[styles.dayTitle, { color: theme.text }]}>Día {dia}</Text>
+              <View style={styles.dayHeader}>
+                <Text style={[styles.dayTitle, { color: theme.text }]}>Día {dia}</Text>
+                {soyCreador && (
+                  <Pressable
+                    onPress={() => setConfirmDeleteDay(dia)}
+                    disabled={busy}
+                    style={({ pressed }) => [styles.dayDeleteBtn, pressed && { opacity: 0.65 }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Eliminar Día ${dia}`}
+                  >
+                    <MaterialIcons name={icons.Delete} size={20} color={theme.danger} />
+                  </Pressable>
+                )}
+              </View>
               {items.length === 0 ? (
                 <Text style={[styles.emptyDay, { color: theme.textSecondary }]}>Sin actividades aún.</Text>
               ) : (
@@ -502,6 +530,21 @@ export default function GroupItineraryScreen() {
         onConfirm={handleDelete}
       />
 
+      <ConfirmAlert
+        visible={confirmDeleteDay !== null}
+        title="Eliminar día"
+        message={
+          confirmDeleteDay !== null && itinerary.items.some((i) => i.dia === confirmDeleteDay)
+            ? `Se van a eliminar las actividades del Día ${confirmDeleteDay} y se reordenarán los días siguientes.`
+            : `Se eliminará el Día ${confirmDeleteDay} y se reordenarán los días siguientes.`
+        }
+        cancelText="Cancelar"
+        confirmText="Eliminar"
+        loading={isDeletingDay}
+        onCancel={() => setConfirmDeleteDay(null)}
+        onConfirm={handleDeleteDay}
+      />
+
       <SingleDateModal
         visible={dateModalVisible}
         initialDate={itinerary.fechaInicio}
@@ -530,7 +573,9 @@ const styles = StyleSheet.create({
   dateText: { fontFamily: fonts.family.headingMedium, fontSize: fonts.size.md, flex: 1 },
   dateEditBtn: { padding: paddings.spacing.xs },
   daySection: { marginBottom: paddings.spacing.lg },
-  dayTitle: { fontFamily: fonts.family.headingBold, fontSize: fonts.size.lg, marginBottom: paddings.spacing.sm },
+  dayHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: paddings.spacing.sm },
+  dayTitle: { fontFamily: fonts.family.headingBold, fontSize: fonts.size.lg },
+  dayDeleteBtn: { padding: paddings.spacing.xs },
   emptyDay: { fontFamily: fonts.family.bodyRegular, fontSize: fonts.size.sm, marginBottom: paddings.spacing.sm },
   card: { borderRadius: paddings.radius.md, borderWidth: 1, padding: paddings.spacing.md, marginBottom: paddings.spacing.md },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
