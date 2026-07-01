@@ -44,7 +44,12 @@ export default function ExploreScreen() {
     },
   });
 
-  const error = queryError instanceof Error ? queryError.message : (queryError ? String(queryError) : null);
+  let error: string | null = null;
+  if (queryError instanceof Error) {
+    error = queryError.message;
+  } else if (queryError) {
+    error = String(queryError);
+  }
 
   const renderHeader = useCallback(() => (
     <View>

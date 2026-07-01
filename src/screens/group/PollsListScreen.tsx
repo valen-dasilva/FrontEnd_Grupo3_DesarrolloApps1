@@ -1,4 +1,4 @@
-import { Stack, useFocusEffect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import {
   FlatList,
@@ -39,12 +39,12 @@ export default function PollsListScreen() {
   );
 
   const handleCreatePoll = () => {
-    router.push(`/(tabs)/(group)/crearEncuesta?idGrupo=${groupId}` as Href);
+    router.push(`/(tabs)/(group)/crearEncuesta?idGrupo=${groupId}`);
   };
 
   const handlePollPress = (poll: PollSummary) => {
     router.push(
-      `/(tabs)/(group)/detalleEncuesta?idGrupo=${groupId}&idEncuesta=${poll.idEncuesta}` as Href,
+      `/(tabs)/(group)/detalleEncuesta?idGrupo=${groupId}&idEncuesta=${poll.idEncuesta}`,
     );
   };
 
@@ -58,6 +58,43 @@ export default function PollsListScreen() {
     </View>
   );
 
+  let content;
+  if (isLoading) {
+    content = <FullScreenLoader message="Cargando encuestas..." />;
+  } else if (error) {
+    content = (
+      <View style={styles.centered}>
+        <Text style={[styles.error, { color: theme.danger }]}>{error}</Text>
+      </View>
+    );
+  } else {
+    content = (
+      <>
+        <Pressable
+          onPress={handleCreatePoll}
+          style={({ pressed }) => [
+            styles.createButton,
+            { backgroundColor: theme.primary },
+            pressed && { opacity: 0.8 },
+          ]}
+        >
+          <MaterialIcons name={icons.Add} size={20} color={theme.textInverse} />
+          <Text style={[styles.createButtonText, { color: theme.textInverse }]}>Nueva encuesta</Text>
+        </Pressable>
+
+        <FlatList
+          data={polls}
+          keyExtractor={(item) => item.idEncuesta.toString()}
+          renderItem={({ item }) => <PollCard poll={item} onPress={() => handlePollPress(item)} />}
+          contentContainerStyle={styles.list}
+          refreshing={isLoading}
+          onRefresh={loadPolls}
+          ListEmptyComponent={renderEmpty}
+        />
+      </>
+    );
+  }
+
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -70,37 +107,7 @@ export default function PollsListScreen() {
         onThemeTogglePress={toggleColorScheme}
       />
 
-      {isLoading ? (
-        <FullScreenLoader message="Cargando encuestas..." />
-      ) : error ? (
-        <View style={styles.centered}>
-          <Text style={[styles.error, { color: theme.danger }]}>{error}</Text>
-        </View>
-      ) : (
-        <>
-          <Pressable
-            onPress={handleCreatePoll}
-            style={({ pressed }) => [
-              styles.createButton,
-              { backgroundColor: theme.primary },
-              pressed && { opacity: 0.8 },
-            ]}
-          >
-            <MaterialIcons name={icons.Add} size={20} color={theme.textInverse} />
-            <Text style={[styles.createButtonText, { color: theme.textInverse }]}>Nueva encuesta</Text>
-          </Pressable>
-
-          <FlatList
-            data={polls}
-            keyExtractor={(item) => item.idEncuesta.toString()}
-            renderItem={({ item }) => <PollCard poll={item} onPress={() => handlePollPress(item)} />}
-            contentContainerStyle={styles.list}
-            refreshing={isLoading}
-            onRefresh={loadPolls}
-            ListEmptyComponent={renderEmpty}
-          />
-        </>
-      )}
+      {content}
     </View>
   );
 }

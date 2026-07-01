@@ -20,6 +20,9 @@ import {
     snapshotItinerarioCaches,
     restoreItinerarioCaches,
 } from '@/hooks/itinerarioCacheHelpers';
+
+let optimisticIdCounter = 0;
+
 import {
     deleteFoto,
     deleteItem,
@@ -443,7 +446,7 @@ export const useItinerariosDetailsHook = () => {
 
             const optimisticItem: ItemItinerarioUsuario = {
                 ...itemData,
-                id: -Math.floor(Math.random() * 1000000),
+                id: -(Date.now() + (++optimisticIdCounter) % 1000),
             };
 
             if (prevDetails) {

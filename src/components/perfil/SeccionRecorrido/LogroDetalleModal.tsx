@@ -34,6 +34,18 @@ export function LogroDetalleModal({ logro, visitadasSet, onClose }: Props) {
   const porcentaje = logro ? Math.round((logro.visitadas / logro.total) * 100) : 0;
   const faltantes = logro ? logro.total - logro.visitadas : 0;
 
+  const getFaltantesTexto = () => {
+    if (!logro) return '';
+    if (logro.desbloqueado) {
+      return 'Completaste todas las provincias de este logro.';
+    }
+    if (faltantes === 1) {
+      return 'Te falta 1 provincia para desbloquearlo.';
+    }
+    return `Te faltan ${faltantes} provincias para desbloquearlo.`;
+  };
+  const faltantesTexto = getFaltantesTexto();
+
   return (
     <Modal
       visible={logro !== null}
@@ -107,11 +119,7 @@ export function LogroDetalleModal({ logro, visitadasSet, onClose }: Props) {
                   trackColor={theme.surfaceNeutral}
                 />
                 <Text style={[styles.faltantesTexto, { color: theme.textSecondary }]}>
-                  {logro.desbloqueado
-                    ? 'Completaste todas las provincias de este logro.'
-                    : faltantes === 1
-                      ? 'Te falta 1 provincia para desbloquearlo.'
-                      : `Te faltan ${faltantes} provincias para desbloquearlo.`}
+                  {faltantesTexto}
                 </Text>
               </View>
 

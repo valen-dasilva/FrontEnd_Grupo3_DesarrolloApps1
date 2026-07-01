@@ -7,7 +7,7 @@ const keyFor = (id: number) => `${DURATION_OVERRIDE_PREFIX}${id}`;
 export const getLocalDurationOverride = async (id: number): Promise<number | null> => {
   try {
     const val = await AsyncStorage.getItem(keyFor(id));
-    return val ? parseInt(val, 10) : null;
+    return val ? Number.parseInt(val, 10) : null;
   } catch {
     return null;
   }

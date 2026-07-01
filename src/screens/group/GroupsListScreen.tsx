@@ -1,4 +1,4 @@
-import { Stack, useRouter, type Href } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import React from 'react';
 import {
   FlatList,
@@ -30,16 +30,16 @@ export default function GroupsListScreen() {
   const { groups, isLoading, error, loadGroups } = useGroupsHook();
 
   const handleCreateGroup = () => {
-    router.push('/(tabs)/(group)/crearGrupo' as Href);
+    router.push('/(tabs)/(group)/crearGrupo');
   };
 
   const handleJoinGroup = () => {
-    router.push('/(tabs)/(group)/unirseGrupo' as Href);
+    router.push('/(tabs)/(group)/unirseGrupo');
   };
 
   const handleGroupPress = (group: GroupSummary) => {
     router.push(
-      `/(tabs)/(group)/detalleGrupo?idGrupo=${group.idGrupo}` as Href,
+      `/(tabs)/(group)/detalleGrupo?idGrupo=${group.idGrupo}`,
     );
   };
 
@@ -52,6 +52,31 @@ export default function GroupsListScreen() {
       />
     </View>
   );
+
+  let listContent;
+  if (isLoading) {
+    listContent = <FullScreenLoader message="Cargando grupos..." />;
+  } else if (error) {
+    listContent = (
+      <View style={styles.centered}>
+        <Text style={[styles.error, { color: theme.danger }]}>{error}</Text>
+      </View>
+    );
+  } else {
+    listContent = (
+      <FlatList
+        data={groups}
+        keyExtractor={(item) => item.idGrupo.toString()}
+        renderItem={({ item }) => (
+          <GroupCard group={item} onPress={() => handleGroupPress(item)} />
+        )}
+        contentContainerStyle={styles.list}
+        refreshing={isLoading}
+        onRefresh={loadGroups}
+        ListEmptyComponent={renderEmpty}
+      />
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
@@ -86,25 +111,7 @@ export default function GroupsListScreen() {
         </Pressable>
       </View>
 
-      {isLoading ? (
-        <FullScreenLoader message="Cargando grupos..." />
-      ) : error ? (
-        <View style={styles.centered}>
-          <Text style={[styles.error, { color: theme.danger }]}>{error}</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={groups}
-          keyExtractor={(item) => item.idGrupo.toString()}
-          renderItem={({ item }) => (
-            <GroupCard group={item} onPress={() => handleGroupPress(item)} />
-          )}
-          contentContainerStyle={styles.list}
-          refreshing={isLoading}
-          onRefresh={loadGroups}
-          ListEmptyComponent={renderEmpty}
-        />
-      )}
+      {listContent}
     </View>
   );
 }

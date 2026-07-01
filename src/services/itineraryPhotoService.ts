@@ -6,6 +6,8 @@ const PUBLIC_URL_PREFIX = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET_NAM
 export const MAX_ITINERARY_PHOTOS = 10;
 export const MAX_ITINERARY_PHOTO_BYTES = 8 * 1024 * 1024;
 
+let photoIdCounter = 0;
+
 export interface ItineraryPhotoFile {
   uri: string;
   fileName?: string | null;
@@ -61,7 +63,8 @@ export async function uploadItineraryPhoto(
     throw new Error('El archivo seleccionado no es una imagen válida.');
   }
 
-  const uniquePart = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  photoIdCounter += 1;
+  const uniquePart = `${Date.now()}_${photoIdCounter.toString(36)}`;
   const path = `usuarios/${userId}/${uniquePart}.${extensionFrom(file)}`;
   const encodedPath = encodeObjectPath(path);
 

@@ -1,4 +1,4 @@
-import { Stack, useFocusEffect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -32,7 +32,7 @@ const STATUS_LABEL: Record<PollStatus, string> = {
   FINALIZADA: 'Finalizada',
 };
 
-}
+
 
 interface OpenPollSectionProps {
   poll: Poll;
@@ -61,6 +61,39 @@ const OpenPollSection: React.FC<OpenPollSectionProps> = ({
   handleVote,
   handleFinalize,
 }) => {
+  let actionButton = null;
+  if (canFinalize) {
+    actionButton = (
+      <Pressable
+        onPress={handleFinalize}
+        disabled={isFinalizing || isDeleting}
+        style={({ pressed }) => [
+          styles.primaryButton,
+          { backgroundColor: theme.primary },
+          pressed && { opacity: 0.8 },
+          (isFinalizing || isDeleting) && { opacity: 0.7 },
+        ]}
+      >
+        {isFinalizing ? (
+          <ActivityIndicator color={theme.textInverse} />
+        ) : (
+          <>
+            <MaterialIcons name={icons.Poll} size={20} color={theme.textInverse} />
+            <Text style={[styles.primaryButtonText, { color: theme.textInverse }]}>
+              Finalizar encuesta
+            </Text>
+          </>
+        )}
+      </Pressable>
+    );
+  } else if (isCreator) {
+    actionButton = (
+      <Text style={[styles.hint, { color: theme.textSecondary }]}>
+        Faltan {missingVotes} voto{missingVotes > 1 ? 's' : ''} para finalizar.
+      </Text>
+    );
+  }
+
   return (
     <>
       <Text style={[styles.pollName, { color: theme.text }]}>
@@ -82,33 +115,7 @@ const OpenPollSection: React.FC<OpenPollSectionProps> = ({
           disabled={isFinalizing || isDeleting}
         />
       ))}
-      {canFinalize ? (
-        <Pressable
-          onPress={handleFinalize}
-          disabled={isFinalizing || isDeleting}
-          style={({ pressed }) => [
-            styles.primaryButton,
-            { backgroundColor: theme.primary },
-            pressed && { opacity: 0.8 },
-            (isFinalizing || isDeleting) && { opacity: 0.7 },
-          ]}
-        >
-          {isFinalizing ? (
-            <ActivityIndicator color={theme.textInverse} />
-          ) : (
-            <>
-              <MaterialIcons name={icons.Poll} size={20} color={theme.textInverse} />
-              <Text style={[styles.primaryButtonText, { color: theme.textInverse }]}>
-                Finalizar encuesta
-              </Text>
-            </>
-          )}
-        </Pressable>
-      ) : isCreator ? (
-        <Text style={[styles.hint, { color: theme.textSecondary }]}>
-          Faltan {missingVotes} voto{missingVotes > 1 ? 's' : ''} para finalizar.
-        </Text>
-      ) : null}
+      {actionButton}
     </>
   );
 };
@@ -199,7 +206,7 @@ const FinalizedPollSection: React.FC<FinalizedPollSectionProps> = ({
 
       <Pressable
         onPress={() =>
-          router.push(`/(tabs)/(group)/itinerarioGrupo?idGrupo=${groupId}` as Href)
+          router.push(`/(tabs)/(group)/itinerarioGrupo?idGrupo=${groupId}`)
         }
         style={({ pressed }) => [
           styles.primaryButton,
@@ -276,6 +283,97 @@ const TiedPollSection: React.FC<TiedPollSectionProps> = ({
         );
       })}
     </>
+  );
+};
+
+interface PollDetailLoadingScreenProps {
+  insets: { top: number };
+  theme: any;
+  isDark: boolean;
+  toggleColorScheme: () => void;
+}
+
+const PollDetailLoadingScreen: React.FC<Readonly<PollDetailLoadingScreenProps>> = ({
+  insets,
+  theme,
+  isDark,
+  toggleColorScheme,
+}) => {
+  return (
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
+      <Header title="Encuesta" onThemeTogglePress={toggleColorScheme} />
+      <FullScreenLoader />
+    </View>
+  );
+};
+
+interface PollDetailErrorScreenProps {
+  insets: { top: number };
+  theme: any;
+  isDark: boolean;
+  toggleColorScheme: () => void;
+  router: any;
+  error: any;
+}
+
+const PollDetailErrorScreen: React.FC<Readonly<PollDetailErrorScreenProps>> = ({
+  insets,
+  theme,
+  isDark,
+  toggleColorScheme,
+  router,
+  error,
+}) => {
+  return (
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
+      <Header title="Encuesta" showBackButton onBackPress={() => router.back()} onThemeTogglePress={toggleColorScheme} />
+      <View style={styles.centered}>
+        <Text style={[styles.error, { color: theme.danger }]}>
+          {error ? String(error) : 'No se pudo cargar la encuesta.'}
+        </Text>
+      </View>
+    </View>
+  );
+};
+
+interface PollDetailDeletedScreenProps {
+  insets: { top: number };
+  theme: any;
+  isDark: boolean;
+  toggleColorScheme: () => void;
+  router: any;
+}
+
+const PollDetailDeletedScreen: React.FC<Readonly<PollDetailDeletedScreenProps>> = ({
+  insets,
+  theme,
+  isDark,
+  toggleColorScheme,
+  router,
+}) => {
+  return (
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
+      <Header title="Encuesta" onThemeTogglePress={toggleColorScheme} />
+      <View style={styles.centered}>
+        <MaterialIcons name={icons.Poll} size={48} color={theme.textSecondary} />
+        <Text style={[styles.error, { color: theme.textSecondary, marginTop: paddings.spacing.md }]}>
+          La encuesta fue eliminada.
+        </Text>
+        <Pressable
+          onPress={() => router.back()}
+          style={({ pressed }) => [
+            styles.primaryButton,
+            { backgroundColor: theme.primary, marginTop: paddings.spacing.lg },
+            pressed && { opacity: 0.8 },
+          ]}
+        >
+          <Text style={[styles.primaryButtonText, { color: theme.textInverse }]}>Volver</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 };
 
@@ -387,17 +485,18 @@ export default function PollDetailScreen() {
 
   const handleOptionPress = (option: PollOption) => {
     router.push(
-      `/(tabs)/(group)/detalleOpcion?idGrupo=${groupId}&idEncuesta=${pollId}&idOpcion=${option.id}` as Href,
+      `/(tabs)/(group)/detalleOpcion?idGrupo=${groupId}&idEncuesta=${pollId}&idOpcion=${option.id}`,
     );
   };
 
   if (isLoading) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
-        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
-        <Header title="Encuesta" onThemeTogglePress={toggleColorScheme} />
-        <FullScreenLoader />
-      </View>
+      <PollDetailLoadingScreen
+        insets={insets}
+        theme={theme}
+        isDark={isDark}
+        toggleColorScheme={toggleColorScheme}
+      />
     );
   }
 
@@ -406,38 +505,24 @@ export default function PollDetailScreen() {
     const isDeletedByOther = isNotFound && pollId !== null;
     if (isDeletedByOther) {
       return (
-        <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
-          <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
-          <Header title="Encuesta" onThemeTogglePress={toggleColorScheme} />
-          <View style={styles.centered}>
-            <MaterialIcons name={icons.Poll} size={48} color={theme.textSecondary} />
-            <Text style={[styles.error, { color: theme.textSecondary, marginTop: paddings.spacing.md }]}>
-              La encuesta fue eliminada.
-            </Text>
-            <Pressable
-              onPress={() => router.back()}
-              style={({ pressed }) => [
-                styles.primaryButton,
-                { backgroundColor: theme.primary, marginTop: paddings.spacing.lg },
-                pressed && { opacity: 0.8 },
-              ]}
-            >
-              <Text style={[styles.primaryButtonText, { color: theme.textInverse }]}>Volver</Text>
-            </Pressable>
-          </View>
-        </View>
+        <PollDetailDeletedScreen
+          insets={insets}
+          theme={theme}
+          isDark={isDark}
+          toggleColorScheme={toggleColorScheme}
+          router={router}
+        />
       );
     }
     return (
-      <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
-        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
-        <Header title="Encuesta" onThemeTogglePress={toggleColorScheme} />
-        <View style={styles.centered}>
-          <Text style={[styles.error, { color: theme.danger }]}>
-            {error || 'No se pudo cargar la encuesta.'}
-          </Text>
-        </View>
-      </View>
+      <PollDetailErrorScreen
+        insets={insets}
+        theme={theme}
+        isDark={isDark}
+        toggleColorScheme={toggleColorScheme}
+        router={router}
+        error={error}
+      />
     );
   }
 

@@ -52,7 +52,8 @@ function buildActivitiesNotes(items: ItinerarioEnCursoDTO['items']): string {
     .slice()
     .sort((a, b) => a.dia - b.dia || (a.hora ?? '').localeCompare(b.hora ?? ''))
     .map((item) => {
-      const header = `• Día ${item.dia}${item.hora ? ` · ${item.hora.substring(0, 5)}` : ''} — ${item.nombreActividad}`;
+      const timeStr = item.hora ? ` · ${item.hora.substring(0, 5)}` : '';
+      const header = `• Día ${item.dia}${timeStr} — ${item.nombreActividad}`;
       const details = [
         item.descripcion,
         item.localidad && `📍 ${item.localidad}`,

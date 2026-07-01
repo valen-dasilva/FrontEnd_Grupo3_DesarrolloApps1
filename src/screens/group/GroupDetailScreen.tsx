@@ -1,4 +1,4 @@
-import { Stack, useFocusEffect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
@@ -97,7 +97,7 @@ export default function GroupDetailScreen() {
     if (Number.isNaN(groupId)) return;
     await leaveGroup(groupId);
     setShowLeaveConfirm(false);
-    router.replace('/(tabs)/grupo' as Href);
+    router.replace('/(tabs)/grupo');
   };
 
   const handleRemoveMember = async () => {
@@ -107,15 +107,18 @@ export default function GroupDetailScreen() {
   };
 
   const handleCreatePoll = () => {
-    router.push(`/(tabs)/(group)/crearEncuesta?idGrupo=${groupId}` as Href);
+    router.push(`/(tabs)/(group)/crearEncuesta?idGrupo=${groupId}`);
   };
 
   const handleViewPolls = () => {
-    router.push(`/(tabs)/(group)/encuestas?idGrupo=${groupId}` as Href);
+    router.push(`/(tabs)/(group)/encuestas?idGrupo=${groupId}`);
   };
 
   const handleViewItinerary = () => {
-    router.push(`/(tabs)/(group)/itinerarioGrupo?idGrupo=${groupId}` as Href);
+    router.push({
+      pathname: '/(tabs)/(group)/itinerarioGrupo' as any,
+      params: { idGrupo: groupId },
+    });
   };
 
   const renderMember = ({ item }: { item: GroupMember }) => {
@@ -209,7 +212,7 @@ export default function GroupDetailScreen() {
 
       {isCreator && (
         <Pressable
-          onPress={() => router.push(`/(tabs)/(group)/editarGrupo?idGrupo=${groupId}` as Href)}
+          onPress={() => router.push(`/(tabs)/(group)/editarGrupo?idGrupo=${groupId}`)}
           style={({ pressed }) => [
             styles.floatingSettings,
             {

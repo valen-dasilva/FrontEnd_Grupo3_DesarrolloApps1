@@ -86,7 +86,9 @@ export default function FavoriteItineraryInfoScreen() {
     const displayImageUrl = fotoPortada || itineraryDetails?.fotoPortada;
     const displayImages = useMemo(() => {
         const detailImages = (itineraryDetails?.fotos ?? []).map((foto) => foto.url);
-        return detailImages.length > 0 ? detailImages : displayImageUrl ? [displayImageUrl] : [];
+        if (detailImages.length > 0) return detailImages;
+        if (displayImageUrl) return [displayImageUrl];
+        return [];
     }, [displayImageUrl, itineraryDetails?.fotos]);
     const displayCategory = (etiquetas?.split(',')[0]) || itineraryDetails?.etiquetas?.[0];
     const displayCategories = useMemo(() => {
@@ -202,8 +204,16 @@ export default function FavoriteItineraryInfoScreen() {
         fechaFin: endDate ?? '',
     });
 
-    const renderHeader = useCallback(() => (
-        <>
+    const renderHeader = useCallback(() => {
+        let completarTexto = 'Marcar como completado';
+        if (isCompletando) {
+            completarTexto = 'Guardando...';
+        } else if (yaCompletado) {
+            completarTexto = '¡Viaje completado!';
+        }
+
+        return (
+            <>
             <CardItinerarioInfoFav
                 title={displayTitle}
                 imageUrl={displayImageUrl}
@@ -247,12 +257,12 @@ export default function FavoriteItineraryInfoScreen() {
                         color={completarIconColor}
                     />
                     <Text style={[styles.completarBtnText, { color: completarIconColor }]}>
-                        {isCompletando ? 'Guardando...' : yaCompletado ? '¡Viaje completado!' : 'Marcar como completado'}
+                        {completarTexto}
                     </Text>
                 </Animated.View>
             </TouchableOpacity>
         </>
-    ), [displayTitle, displayImageUrl, displayImages, displayCategory, displayCategories, displayDateRange, displayDescription, id, router, yaCompletado, isCompletando, handleCompletarViaje, scaleAnim, completarBg, completarBorder, completarIconColor, weatherCoords, startDate, endDate]);
+    );}, [displayTitle, displayImageUrl, displayImages, displayCategory, displayCategories, displayDateRange, displayDescription, id, router, yaCompletado, isCompletando, handleCompletarViaje, scaleAnim, completarBg, completarBorder, completarIconColor, weatherCoords, startDate, endDate]);
 
     const renderEmptyComponent = () => {
         if (isLoading) {

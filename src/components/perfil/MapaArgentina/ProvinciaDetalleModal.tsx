@@ -31,12 +31,52 @@ export function ProvinciaDetalleModal({
   titulosItinerarios,
   colorRegion,
   onClose,
-}: Props) {
+}: Readonly<Props>) {
   const { theme } = useTheme();
 
   const nombreProvincia = provincia ? (PROVINCIA_LABEL[provincia] ?? provincia) : '';
   const regionLabel = provincia ? (REGION_LABEL_POR_PROVINCIA[provincia] ?? '') : '';
   const descripcion = provincia ? (PROVINCIAS_INFO[provincia]?.descripcion ?? '') : '';
+
+  const viajesContent = (() => {
+    if (titulosItinerarios.length > 0) {
+      return (
+        <View style={styles.viajesSeccion}>
+          <Text style={[styles.viajesLabel, { color: theme.gray }]}>
+            Tus viajes aquí
+          </Text>
+          {titulosItinerarios.map((titulo, i) => (
+            <View
+              key={`${titulo}-${i}`}
+              style={[styles.viajeItem, { backgroundColor: theme.surfaceNeutral }]}
+            >
+              <Ionicons name="briefcase-outline" size={15} color={colorRegion} />
+              <Text
+                style={[styles.viajeTitulo, { color: theme.text }]}
+                numberOfLines={1}
+              >
+                {titulo}
+              </Text>
+            </View>
+          ))}
+        </View>
+      );
+    }
+    if (!fueVisitada) {
+      return (
+        <View style={[styles.noVisitadaMsg, { backgroundColor: theme.surfaceNeutral }]}>
+          <Ionicons name="map-outline" size={24} color={theme.gray} />
+          <Text style={[styles.noVisitadaTexto, { color: theme.textSecondary }]}>
+            Todavía no fuiste a {nombreProvincia}
+          </Text>
+          <Text style={[styles.noVisitadaSub, { color: theme.gray }]}>
+            ¡Puede ser tu próxima aventura!
+          </Text>
+        </View>
+      );
+    }
+    return null;
+  })();
 
   return (
     <Modal
@@ -104,37 +144,7 @@ export function ProvinciaDetalleModal({
               {descripcion}
             </Text>
 
-            {titulosItinerarios.length > 0 ? (
-              <View style={styles.viajesSeccion}>
-                <Text style={[styles.viajesLabel, { color: theme.gray }]}>
-                  Tus viajes aquí
-                </Text>
-                {titulosItinerarios.map((titulo, i) => (
-                  <View
-                    key={i}
-                    style={[styles.viajeItem, { backgroundColor: theme.surfaceNeutral }]}
-                  >
-                    <Ionicons name="briefcase-outline" size={15} color={colorRegion} />
-                    <Text
-                      style={[styles.viajeTitulo, { color: theme.text }]}
-                      numberOfLines={1}
-                    >
-                      {titulo}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            ) : !fueVisitada ? (
-              <View style={[styles.noVisitadaMsg, { backgroundColor: theme.surfaceNeutral }]}>
-                <Ionicons name="map-outline" size={24} color={theme.gray} />
-                <Text style={[styles.noVisitadaTexto, { color: theme.textSecondary }]}>
-                  Todavía no fuiste a {nombreProvincia}
-                </Text>
-                <Text style={[styles.noVisitadaSub, { color: theme.gray }]}>
-                  ¡Puede ser tu próxima aventura!
-                </Text>
-              </View>
-            ) : null}
+            {viajesContent}
           </ScrollView>
         </View>
       </View>

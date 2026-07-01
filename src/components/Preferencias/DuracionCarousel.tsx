@@ -27,7 +27,7 @@ export function DuracionCarousel({
   onSelect,
   titulo = '¿Cuántos días?',
   subtitulo = 'Selecciona la duración ideal para tu viaje',
-}: DuracionCarouselProps) {
+}: Readonly<DuracionCarouselProps>) {
   const { theme } = useTheme();
 
   return (
@@ -51,7 +51,7 @@ export function DuracionCarousel({
 
           return (
             <TouchableOpacity
-              key={index}
+              key={opcion.value ?? index}
               style={[
                 styles.card,
                 {

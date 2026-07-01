@@ -21,20 +21,23 @@ interface Props {
  * con un botón opcional. Usado al crear una copia, completar un viaje y
  * mostrar errores controlados.
  */
-export function StatusModal({ visible, state, title, message, actionLabel, onAction }: Props) {
+export function StatusModal({ visible, state, title, message, actionLabel, onAction }: Readonly<Props>) {
   const { theme } = useTheme();
+
+  let iconComponent;
+  if (state === 'loading') {
+    iconComponent = <ActivityIndicator size="large" color={theme.primary} style={styles.icon} />;
+  } else if (state === 'error') {
+    iconComponent = <MaterialIcons name="cancel" size={56} color={theme.danger} style={styles.icon} />;
+  } else {
+    iconComponent = <MaterialIcons name="check-circle" size={56} color={theme.lightgreen} style={styles.icon} />;
+  }
 
   return (
     <Modal transparent animationType="fade" visible={visible} onRequestClose={onAction}>
       <View style={styles.overlay}>
         <View style={[styles.box, { backgroundColor: theme.surface }]}>
-          {state === 'loading' ? (
-            <ActivityIndicator size="large" color={theme.primary} style={styles.icon} />
-          ) : state === 'error' ? (
-            <MaterialIcons name="cancel" size={56} color={theme.danger} style={styles.icon} />
-          ) : (
-            <MaterialIcons name="check-circle" size={56} color={theme.lightgreen} style={styles.icon} />
-          )}
+          {iconComponent}
 
           <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
           {message ? (

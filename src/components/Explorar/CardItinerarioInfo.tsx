@@ -53,7 +53,7 @@ export function ItineraryInfoCard({
   showBackButton = true,
   showFavoriteButton = true,
   showCategoryBadge = true,
-}: Props) {
+}: Readonly<Props>) {
   const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === 'dark';
 
@@ -63,21 +63,29 @@ export function ItineraryInfoCard({
     idFavorito
   );
 
-  const resolvedCategories = categories && categories.length > 0
-    ? categories
-    : category && showCategoryBadge
-      ? [category]
-      : [];
+  let resolvedCategories: string[] = [];
+  if (categories && categories.length > 0) {
+    resolvedCategories = categories;
+  } else if (category && showCategoryBadge) {
+    resolvedCategories = [category];
+  }
 
   const resolvedDateRange = dateRange || (startDate && endDate
     ? formatDateRange(startDate, endDate)
     : "15 Oct - 22 Oct, 2024");
 
+  let carouselImages: readonly string[] = [];
+  if (images?.length) {
+    carouselImages = images;
+  } else if (image) {
+    carouselImages = [image];
+  }
+
   return (
     <View>
       {/** Image container */}
       <ImageCarousel
-        images={images?.length ? images : image ? [image] : []}
+        images={carouselImages}
         fallbackColor={theme.surfaceNeutral}
         defaultImage={defaultImageSrc}
         defaultImageStyle={{ width: '100%', height: '100%', resizeMode: 'contain', transform: [{ scale: 0.4 }] }}
@@ -125,9 +133,9 @@ export function ItineraryInfoCard({
             {/** Category badges */}
             {showCategoryBadge && resolvedCategories.length > 0 && (
               <View style={styles.categoriesRow}>
-                {resolvedCategories.map((cat, index) => (
+                {resolvedCategories.map((cat) => (
                   <CategoryBadge
-                    key={index}
+                    key={cat}
                     category={cat}
                     compact
                     style={styles.categoryBadge}

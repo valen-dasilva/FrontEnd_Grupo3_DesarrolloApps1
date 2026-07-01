@@ -1,4 +1,4 @@
-import { Stack, useLocalSearchParams, useRouter, type Href } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
   Linking,
@@ -49,14 +49,19 @@ function AttendanceRow({
   label,
   people,
   theme,
-}: {
+}: Readonly<{
   tone: Tone;
   label: string;
-  people: GroupItineraryAttendance[];
+  people: readonly GroupItineraryAttendance[];
   theme: ReturnType<typeof useTheme>['theme'];
-}) {
+}>) {
   if (people.length === 0) return null;
-  const dotColor = tone === 'green' ? theme.lightgreen : tone === 'red' ? theme.danger : theme.textSecondary;
+  let dotColor = theme.textSecondary;
+  if (tone === 'green') {
+    dotColor = theme.lightgreen;
+  } else if (tone === 'red') {
+    dotColor = theme.danger;
+  }
   return (
     <View style={styles.attRow}>
       <View style={styles.attRowHeader}>
@@ -80,20 +85,20 @@ function AttendanceRow({
 }
 
 interface GroupItineraryItemCardProps {
-  item: GroupItineraryItem;
-  index: number;
-  theme: any;
-  soyCreador: boolean;
-  myId: number | undefined;
-  busy: boolean;
-  toggleAttendance: (id: number, attend: boolean) => Promise<void>;
-  isTogglingAttendanceFor: (id: number) => boolean;
-  openEdit: (item: GroupItineraryItem) => void;
-  setConfirmActionId: (id: number) => void;
-  setConfirmDeleteId: (id: number) => void;
+  readonly item: GroupItineraryItem;
+  readonly index: number;
+  readonly theme: any;
+  readonly soyCreador: boolean;
+  readonly myId: number | undefined;
+  readonly busy: boolean;
+  readonly toggleAttendance: (id: number, attend: boolean) => Promise<any>;
+  readonly isTogglingAttendanceFor: (id: number) => boolean;
+  readonly openEdit: (item: GroupItineraryItem) => void;
+  readonly setConfirmActionId: (id: number) => void;
+  readonly setConfirmDeleteId: (id: number) => void;
 }
 
-const GroupItineraryItemCard: React.FC<GroupItineraryItemCardProps> = ({
+const GroupItineraryItemCard: React.FC<Readonly<GroupItineraryItemCardProps>> = ({
   item,
   index,
   theme,
@@ -263,6 +268,79 @@ const GroupItineraryItemCard: React.FC<GroupItineraryItemCardProps> = ({
   );
 };
 
+interface GroupItineraryLoadingScreenProps {
+  insets: { top: number };
+  theme: any;
+  isDark: boolean;
+  toggleColorScheme: () => void;
+}
+
+const GroupItineraryLoadingScreen: React.FC<Readonly<GroupItineraryLoadingScreenProps>> = ({
+  insets,
+  theme,
+  isDark,
+  toggleColorScheme,
+}) => {
+  return (
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
+      <Header title="Itinerario del grupo" onThemeTogglePress={toggleColorScheme} />
+      <FullScreenLoader />
+    </View>
+  );
+};
+
+interface GroupItineraryErrorScreenProps {
+  insets: { top: number };
+  theme: any;
+  isDark: boolean;
+  toggleColorScheme: () => void;
+  router: any;
+  groupId: number;
+}
+
+const GroupItineraryErrorScreen: React.FC<Readonly<GroupItineraryErrorScreenProps>> = ({
+  insets,
+  theme,
+  isDark,
+  toggleColorScheme,
+  router,
+  groupId,
+}) => {
+  return (
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
+      <Header title="Itinerario del grupo" showBackButton onBackPress={() => router.back()} onThemeTogglePress={toggleColorScheme} />
+      <Animated.View entering={FadeIn.duration(300)} style={styles.centered}>
+        <MaterialIcons name={icons.Poll} size={48} color={theme.textSecondary} />
+        <Text style={[styles.emptyTitle, { color: theme.text }]}>Todavía no hay itinerario</Text>
+        <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+          El itinerario compartido se crea cuando el grupo finaliza una encuesta.
+        </Text>
+        <Pressable
+          onPress={() => router.push(`/(tabs)/(group)/encuestas?idGrupo=${groupId}`)}
+          style={({ pressed }) => [styles.primaryButton, { backgroundColor: theme.primary }, pressed && { opacity: 0.8 }]}
+        >
+          <Text style={[styles.primaryButtonText, { color: theme.textInverse }]}>Ir a las encuestas</Text>
+        </Pressable>
+      </Animated.View>
+    </View>
+  );
+};
+
+function getBadgeForModal(editingItem: GroupItineraryItem | null, soyCreador: boolean) {
+  if (editingItem) {
+    if (editingItem.estado === 'PROPUESTO') {
+      return { label: 'Propuesta', tone: 'proposed' as const };
+    }
+    return { label: 'Confirmada', tone: 'confirmed' as const };
+  }
+  if (soyCreador) {
+    return null;
+  }
+  return { label: 'Quedará como propuesta', tone: 'proposed' as const };
+}
+
 export default function GroupItineraryScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -383,43 +461,29 @@ export default function GroupItineraryScreen() {
 
   // canEdit, canDelete, and renderItem extracted to GroupItineraryItemCard subcomponent
 
-  const badgeForModal = editingItem
-    ? editingItem.estado === 'PROPUESTO'
-      ? { label: 'Propuesta', tone: 'proposed' as const }
-      : { label: 'Confirmada', tone: 'confirmed' as const }
-    : !soyCreador
-      ? { label: 'Quedará como propuesta', tone: 'proposed' as const }
-      : null;
+  const badgeForModal = getBadgeForModal(editingItem, soyCreador);
 
   if (isLoading) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
-        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
-        <Header title="Itinerario del grupo" onThemeTogglePress={toggleColorScheme} />
-        <FullScreenLoader />
-      </View>
+      <GroupItineraryLoadingScreen
+        insets={insets}
+        theme={theme}
+        isDark={isDark}
+        toggleColorScheme={toggleColorScheme}
+      />
     );
   }
 
   if (error || !itinerary) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
-        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
-        <Header title="Itinerario del grupo" showBackButton onBackPress={() => router.back()} onThemeTogglePress={toggleColorScheme} />
-        <Animated.View entering={FadeIn.duration(300)} style={styles.centered}>
-          <MaterialIcons name={icons.Poll} size={48} color={theme.textSecondary} />
-          <Text style={[styles.emptyTitle, { color: theme.text }]}>Todavía no hay itinerario</Text>
-          <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-            El itinerario compartido se crea cuando el grupo finaliza una encuesta.
-          </Text>
-          <Pressable
-            onPress={() => router.push(`/(tabs)/(group)/encuestas?idGrupo=${groupId}` as Href)}
-            style={({ pressed }) => [styles.primaryButton, { backgroundColor: theme.primary }, pressed && { opacity: 0.8 }]}
-          >
-            <Text style={[styles.primaryButtonText, { color: theme.textInverse }]}>Ir a las encuestas</Text>
-          </Pressable>
-        </Animated.View>
-      </View>
+      <GroupItineraryErrorScreen
+        insets={insets}
+        theme={theme}
+        isDark={isDark}
+        toggleColorScheme={toggleColorScheme}
+        router={router}
+        groupId={groupId}
+      />
     );
   }
 
