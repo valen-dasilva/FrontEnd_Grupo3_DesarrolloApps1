@@ -13,11 +13,18 @@
     },
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./assets/icono.png",
         "backgroundColor": "#E6F4FE"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.Turistear.app"
+      "package": "com.Turistear.app",
+      "permissions": [
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR"
+      ]
     },
     "web": {
       "output": "static"
@@ -67,14 +74,6 @@
       "eas": {
         "projectId": "c30baf96-af84-4130-9cde-16acc168da7e"
       }
-    },
-    "android": {
-      "permissions": [
-        "android.permission.SCHEDULE_EXACT_ALARM",
-        "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.READ_CALENDAR",
-        "android.permission.WRITE_CALENDAR"
-      ]
     }
   }
 }

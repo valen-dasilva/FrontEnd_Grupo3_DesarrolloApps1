@@ -89,6 +89,7 @@ export default function CambiarContrasenaScreen() {
           secureTextEntry
           value={actual}
           onChangeText={setActual}
+          maxLength={25}
           eyeButtonDisabled = {actual.length === 0}
         />
 
