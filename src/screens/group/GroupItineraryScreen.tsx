@@ -1,33 +1,44 @@
-import { Stack, useFocusEffect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
-import React, { useCallback, useMemo, useState } from 'react';
+import { Stack, useLocalSearchParams, useRouter, type Href } from 'expo-router';
+import React, { useMemo, useState } from 'react';
 import {
   Image,
   Modal,
   Pressable,
+  RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import Animated, { FadeIn, FadeInDown, LinearTransition } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Header } from '@/components/common/Header/Header';
 import { FullScreenLoader } from '@/components/common/FullScreenLoader/FullScreenLoader';
 import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
+import { UserAvatar } from '@/components/common/UserAvatar/UserAvatar';
+import { WeatherStrip } from '@/components/common/WeatherStrip/WeatherStrip';
 import {
   ActivityFormValues,
   EditActivityFormulary,
 } from '@/components/favorites/editActivityFormulary/EditActivityFormulary';
 import { useGroupItineraryHook } from '@/hooks/useGroupItinerary';
-import { useGroupDetailsHook } from '@/hooks/useGroups';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useColorScheme';
 import { formatHora } from '@/utils/dateUtils';
-import { GroupItineraryItem, GroupItineraryItemRequest } from '@/types/itinerarioGrupo';
+import { PROVINCIA_COORDS } from '@/utils/provinciaCoords';
+import { Provincia } from '@/types/itinerario';
+import {
+  GroupItineraryAttendance,
+  GroupItineraryItem,
+  GroupItineraryItemRequest,
+} from '@/types/itinerarioGrupo';
 import { icons } from '@/constants/icons';
 import { fonts } from '@/constants/fonts';
 import { paddings } from '@/constants/paddings';
+
+type Tone = 'green' | 'red' | 'neutral';
 
 export default function GroupItineraryScreen() {
   const insets = useSafeAreaInsets();
@@ -39,9 +50,6 @@ export default function GroupItineraryScreen() {
   const isDark = colorScheme === 'dark';
   const { user } = useAuth();
   const myId = user?.idUsuario;
-
-  const { group } = useGroupDetailsHook(validGroupId);
-  const soyCreador = group?.soyCreador ?? false;
 
   const {
     itinerary,
@@ -55,23 +63,35 @@ export default function GroupItineraryScreen() {
     toggleAttendance,
     isProposing,
     isUpdating,
+    isConfirming,
+    isDeleting,
   } = useGroupItineraryHook(validGroupId);
+
+  const soyCreador = itinerary?.soyCreador ?? false;
+  const busy = isProposing || isUpdating || isConfirming || isDeleting;
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingItem, setEditingItem] = useState<GroupItineraryItem | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [confirmActionId, setConfirmActionId] = useState<number | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadItinerary();
-    }, [loadItinerary]),
-  );
+  const weatherCoords = useMemo(() => {
+    if (!itinerary) return null;
+    return PROVINCIA_COORDS[itinerary.provincia as Provincia] ?? null;
+  }, [itinerary]);
 
   const dias = useMemo(() => {
     if (!itinerary) return [];
     const total = Math.max(itinerary.duracionDias, ...itinerary.items.map((i) => i.dia), 1);
     return Array.from({ length: total }, (_, i) => i + 1);
   }, [itinerary]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadItinerary();
+    setRefreshing(false);
+  };
 
   const openNew = () => {
     setEditingItem(null);
@@ -105,7 +125,14 @@ export default function GroupItineraryScreen() {
     }
   };
 
-  const confirmDelete = async () => {
+  const handleConfirm = async () => {
+    if (confirmActionId !== null) {
+      await confirmItem(confirmActionId);
+      setConfirmActionId(null);
+    }
+  };
+
+  const handleDelete = async () => {
     if (confirmDeleteId !== null) {
       await removeItem(confirmDeleteId);
       setConfirmDeleteId(null);
@@ -119,33 +146,69 @@ export default function GroupItineraryScreen() {
   const canDelete = (item: GroupItineraryItem) =>
     soyCreador || (item.estado === 'PROPUESTO' && item.propuestoPorId === myId);
 
-  const renderItem = (item: GroupItineraryItem) => {
+  const AttendanceRow = ({ tone, label, people }: { tone: Tone; label: string; people: GroupItineraryAttendance[] }) => {
+    if (people.length === 0) return null;
+    const dotColor = tone === 'green' ? theme.lightgreen : tone === 'red' ? theme.danger : theme.textSecondary;
+    return (
+      <View style={styles.attRow}>
+        <View style={styles.attRowHeader}>
+          <View style={[styles.attDot, { backgroundColor: dotColor }]} />
+          <Text style={[styles.attLabel, { color: theme.text }]}>
+            {label} · {people.length}
+          </Text>
+        </View>
+        <View style={styles.attAvatars}>
+          {people.map((p) => (
+            <View key={p.usuarioId} style={styles.attChip}>
+              <UserAvatar uri={p.fotoPerfil ?? undefined} nombre={p.nombreUsuario} size={26} />
+              <Text style={[styles.attChipName, { color: theme.textSecondary }]} numberOfLines={1}>
+                {p.nombreUsuario.split(' ')[0]}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  };
+
+  const renderItem = (item: GroupItineraryItem, index: number) => {
     const van = item.asistencias.filter((a) => a.asiste === true);
     const noVan = item.asistencias.filter((a) => a.asiste === false);
     const sinResponder = item.asistencias.filter((a) => a.asiste === null);
     const esPropuesta = item.estado === 'PROPUESTO';
 
     return (
-      <View
+      <Animated.View
         key={item.id}
-        style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}
+        entering={FadeInDown.delay(Math.min(index, 6) * 60).duration(280)}
+        layout={LinearTransition.springify().damping(18)}
+        style={[styles.card, { backgroundColor: theme.surface, borderColor: esPropuesta ? theme.primary : theme.border }]}
       >
         <View style={styles.cardHeader}>
           <View style={styles.cardHeaderLeft}>
             {item.hora ? (
-              <Text style={[styles.hora, { color: theme.primary }]}>{formatHora(item.hora)}</Text>
+              <View style={styles.horaRow}>
+                <MaterialIcons name={icons.Schedule} size={14} color={theme.primary} />
+                <Text style={[styles.hora, { color: theme.primary }]}>{formatHora(item.hora)}</Text>
+              </View>
             ) : null}
             <Text style={[styles.actividad, { color: theme.text }]}>{item.nombreActividad}</Text>
           </View>
           {esPropuesta && (
             <View style={[styles.badge, { backgroundColor: theme.surfaceHighlight }]}>
+              <MaterialIcons name={icons.Schedule} size={12} color={theme.primary} />
               <Text style={[styles.badgeText, { color: theme.primary }]}>Propuesta</Text>
             </View>
           )}
         </View>
 
         {item.localidad ? (
-          <Text style={[styles.localidad, { color: theme.textSecondary }]}>{item.localidad}</Text>
+          <View style={styles.metaRow}>
+            <MaterialIcons name={icons.Location} size={14} color={theme.textSecondary} />
+            <Text style={[styles.localidad, { color: theme.textSecondary }]} numberOfLines={1}>
+              {item.localidad}
+            </Text>
+          </View>
         ) : null}
         {item.descripcion ? (
           <Text style={[styles.descripcion, { color: theme.textSecondary }]}>{item.descripcion}</Text>
@@ -177,12 +240,7 @@ export default function GroupItineraryScreen() {
                   size={16}
                   color={item.miAsistencia === true ? theme.textInverse : theme.primary}
                 />
-                <Text
-                  style={[
-                    styles.attBtnText,
-                    { color: item.miAsistencia === true ? theme.textInverse : theme.primary },
-                  ]}
-                >
+                <Text style={[styles.attBtnText, { color: item.miAsistencia === true ? theme.textInverse : theme.primary }]}>
                   Voy
                 </Text>
               </Pressable>
@@ -202,60 +260,58 @@ export default function GroupItineraryScreen() {
                   size={16}
                   color={item.miAsistencia === false ? theme.textInverse : theme.textSecondary}
                 />
-                <Text
-                  style={[
-                    styles.attBtnText,
-                    { color: item.miAsistencia === false ? theme.textInverse : theme.textSecondary },
-                  ]}
-                >
+                <Text style={[styles.attBtnText, { color: item.miAsistencia === false ? theme.textInverse : theme.textSecondary }]}>
                   No voy
                 </Text>
               </Pressable>
             </View>
-            <Text style={[styles.attCounts, { color: theme.textSecondary }]}>
-              {van.length} {van.length === 1 ? 'va' : 'van'} · {noVan.length} no · {sinResponder.length} sin responder
-            </Text>
-            {van.length > 0 && (
-              <Text style={[styles.attNames, { color: theme.textSecondary }]} numberOfLines={2}>
-                Van: {van.map((a) => a.nombreUsuario).join(', ')}
-              </Text>
-            )}
+
+            <View style={[styles.attLists, { borderTopColor: theme.border }]}>
+              <AttendanceRow tone="green" label="Van" people={van} />
+              <AttendanceRow tone="red" label="No van" people={noVan} />
+              <AttendanceRow tone="neutral" label="Sin responder" people={sinResponder} />
+            </View>
           </View>
         )}
 
         {/* Acciones */}
-        <View style={styles.actions}>
-          {soyCreador && esPropuesta && (
-            <Pressable
-              onPress={() => confirmItem(item.id)}
-              style={({ pressed }) => [styles.actionChip, { backgroundColor: theme.primary }, pressed && { opacity: 0.8 }]}
-            >
-              <MaterialIcons name={icons.Check} size={16} color={theme.textInverse} />
-              <Text style={[styles.actionChipText, { color: theme.textInverse }]}>Confirmar</Text>
-            </Pressable>
-          )}
-          {canEdit(item) && (
-            <Pressable
-              onPress={() => openEdit(item)}
-              style={({ pressed }) => [styles.actionChip, { backgroundColor: theme.surfaceHighlight }, pressed && { opacity: 0.8 }]}
-            >
-              <MaterialIcons name={icons.Edit} size={16} color={theme.primary} />
-              <Text style={[styles.actionChipText, { color: theme.primary }]}>Editar</Text>
-            </Pressable>
-          )}
-          {canDelete(item) && (
-            <Pressable
-              onPress={() => setConfirmDeleteId(item.id)}
-              style={({ pressed }) => [styles.actionChip, { backgroundColor: theme.surfaceHighlight }, pressed && { opacity: 0.8 }]}
-            >
-              <MaterialIcons name={icons.Delete} size={16} color={theme.danger} />
-              <Text style={[styles.actionChipText, { color: theme.danger }]}>
-                {soyCreador && esPropuesta ? 'Rechazar' : 'Eliminar'}
-              </Text>
-            </Pressable>
-          )}
-        </View>
-      </View>
+        {(canEdit(item) || canDelete(item) || (soyCreador && esPropuesta)) && (
+          <View style={styles.actions}>
+            {soyCreador && esPropuesta && (
+              <Pressable
+                onPress={() => setConfirmActionId(item.id)}
+                disabled={busy}
+                style={({ pressed }) => [styles.actionChip, { backgroundColor: theme.primary }, (pressed || busy) && { opacity: 0.7 }]}
+              >
+                <MaterialIcons name={icons.Check} size={16} color={theme.textInverse} />
+                <Text style={[styles.actionChipText, { color: theme.textInverse }]}>Confirmar</Text>
+              </Pressable>
+            )}
+            {canEdit(item) && (
+              <Pressable
+                onPress={() => openEdit(item)}
+                disabled={busy}
+                style={({ pressed }) => [styles.actionChip, { backgroundColor: theme.surfaceHighlight }, (pressed || busy) && { opacity: 0.7 }]}
+              >
+                <MaterialIcons name={icons.Edit} size={16} color={theme.primary} />
+                <Text style={[styles.actionChipText, { color: theme.primary }]}>Editar</Text>
+              </Pressable>
+            )}
+            {canDelete(item) && (
+              <Pressable
+                onPress={() => setConfirmDeleteId(item.id)}
+                disabled={busy}
+                style={({ pressed }) => [styles.actionChip, { backgroundColor: theme.surfaceHighlight }, (pressed || busy) && { opacity: 0.7 }]}
+              >
+                <MaterialIcons name={icons.Delete} size={16} color={theme.danger} />
+                <Text style={[styles.actionChipText, { color: theme.danger }]}>
+                  {soyCreador && esPropuesta ? 'Rechazar' : 'Eliminar'}
+                </Text>
+              </Pressable>
+            )}
+          </View>
+        )}
+      </Animated.View>
     );
   };
 
@@ -282,7 +338,7 @@ export default function GroupItineraryScreen() {
       <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
         <Header title="Itinerario del grupo" showBackButton onBackPress={() => router.back()} onThemeTogglePress={toggleColorScheme} />
-        <View style={styles.centered}>
+        <Animated.View entering={FadeIn.duration(300)} style={styles.centered}>
           <MaterialIcons name={icons.Poll} size={48} color={theme.textSecondary} />
           <Text style={[styles.emptyTitle, { color: theme.text }]}>Todavía no hay itinerario</Text>
           <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
@@ -294,7 +350,7 @@ export default function GroupItineraryScreen() {
           >
             <Text style={[styles.primaryButtonText, { color: theme.textInverse }]}>Ir a las encuestas</Text>
           </Pressable>
-        </View>
+        </Animated.View>
       </View>
     );
   }
@@ -311,10 +367,17 @@ export default function GroupItineraryScreen() {
         onThemeTogglePress={toggleColorScheme}
       />
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
+      >
         {itinerary.fotoPortada ? (
-          <Image source={{ uri: itinerary.fotoPortada }} style={styles.cover} />
+          <Animated.Image entering={FadeIn.duration(400)} source={{ uri: itinerary.fotoPortada }} style={styles.cover} />
         ) : null}
+
+        {weatherCoords && (
+          <WeatherStrip coords={weatherCoords} fechaInicio={itinerary.fechaInicio} fechaFin={itinerary.fechaFin} />
+        )}
 
         {dias.map((dia) => {
           const items = itinerary.items
@@ -334,7 +397,8 @@ export default function GroupItineraryScreen() {
 
         <Pressable
           onPress={openNew}
-          style={({ pressed }) => [styles.proposeButton, { backgroundColor: theme.primary }, pressed && { opacity: 0.85 }]}
+          disabled={busy}
+          style={({ pressed }) => [styles.proposeButton, { backgroundColor: theme.primary }, (pressed || busy) && { opacity: 0.85 }]}
         >
           <MaterialIcons name={icons.Add} size={20} color={theme.textInverse} />
           <Text style={[styles.proposeButtonText, { color: theme.textInverse }]}>
@@ -343,12 +407,7 @@ export default function GroupItineraryScreen() {
         </Pressable>
       </ScrollView>
 
-      <Modal
-        visible={modalVisible}
-        animationType="slide"
-        transparent={false}
-        onRequestClose={() => setModalVisible(false)}
-      >
+      <Modal visible={modalVisible} animationType="slide" transparent={false} onRequestClose={() => setModalVisible(false)}>
         <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
           <Header
             title={editingItem ? 'Editar actividad' : 'Proponer actividad'}
@@ -377,13 +436,25 @@ export default function GroupItineraryScreen() {
       </Modal>
 
       <ConfirmAlert
+        visible={confirmActionId !== null}
+        title="Confirmar actividad"
+        message="Al confirmarla, todos los miembros van a poder marcar si asisten o no."
+        cancelText="Cancelar"
+        confirmText="Confirmar"
+        loading={isConfirming}
+        onCancel={() => setConfirmActionId(null)}
+        onConfirm={handleConfirm}
+      />
+
+      <ConfirmAlert
         visible={confirmDeleteId !== null}
         title="Eliminar actividad"
         message="¿Seguro que querés eliminar esta actividad del itinerario del grupo?"
         cancelText="Cancelar"
         confirmText="Eliminar"
+        loading={isDeleting}
         onCancel={() => setConfirmDeleteId(null)}
-        onConfirm={confirmDelete}
+        onConfirm={handleDelete}
       />
     </View>
   );
@@ -400,19 +471,27 @@ const styles = StyleSheet.create({
   card: { borderRadius: paddings.radius.md, borderWidth: 1, padding: paddings.spacing.md, marginBottom: paddings.spacing.md },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   cardHeaderLeft: { flex: 1 },
+  horaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   hora: { fontFamily: fonts.family.headingMedium, fontSize: fonts.size.sm },
   actividad: { fontFamily: fonts.family.headingMedium, fontSize: fonts.size.md, marginTop: 2 },
-  localidad: { fontFamily: fonts.family.bodyRegular, fontSize: fonts.size.sm, marginTop: 2 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  localidad: { fontFamily: fonts.family.bodyRegular, fontSize: fonts.size.sm, flex: 1 },
   descripcion: { fontFamily: fonts.family.bodyRegular, fontSize: fonts.size.sm, marginTop: 4 },
   propuestaPor: { fontFamily: fonts.family.bodyRegular, fontSize: fonts.size.xs, marginTop: 6, fontStyle: 'italic' },
-  badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: paddings.radius.sm },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: paddings.radius.sm },
   badgeText: { fontFamily: fonts.family.bodySemiBold, fontSize: fonts.size.xs },
-  attendanceBlock: { marginTop: paddings.spacing.md, gap: 6 },
+  attendanceBlock: { marginTop: paddings.spacing.md, gap: paddings.spacing.sm },
   attendanceButtons: { flexDirection: 'row', gap: paddings.spacing.sm },
   attBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, height: 36, borderRadius: paddings.radius.sm, borderWidth: 1 },
   attBtnText: { fontFamily: fonts.family.headingMedium, fontSize: fonts.size.sm },
-  attCounts: { fontFamily: fonts.family.bodyRegular, fontSize: fonts.size.xs },
-  attNames: { fontFamily: fonts.family.bodyRegular, fontSize: fonts.size.xs },
+  attLists: { borderTopWidth: 1, paddingTop: paddings.spacing.sm, gap: paddings.spacing.sm },
+  attRow: { gap: 6 },
+  attRowHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  attDot: { width: 8, height: 8, borderRadius: 4 },
+  attLabel: { fontFamily: fonts.family.bodySemiBold, fontSize: fonts.size.xs },
+  attAvatars: { flexDirection: 'row', flexWrap: 'wrap', gap: paddings.spacing.sm, paddingLeft: 14 },
+  attChip: { alignItems: 'center', width: 44, gap: 2 },
+  attChipName: { fontSize: 10, fontFamily: fonts.family.bodyRegular, maxWidth: 44, textAlign: 'center' },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: paddings.spacing.sm, marginTop: paddings.spacing.md },
   actionChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, height: 34, borderRadius: paddings.radius.sm },
   actionChipText: { fontFamily: fonts.family.headingMedium, fontSize: fonts.size.sm },

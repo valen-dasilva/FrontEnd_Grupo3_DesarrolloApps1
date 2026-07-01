@@ -42,6 +42,8 @@ export interface GroupItinerary {
   creadorOriginalId: number;
   nombreCreadorOriginal: string;
   idEncuestaOrigen: number | null;
+  /** ¿El usuario actual es el líder del grupo? (habilita confirmar/editar). */
+  soyCreador: boolean;
   items: GroupItineraryItem[];
 }
 

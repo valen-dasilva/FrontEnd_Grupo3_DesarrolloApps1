@@ -1,4 +1,5 @@
-import { Alert } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, AppState } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   confirmItem,
@@ -15,13 +16,25 @@ const GROUP_ITINERARY_KEY = 'groupItinerary';
 
 /**
  * Itinerario compartido de un grupo. Como es colaborativo (varios miembros
- * mirando/editando lo mismo), la query hace polling cada 7s mientras la
- * pantalla está montada — mismo patrón que usePollDetailsHook para encuestas
- * abiertas — para acercarse a "en vivo" sin infraestructura de realtime.
+ * mirando/editando lo mismo), la query hace polling mientras la pantalla está
+ * montada y la app en primer plano — para acercarse a "en vivo" sin realtime.
+ *
+ * Optimizaciones de carga (Supabase tolera mal el spam de requests):
+ *  - Intervalo de 15s (antes 7s) y sin polling en background.
+ *  - Se pausa cuando la app pasa a segundo plano (AppState).
+ *  - Solo se invalida esta query tras cada mutación (no cachés ajenas).
  */
+const POLL_INTERVAL_MS = 15000;
+
 export const useGroupItineraryHook = (idGrupo: number | null) => {
   const queryClient = useQueryClient();
   const key = [GROUP_ITINERARY_KEY, idGrupo];
+
+  const [appActive, setAppActive] = useState(AppState.currentState === 'active');
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => setAppActive(state === 'active'));
+    return () => sub.remove();
+  }, []);
 
   const {
     data: itinerary,
@@ -35,15 +48,12 @@ export const useGroupItineraryHook = (idGrupo: number | null) => {
       return await getGroupItinerary(idGrupo);
     },
     enabled: idGrupo !== null,
-    refetchInterval: 7000,
+    refetchInterval: appActive ? POLL_INTERVAL_MS : false,
+    refetchIntervalInBackground: false,
   });
 
   const invalidate = () => {
-    if (idGrupo) {
-      queryClient.invalidateQueries({ queryKey: key });
-      // Por si a futuro GroupDetailScreen muestra un badge de "hay itinerario".
-      queryClient.invalidateQueries({ queryKey: ['group', idGrupo] });
-    }
+    if (idGrupo) queryClient.invalidateQueries({ queryKey: key });
   };
 
   const proposeMutation = useMutation({
