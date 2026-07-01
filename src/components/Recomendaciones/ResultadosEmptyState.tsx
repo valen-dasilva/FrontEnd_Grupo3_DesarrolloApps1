@@ -9,20 +9,35 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { useTheme } from '@/hooks/useColorScheme';
 
-interface ResultadosEmptyStateProps {
+export interface ResultadosEmptyStateProps {
   /** Vuelve a la pantalla de preferencias para que el usuario ajuste los filtros */
   onBack: () => void;
+  /** Duración seleccionada en preferencias, para personalizar el mensaje */
+  duracion?: '1' | '2-3' | '4+';
 }
 
-export function ResultadosEmptyState({ onBack }: ResultadosEmptyStateProps) {
+export function ResultadosEmptyState({ onBack, duracion }: ResultadosEmptyStateProps) {
   const { theme } = useTheme();
+
+  const subtitulo = (() => {
+    if (duracion === '1') {
+      return 'No hay itinerarios de 1 día. Probá con otra duración.';
+    }
+    if (duracion === '2-3') {
+      return 'No hay itinerarios de 2-3 días. Probá con otra duración.';
+    }
+    if (duracion === '4+') {
+      return 'No hay itinerarios de 4 o más días. Probá con otra duración.';
+    }
+    return 'Probá con otros filtros o fechas distintas.';
+  })();
 
   return (
     <View style={styles.contenedor}>
       <Ionicons name="search-outline" size={48} color={theme.textSecondary} />
       <Text style={[styles.titulo, { color: theme.text }]}>Sin resultados</Text>
       <Text style={[styles.subtitulo, { color: theme.textSecondary }]}>
-        Probá con otros filtros o fechas distintas.
+        {subtitulo}
       </Text>
       <TouchableOpacity
         style={[styles.boton, { backgroundColor: theme.primary }]}

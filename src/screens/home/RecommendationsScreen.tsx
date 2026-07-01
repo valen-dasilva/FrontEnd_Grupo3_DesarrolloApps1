@@ -32,6 +32,7 @@ export default function RecomendacionesScreen() {
     etiquetas: string;
     fechaInicio: string;
     fechaFin: string;
+    duracion: '1' | '2-3' | '4+' | '';
   }>();
 
   const resultados: ItinerarioSistemaResumenDTO[] = useMemo(
@@ -75,8 +76,11 @@ export default function RecomendacionesScreen() {
   ), [provinciaLabel, params.fechaInicio, params.fechaFin, etiquetas, resultados, router]);
 
   const renderEmpty = useCallback(() => (
-    <ResultadosEmptyState onBack={() => router.back()} />
-  ), [router]);
+    <ResultadosEmptyState
+      onBack={() => router.back()}
+      duracion={params.duracion || undefined}
+    />
+  ), [router, params.duracion]);
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: theme.background }]}>

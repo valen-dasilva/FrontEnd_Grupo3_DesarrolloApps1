@@ -93,6 +93,7 @@ export default function PreferenciasScreen() {
           resultados: JSON.stringify(resultados),
           provincia: provincia ?? "",
           etiquetas: JSON.stringify(Array.from(categorias)),
+          duracion: duracion ?? '',
         },
       });
     } catch (err: unknown) {
