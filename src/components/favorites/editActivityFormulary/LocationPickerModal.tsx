@@ -86,6 +86,13 @@ export function LocationPickerModal({ visible, onSelect, onClose }: LocationPick
     onClose();
   };
 
+  const handleUseManual = () => {
+    const text = query.trim();
+    if (!text) return;
+    onSelect(text);
+    onClose();
+  };
+
   return (
     <Modal
       visible={visible}
@@ -128,6 +135,27 @@ export function LocationPickerModal({ visible, onSelect, onClose }: LocationPick
             )}
           </View>
         </View>
+
+        {/* Usar dirección manual */}
+        {query.trim().length >= 2 && (
+          <View style={styles.manualWrapper}>
+            <Pressable
+              onPress={handleUseManual}
+              style={({ pressed }) => [
+                styles.manualButton,
+                { backgroundColor: theme.surfaceHighlight, borderColor: theme.primary },
+                pressed && { opacity: 0.75 },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Usar la dirección escrita manualmente"
+            >
+              <Ionicons name="map-outline" size={18} color={theme.primary} />
+              <Text style={[styles.manualText, { color: theme.primary }]}>
+                Usar esta dirección
+              </Text>
+            </Pressable>
+          </View>
+        )}
 
         {/* Resultados */}
         <ScrollView
@@ -197,6 +225,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: paddings.spacing.lg,
     paddingTop: paddings.spacing.md,
     paddingBottom: paddings.spacing.sm,
+  },
+  manualWrapper: {
+    paddingHorizontal: paddings.spacing.lg,
+    paddingBottom: paddings.spacing.sm,
+  },
+  manualButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 44,
+    borderWidth: 1,
+    borderRadius: paddings.radius.sm,
+  },
+  manualText: {
+    fontFamily: fonts.family.headingMedium,
+    fontSize: fonts.size.sm,
   },
   searchBox: {
     flexDirection: 'row',

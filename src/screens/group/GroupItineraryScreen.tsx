@@ -1,7 +1,7 @@
 import { Stack, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import {
-  Image,
+  Linking,
   Modal,
   Pressable,
   RefreshControl,
@@ -23,10 +23,11 @@ import {
   ActivityFormValues,
   EditActivityFormulary,
 } from '@/components/favorites/editActivityFormulary/EditActivityFormulary';
+import { SingleDateModal } from '@/components/common/SingleDateModal/SingleDateModal';
 import { useGroupItineraryHook } from '@/hooks/useGroupItinerary';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/hooks/useColorScheme';
-import { formatHora } from '@/utils/dateUtils';
+import { formatDateRange, formatHora } from '@/utils/dateUtils';
 import { PROVINCIA_COORDS } from '@/utils/provinciaCoords';
 import { Provincia } from '@/types/itinerario';
 import {
@@ -98,19 +99,23 @@ export default function GroupItineraryScreen() {
     confirmItem,
     removeItem,
     toggleAttendance,
+    patchFechaInicio,
     isProposing,
     isUpdating,
     isConfirming,
     isDeleting,
+    isPatchingFechaInicio,
+    isTogglingAttendanceFor,
   } = useGroupItineraryHook(validGroupId);
 
   const soyCreador = itinerary?.soyCreador ?? false;
-  const busy = isProposing || isUpdating || isConfirming || isDeleting;
+  const busy = isProposing || isUpdating || isConfirming || isDeleting || isPatchingFechaInicio;
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingItem, setEditingItem] = useState<GroupItineraryItem | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [confirmActionId, setConfirmActionId] = useState<number | null>(null);
+  const [dateModalVisible, setDateModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const weatherCoords = useMemo(() => {
@@ -215,12 +220,20 @@ export default function GroupItineraryScreen() {
         </View>
 
         {item.localidad ? (
-          <View style={styles.metaRow}>
-            <MaterialIcons name={icons.Location} size={14} color={theme.textSecondary} />
-            <Text style={[styles.localidad, { color: theme.textSecondary }]} numberOfLines={1}>
+          <Pressable
+            onPress={() => {
+              const query = encodeURIComponent(item.localidad!.trim());
+              Linking.openURL(`https://maps.google.com/?q=${query}`);
+            }}
+            style={({ pressed }) => [styles.metaRow, pressed && { opacity: 0.65 }]}
+            accessibilityRole="link"
+            accessibilityLabel={`Abrir ubicación en Maps: ${item.localidad}`}
+          >
+            <MaterialIcons name={icons.Location} size={14} color={theme.primary} />
+            <Text style={[styles.localidad, { color: theme.primary }]} numberOfLines={1}>
               {item.localidad}
             </Text>
-          </View>
+          </Pressable>
         ) : null}
         {item.descripcion ? (
           <Text style={[styles.descripcion, { color: theme.textSecondary }]}>{item.descripcion}</Text>
@@ -238,13 +251,14 @@ export default function GroupItineraryScreen() {
             <View style={styles.attendanceButtons}>
               <Pressable
                 onPress={() => toggleAttendance(item.id, true)}
+                disabled={isTogglingAttendanceFor(item.id)}
                 style={({ pressed }) => [
                   styles.attBtn,
                   {
                     backgroundColor: item.miAsistencia === true ? theme.lightgreen : theme.surfaceHighlight,
                     borderColor: item.miAsistencia === true ? theme.lightgreen : theme.border,
                   },
-                  pressed && { opacity: 0.8 },
+                  (pressed || isTogglingAttendanceFor(item.id)) && { opacity: 0.75 },
                 ]}
               >
                 <MaterialIcons
@@ -258,13 +272,14 @@ export default function GroupItineraryScreen() {
               </Pressable>
               <Pressable
                 onPress={() => toggleAttendance(item.id, false)}
+                disabled={isTogglingAttendanceFor(item.id)}
                 style={({ pressed }) => [
                   styles.attBtn,
                   {
                     backgroundColor: item.miAsistencia === false ? theme.danger : theme.surfaceHighlight,
                     borderColor: item.miAsistencia === false ? theme.danger : theme.border,
                   },
-                  pressed && { opacity: 0.8 },
+                  (pressed || isTogglingAttendanceFor(item.id)) && { opacity: 0.75 },
                 ]}
               >
                 <MaterialIcons
@@ -387,6 +402,24 @@ export default function GroupItineraryScreen() {
           <Animated.Image entering={FadeIn.duration(400)} source={{ uri: itinerary.fotoPortada }} style={styles.cover} />
         ) : null}
 
+        <View style={styles.dateRow}>
+          <MaterialIcons name={icons.Schedule} size={18} color={theme.primary} />
+          <Text style={[styles.dateText, { color: theme.text }]}>
+            {formatDateRange(itinerary.fechaInicio, itinerary.fechaFin)}
+          </Text>
+          {soyCreador && (
+            <Pressable
+              onPress={() => setDateModalVisible(true)}
+              disabled={busy}
+              style={({ pressed }) => [styles.dateEditBtn, pressed && { opacity: 0.65 }]}
+              accessibilityRole="button"
+              accessibilityLabel="Cambiar fecha de inicio"
+            >
+              <MaterialIcons name={icons.Edit} size={18} color={theme.primary} />
+            </Pressable>
+          )}
+        </View>
+
         {weatherCoords && (
           <WeatherStrip coords={weatherCoords} fechaInicio={itinerary.fechaInicio} fechaFin={itinerary.fechaFin} />
         )}
@@ -468,6 +501,22 @@ export default function GroupItineraryScreen() {
         onCancel={() => setConfirmDeleteId(null)}
         onConfirm={handleDelete}
       />
+
+      <SingleDateModal
+        visible={dateModalVisible}
+        initialDate={itinerary.fechaInicio}
+        title="Nueva fecha de inicio"
+        confirmLabel="Guardar"
+        onClose={() => setDateModalVisible(false)}
+        onConfirm={async (fecha) => {
+          try {
+            await patchFechaInicio(fecha);
+            setDateModalVisible(false);
+          } catch {
+            // el hook ya muestra el Alert de error
+          }
+        }}
+      />
     </View>
   );
 }
@@ -477,6 +526,9 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: paddings.spacing.lg, gap: paddings.spacing.md },
   scroll: { padding: paddings.spacing.lg, paddingBottom: paddings.spacing.xxxl },
   cover: { width: '100%', height: 160, borderRadius: paddings.radius.md, marginBottom: paddings.spacing.lg },
+  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: paddings.spacing.lg },
+  dateText: { fontFamily: fonts.family.headingMedium, fontSize: fonts.size.md, flex: 1 },
+  dateEditBtn: { padding: paddings.spacing.xs },
   daySection: { marginBottom: paddings.spacing.lg },
   dayTitle: { fontFamily: fonts.family.headingBold, fontSize: fonts.size.lg, marginBottom: paddings.spacing.sm },
   emptyDay: { fontFamily: fonts.family.bodyRegular, fontSize: fonts.size.sm, marginBottom: paddings.spacing.sm },

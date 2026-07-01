@@ -3,6 +3,22 @@ import { GroupItinerary, GroupItineraryItem, GroupItineraryItemRequest } from '@
 
 const GROUPS_PATH = '/grupos';
 
+export interface UpdateGroupItineraryDateRequest {
+  fechaInicio: string;
+}
+
+/** Cambia la fecha de inicio del itinerario de grupo (solo creador). */
+export const patchFechaInicio = async (
+  idGrupo: number,
+  request: UpdateGroupItineraryDateRequest,
+): Promise<GroupItinerary> => {
+  const response = await apiClient.patch<GroupItinerary>(
+    `${GROUPS_PATH}/${idGrupo}/itinerario/fecha-inicio`,
+    request,
+  );
+  return response.data;
+};
+
 /** Itinerario compartido del grupo (el del último ganador de una encuesta). */
 export const getGroupItinerary = async (idGrupo: number): Promise<GroupItinerary> => {
   const response = await apiClient.get<GroupItinerary>(`${GROUPS_PATH}/${idGrupo}/itinerario`);

@@ -10,6 +10,7 @@ import {
   getInvitationCode,
   joinGroup,
   leaveGroup,
+  removeMember,
   updateGroup,
 } from '@/services/groupService';
 import { Group, GroupFormValues } from '@/types/grupo';
@@ -164,6 +165,22 @@ export const useGroupDetailsHook = (id: number | null) => {
     return await updateGroupMutation.mutateAsync({ groupId, values });
   };
 
+  const removeMemberMutation = useMutation({
+    mutationFn: ({ groupId, memberId }: { groupId: number; memberId: number }) =>
+      removeMember(groupId, memberId),
+    onSuccess: async (_data, { groupId }) => {
+      await queryClient.invalidateQueries({ queryKey: [GROUP_QUERY_KEY, groupId] });
+      await queryClient.invalidateQueries({ queryKey: [GROUPS_QUERY_KEY] });
+    },
+    onError: (err) => {
+      Alert.alert('Error', err instanceof ApiError ? err.message : 'No se pudo eliminar al miembro.');
+    },
+  });
+
+  const removeMemberById = async (groupId: number, memberId: number) => {
+    await removeMemberMutation.mutateAsync({ groupId, memberId });
+  };
+
   let errorString: string | null = null;
   if (error instanceof Error) {
     errorString = error.message;
@@ -191,5 +208,7 @@ export const useGroupDetailsHook = (id: number | null) => {
     isRegenerating: regenerateInvitationMutation.isPending,
     editGroup,
     isUpdating: updateGroupMutation.isPending,
+    removeMember: removeMemberById,
+    isRemovingMember: removeMemberMutation.isPending,
   };
 };

@@ -44,11 +44,14 @@ export default function GroupDetailScreen() {
     regenerateInvitation,
     isRegenerating,
     loadGroup,
+    removeMember,
+    isRemovingMember,
   } = useGroupDetailsHook(Number.isNaN(groupId) ? null : groupId);
   const { leaveGroup, isLeaving } = useGroupsHook();
 
   const [countdown, setCountdown] = useState('');
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<GroupMember | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -97,6 +100,12 @@ export default function GroupDetailScreen() {
     router.replace('/(tabs)/grupo' as Href);
   };
 
+  const handleRemoveMember = async () => {
+    if (Number.isNaN(groupId) || !memberToRemove) return;
+    await removeMember(groupId, memberToRemove.idUsuario);
+    setMemberToRemove(null);
+  };
+
   const handleCreatePoll = () => {
     router.push(`/(tabs)/(group)/crearEncuesta?idGrupo=${groupId}` as Href);
   };
@@ -109,27 +118,42 @@ export default function GroupDetailScreen() {
     router.push(`/(tabs)/(group)/itinerarioGrupo?idGrupo=${groupId}` as Href);
   };
 
-  const renderMember = ({ item }: { item: GroupMember }) => (
-    <View style={[styles.memberCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-      {item.fotoPerfil ? (
-        <Image source={{ uri: item.fotoPerfil }} style={styles.avatarImage} />
-      ) : (
-        <View style={[styles.avatar, { backgroundColor: theme.avatarBg }]}>
-          <Text style={[styles.avatarText, { color: theme.primary }]}>
-            {item.nombre[0] ?? ''}
+  const renderMember = ({ item }: { item: GroupMember }) => {
+    const canRemove = group?.soyCreador && item.rol !== 'CREADOR';
+    return (
+      <View style={[styles.memberCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        {item.fotoPerfil ? (
+          <Image source={{ uri: item.fotoPerfil }} style={styles.avatarImage} />
+        ) : (
+          <View style={[styles.avatar, { backgroundColor: theme.avatarBg }]}>
+            <Text style={[styles.avatarText, { color: theme.primary }]}>
+              {item.nombre[0] ?? ''}
+            </Text>
+          </View>
+        )}
+        <View style={styles.memberInfo}>
+          <Text style={[styles.memberName, { color: theme.text }]}>{item.nombre}</Text>
+        </View>
+        <View style={[styles.roleBadge, { backgroundColor: theme.surfaceHighlight }]}>
+          <Text style={[styles.roleText, { color: theme.primary }]}>
+            {item.rol === 'CREADOR' ? 'Creador' : 'Miembro'}
           </Text>
         </View>
-      )}
-      <View style={styles.memberInfo}>
-        <Text style={[styles.memberName, { color: theme.text }]}>{item.nombre}</Text>
+        {canRemove && (
+          <Pressable
+            onPress={() => setMemberToRemove(item)}
+            disabled={isRemovingMember}
+            hitSlop={10}
+            style={({ pressed }) => [styles.removeMemberBtn, pressed && { opacity: 0.65 }]}
+            accessibilityRole="button"
+            accessibilityLabel={`Eliminar a ${item.nombre} del grupo`}
+          >
+            <MaterialIcons name={icons.Delete} size={22} color={theme.danger} />
+          </Pressable>
+        )}
       </View>
-      <View style={[styles.roleBadge, { backgroundColor: theme.surfaceHighlight }]}>
-        <Text style={[styles.roleText, { color: theme.primary }]}>
-          {item.rol === 'CREADOR' ? 'Creador' : 'Miembro'}
-        </Text>
-      </View>
-    </View>
-  );
+    );
+  };
 
   if (isLoading) {
     return (
@@ -142,14 +166,28 @@ export default function GroupDetailScreen() {
   }
 
   if (error || !group) {
+    const isForbidden = error?.includes('403');
     return (
       <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
         <Header title="Grupo" onThemeTogglePress={toggleColorScheme} />
         <View style={styles.centered}>
+          <MaterialIcons name={icons.CloudOffline} size={48} color={theme.textSecondary} />
           <Text style={[styles.error, { color: theme.danger }]}>
-            {error || 'No se pudo cargar el grupo.'}
+            {isForbidden
+              ? 'No tenés permiso para ver este grupo.'
+              : error || 'No se pudo cargar el grupo.'}
           </Text>
+          <Pressable
+            onPress={() => loadGroup()}
+            style={({ pressed }) => [
+              styles.retryButton,
+              { backgroundColor: theme.primary },
+              pressed && { opacity: 0.8 },
+            ]}
+          >
+            <Text style={[styles.retryButtonText, { color: theme.textInverse }]}>Reintentar</Text>
+          </Pressable>
         </View>
       </View>
     );
@@ -167,16 +205,27 @@ export default function GroupDetailScreen() {
         showBackButton
         onBackPress={() => router.back()}
         onThemeTogglePress={toggleColorScheme}
-        rightAction={
-          isCreator
-            ? {
-                icon: icons.Settings,
-                onPress: () => router.push(`/(tabs)/(group)/editarGrupo?idGrupo=${groupId}` as Href),
-                accessibilityLabel: 'Configuración del grupo',
-              }
-            : undefined
-        }
       />
+
+      {isCreator && (
+        <Pressable
+          onPress={() => router.push(`/(tabs)/(group)/editarGrupo?idGrupo=${groupId}` as Href)}
+          style={({ pressed }) => [
+            styles.floatingSettings,
+            {
+              top: insets.top + 56 + paddings.spacing.sm,
+              right: paddings.spacing.lg,
+              backgroundColor: isDark ? theme.surface : '#FFFFFF',
+              borderColor: theme.border,
+            },
+            pressed && { opacity: 0.7 },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="Configuración del grupo"
+        >
+          <MaterialIcons name={icons.Settings} size={22} color={theme.primary} />
+        </Pressable>
+      )}
 
       <ScrollView
         contentContainerStyle={styles.scroll}
@@ -324,6 +373,21 @@ export default function GroupDetailScreen() {
         onCancel={() => setShowLeaveConfirm(false)}
         onConfirm={handleLeave}
       />
+
+      <ConfirmAlert
+        visible={memberToRemove !== null}
+        title="Eliminar miembro"
+        message={
+          memberToRemove
+            ? `¿Seguro que querés eliminar a ${memberToRemove.nombre} del grupo?`
+            : ''
+        }
+        cancelText="Cancelar"
+        confirmText="Eliminar"
+        loading={isRemovingMember}
+        onCancel={() => setMemberToRemove(null)}
+        onConfirm={handleRemoveMember}
+      />
     </View>
   );
 }
@@ -340,6 +404,19 @@ const styles = StyleSheet.create({
     fontSize: fonts.size.md,
     textAlign: 'center',
     paddingHorizontal: paddings.spacing.lg,
+    marginTop: paddings.spacing.md,
+    marginBottom: paddings.spacing.md,
+  },
+  retryButton: {
+    paddingHorizontal: 24,
+    height: 44,
+    borderRadius: paddings.radius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  retryButtonText: {
+    fontFamily: fonts.family.headingMedium,
+    fontSize: fonts.size.md,
   },
   scroll: {
     padding: paddings.spacing.lg,
@@ -468,6 +545,10 @@ const styles = StyleSheet.create({
     fontFamily: fonts.family.bodySemiBold,
     fontSize: fonts.size.xs,
   },
+  removeMemberBtn: {
+    marginLeft: paddings.spacing.sm,
+    padding: paddings.spacing.xs,
+  },
   actions: {
     flexDirection: 'row',
     gap: paddings.spacing.md,
@@ -532,5 +613,15 @@ const styles = StyleSheet.create({
     fontSize: fonts.size.lg,
     textAlignVertical: 'center',
     includeFontPadding: false,
+  },
+  floatingSettings: {
+    position: 'absolute',
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 22,
+    borderWidth: 1,
+    zIndex: 10,
   },
 });

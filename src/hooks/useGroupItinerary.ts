@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, AppState } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   confirmItem,
   deleteItem,
   getGroupItinerary,
+  patchFechaInicio,
   proposeItem,
   toggleAttendance,
   updateItem,
@@ -25,15 +26,25 @@ const GROUP_ITINERARY_KEY = 'groupItinerary';
  *  - Solo se invalida esta query tras cada mutación (no cachés ajenas).
  */
 const POLL_INTERVAL_MS = 15000;
+/** Tiempo de gracia para agrupar refetches tras múltiples cambios de asistencia. */
+const ATTENDANCE_INVALIDATE_DEBOUNCE_MS = 1200;
 
 export const useGroupItineraryHook = (idGrupo: number | null) => {
   const queryClient = useQueryClient();
   const key = [GROUP_ITINERARY_KEY, idGrupo];
+  const invalidateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingAttendanceRef = useRef<Promise<unknown> | null>(null);
+  const [togglingItemId, setTogglingItemId] = useState<number | null>(null);
 
   const [appActive, setAppActive] = useState(AppState.currentState === 'active');
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => setAppActive(state === 'active'));
-    return () => sub.remove();
+    return () => {
+      sub.remove();
+      if (invalidateTimeoutRef.current) {
+        clearTimeout(invalidateTimeoutRef.current);
+      }
+    };
   }, []);
 
   const {
@@ -54,6 +65,17 @@ export const useGroupItineraryHook = (idGrupo: number | null) => {
 
   const invalidate = () => {
     if (idGrupo) queryClient.invalidateQueries({ queryKey: key });
+  };
+
+  const debouncedInvalidate = () => {
+    if (!idGrupo) return;
+    if (invalidateTimeoutRef.current) {
+      clearTimeout(invalidateTimeoutRef.current);
+    }
+    invalidateTimeoutRef.current = setTimeout(() => {
+      invalidateTimeoutRef.current = null;
+      queryClient.invalidateQueries({ queryKey: key });
+    }, ATTENDANCE_INVALIDATE_DEBOUNCE_MS);
   };
 
   const proposeMutation = useMutation({
@@ -92,6 +114,17 @@ export const useGroupItineraryHook = (idGrupo: number | null) => {
     onError: (err) => Alert.alert('Error', getErrorMessage(err, 'No se pudo eliminar la actividad.')),
   });
 
+  const updateDateMutation = useMutation({
+    mutationFn: (fechaInicio: string) => {
+      if (!idGrupo) throw new Error('Grupo no especificado');
+      return patchFechaInicio(idGrupo, { fechaInicio });
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData<GroupItinerary>(key, data);
+    },
+    onError: (err) => Alert.alert('Error', getErrorMessage(err, 'No se pudo cambiar la fecha de inicio.')),
+  });
+
   const attendanceMutation = useMutation({
     mutationFn: ({ idItem, asiste }: { idItem: number; asiste: boolean }) => {
       if (!idGrupo) throw new Error('Grupo no especificado');
@@ -99,6 +132,7 @@ export const useGroupItineraryHook = (idGrupo: number | null) => {
     },
     // Optimista: la asistencia es la acción más frecuente, conviene feedback inmediato.
     onMutate: async ({ idItem, asiste }) => {
+      setTogglingItemId(idItem);
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<GroupItinerary>(key);
       if (previous) {
@@ -115,8 +149,31 @@ export const useGroupItineraryHook = (idGrupo: number | null) => {
       if (context?.previous) queryClient.setQueryData(key, context.previous);
       Alert.alert('Error', getErrorMessage(err, 'No se pudo registrar tu asistencia.'));
     },
-    onSettled: invalidate,
+    onSettled: () => {
+      setTogglingItemId(null);
+      debouncedInvalidate();
+    },
   });
+
+  const toggleAttendanceWithRef = (idItem: number, asiste: boolean) => {
+    const promise = attendanceMutation.mutateAsync({ idItem, asiste });
+    pendingAttendanceRef.current = promise;
+    promise.finally(() => {
+      if (pendingAttendanceRef.current === promise) {
+        pendingAttendanceRef.current = null;
+      }
+    });
+    return promise;
+  };
+
+  const isTogglingAttendanceFor = (idItem: number) => togglingItemId === idItem;
+
+  const awaitPendingAttendance = async () => {
+    const pending = pendingAttendanceRef.current;
+    if (pending) {
+      await pending;
+    }
+  };
 
   return {
     itinerary: itinerary as GroupItinerary | undefined,
@@ -132,8 +189,11 @@ export const useGroupItineraryHook = (idGrupo: number | null) => {
     isConfirming: confirmMutation.isPending,
     removeItem: (idItem: number) => deleteMutation.mutateAsync(idItem),
     isDeleting: deleteMutation.isPending,
-    toggleAttendance: (idItem: number, asiste: boolean) =>
-      attendanceMutation.mutateAsync({ idItem, asiste }),
+    toggleAttendance: toggleAttendanceWithRef,
     isTogglingAttendance: attendanceMutation.isPending,
+    isTogglingAttendanceFor,
+    awaitPendingAttendance,
+    patchFechaInicio: (fechaInicio: string) => updateDateMutation.mutateAsync(fechaInicio),
+    isPatchingFechaInicio: updateDateMutation.isPending,
   };
 };
