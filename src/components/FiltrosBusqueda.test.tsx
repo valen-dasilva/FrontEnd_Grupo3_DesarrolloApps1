@@ -2,7 +2,7 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { FiltrosDeBusqueda } from './FiltrosBusqueda';
 import { Provincia } from '@/types/itinerario';
-import { TouchableOpacity, Text } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 
 const mockTheme = {
   background: '#ffffff',

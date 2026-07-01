@@ -2,7 +2,6 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { ResultadosHeader } from './ResultadosHeader';
 import { CategoriaItinerario } from '@/types/itinerario';
-import { useTheme } from '@/hooks/useColorScheme';
 import { TouchableOpacity } from 'react-native';
 
 const mockTheme = {

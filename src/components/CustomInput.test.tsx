@@ -28,7 +28,7 @@ describe('CustomInput', () => {
   });
 
   it('toggles password visibility when the eye button is pressed', () => {
-    const { getByLabelText, rerender } = render(
+    const { getByLabelText } = render(
       <CustomInput secureTextEntry={true} showEyeButton={true} />
     );
 

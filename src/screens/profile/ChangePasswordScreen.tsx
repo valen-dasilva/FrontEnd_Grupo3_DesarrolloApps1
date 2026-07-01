@@ -13,7 +13,6 @@ import { Header } from '@/components/common/Header/Header';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './ChangePasswordScreen.styles';
-import { configure } from '@testing-library/react-native';
 
 export default function CambiarContrasenaScreen() {
   const router = useRouter();

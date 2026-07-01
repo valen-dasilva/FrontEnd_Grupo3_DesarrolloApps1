@@ -75,6 +75,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onAnimationFinish })
         )
       )
     );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const iconAnimatedStyle = useAnimatedStyle(() => ({

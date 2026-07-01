@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import * as Calendar from 'expo-calendar';
 import { Platform } from 'react-native';
-import { ItinerarioEnCursoDTO } from '@/types/itinerario';
-import { PROVINCIA_LABEL, Provincia } from '@/types/itinerario';
+import type { ItinerarioEnCursoDTO } from '@/types/itinerario';
 
 async function getCalendarId(): Promise<string> {
   if (Platform.OS === 'ios') {

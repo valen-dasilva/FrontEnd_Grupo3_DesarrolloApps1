@@ -20,7 +20,7 @@ export interface ActivityFormValues {
 export interface EditActivityFormularyProps {
   initialValues: ActivityFormValues;
   duracionDias: number;
-  existingActivities?: Array<{ id: number; dia: number; hora: string }>;
+  existingActivities?: { id: number; dia: number; hora: string }[];
   currentActivityId?: number;
   onSave: (values: ActivityFormValues) => Promise<void>;
   onCancel: () => void;

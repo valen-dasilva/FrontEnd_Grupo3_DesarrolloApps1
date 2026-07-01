@@ -20,7 +20,6 @@ export const RegisterScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [hidePassword, setHidePassword] = useState(true);
 
   const handleRegister = async () => {
     if (!name || !lastName || !email || !password || !confirmPassword) {

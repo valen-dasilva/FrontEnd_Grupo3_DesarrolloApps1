@@ -76,6 +76,7 @@ export class ApiError extends Error {
 
 // Instancia única de axios que usa toda la app. Centraliza baseURL y headers
 // para no repetirlos en cada llamada.
+// eslint-disable-next-line import/no-named-as-default-member
 export const apiClient = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },

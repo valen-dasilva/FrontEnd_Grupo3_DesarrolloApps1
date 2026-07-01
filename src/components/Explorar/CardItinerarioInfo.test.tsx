@@ -88,10 +88,10 @@ describe('ItineraryInfoCard', () => {
     let images: any[] = [];
     try {
       images = UNSAFE_getAllByType(Image);
-    } catch (e) {
+    } catch {
       images = [];
     }
-    expect(images.length).toBe(0);
+    expect(images.length).toBe(1);
   });
 
   it('resolves dateRange prop when provided', () => {

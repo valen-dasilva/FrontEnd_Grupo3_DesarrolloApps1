@@ -3,7 +3,7 @@
 // renderiza una CategoriaCard por cada opción, manejando el estado activo/inactivo.
 // Se extrae de preferencias.tsx para dejar esa pantalla enfocada solo en el flujo de búsqueda.
 
-import { Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/hooks/useColorScheme';

@@ -2,7 +2,7 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { ProvinciaSelector } from './ProvinciaSelector';
 import { Provincia, PROVINCIA_LABEL } from '@/types/itinerario';
-import { Modal, TextInput, TouchableOpacity } from 'react-native';
+import { Modal, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 // Mock FlatList using ScrollView to bypass react 19 VirtualizedList compatibility issue
@@ -131,7 +131,7 @@ describe('ProvinciaSelector', () => {
       try {
         const icon = t.findByType('Ionicons');
         return icon.props.name === 'close-circle';
-      } catch (e) {
+      } catch {
         return false;
       }
     });
@@ -164,7 +164,7 @@ describe('ProvinciaSelector', () => {
       try {
         const icon = t.findByType('Ionicons');
         return icon.props.name === 'close';
-      } catch (e) {
+      } catch {
         return false;
       }
     });

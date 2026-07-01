@@ -18,7 +18,7 @@ export default function Index() {
     if (!isLoading && animationDone) {
       router.replace(token ? '/(tabs)' : '/login');
     }
-  }, [isLoading, animationDone, token]);
+  }, [isLoading, animationDone, token, router]);
 
   return <SplashScreen onAnimationFinish={() => setAnimationDone(true)} />;
 }

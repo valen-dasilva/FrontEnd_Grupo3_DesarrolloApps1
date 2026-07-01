@@ -83,5 +83,6 @@ export function useItineraryNotifications(itinerario: ItinerarioEnCursoDTO | nul
         scheduleAll().catch(console.error);
 
         return () => { cancelled = true; }; // Cleanup si el componente se desmonta
-  }, [itinerario?.idItinerarioUsuario, itemsKey]); // Solo re-programa si cambia el itinerario
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itinerario?.idItinerarioUsuario, itemsKey]);
 }

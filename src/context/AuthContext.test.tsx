@@ -1,5 +1,5 @@
 import React from 'react';
-import { renderHook, act, waitFor } from '@testing-library/react-native';
+import { renderHook, act } from '@testing-library/react-native';
 import { AuthProvider, useAuth } from './AuthContext';
 import * as authService from '@/services/authService';
 import * as storage from '@/services/storage';
@@ -64,13 +64,8 @@ describe('AuthContext', () => {
 
   describe('useAuth', () => {
     it('lanza error si se usa fuera del AuthProvider', () => {
-      const TestComponent = () => {
-        useAuth();
-        return null;
-      };
-
       expect(() => {
-        const { unmount } = renderHook(() => null, {
+        renderHook(() => null, {
           wrapper: ({ children }) => <>{children}</>,
         });
         renderHook(() => {
