@@ -17,6 +17,7 @@ import { FullScreenLoader } from '@/components/common/FullScreenLoader/FullScree
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/CustomButton';
 import { useItinerariosHook } from '@/hooks/useItinerarios';
+import { useFavoritosHook } from '@/hooks/useFavoritos';
 import { usePollsHook } from '@/hooks/usePolls';
 import { useTheme } from '@/hooks/useColorScheme';
 import { icons } from '@/constants/icons';
@@ -33,6 +34,7 @@ export default function CreatePollScreen() {
   const isDark = colorScheme === 'dark';
 
   const { listItinerarioResumen, isLoading: loadingItineraries } = useItinerariosHook();
+  const { favoritos, isLoading: loadingFavoritos } = useFavoritosHook();
   const { createPoll, isCreating } = usePollsHook(Number.isNaN(groupId) ? null : groupId);
 
   const [selected, setSelected] = useState<SelectableItineraryOption[]>([]);
@@ -130,7 +132,7 @@ export default function CreatePollScreen() {
     );
   };
 
-  const isLoading = loadingItineraries;
+  const isLoading = loadingItineraries || loadingFavoritos;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.background }]}>
@@ -173,6 +175,22 @@ export default function CreatePollScreen() {
                 fotoPortada: i.fotoPortada,
                 provincia: i.provincia,
                 duracionDias: i.duracionDias,
+              }))
+              .map(renderOption)
+          )}
+
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Favoritos</Text>
+          {favoritos.length === 0 ? (
+            <Text style={[styles.empty, { color: theme.textSecondary }]}>No tenés itinerarios en favoritos.</Text>
+          ) : (
+            favoritos
+              .map((f) => ({
+                id: f.idItinerario,
+                type: 'system' as const,
+                titulo: f.titulo,
+                fotoPortada: f.fotoPortada,
+                provincia: f.provincia,
+                duracionDias: f.duracionDias,
               }))
               .map(renderOption)
           )}
