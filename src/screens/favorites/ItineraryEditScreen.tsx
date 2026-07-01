@@ -383,6 +383,8 @@ export default function EdicionItinerarioScreen() {
                     value={title}
                     onChangeText={setTitle}
                     label="Título del Itinerario"
+                    maxLength={35}
+                    hideMaxMessage
                     onBlur={() => {
                         if (itineraryDetails && title.trim() && title.trim() !== itineraryDetails.titulo) {
                             putItineraryTitle(Number(id), title.trim());

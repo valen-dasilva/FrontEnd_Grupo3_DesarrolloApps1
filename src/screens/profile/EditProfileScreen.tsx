@@ -99,6 +99,7 @@ export default function EditarUsuarioScreen() {
           placeholder="Nombre"
           value={nombre}
           onChangeText={setNombre}
+          maxLength={20}
         />
 
         <CustomInput
@@ -106,12 +107,14 @@ export default function EditarUsuarioScreen() {
           placeholder="Apellido"
           value={apellido}
           onChangeText={setApellido}
+          maxLength={25}
         />
 
         <CustomInput
           label="Correo Electrónico (No modificable)"
           value={correo}
           editable={false}
+          maxLength={30}
         />
 
         <FormActionButtons 

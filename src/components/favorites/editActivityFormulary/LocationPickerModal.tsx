@@ -82,14 +82,14 @@ export function LocationPickerModal({ visible, onSelect, onClose }: LocationPick
   };
 
   const handleSelect = (prediction: Prediction) => {
-    onSelect(prediction.description);
+    onSelect(prediction.description.slice(0, 40));
     onClose();
   };
 
   const handleUseManual = () => {
     const text = query.trim();
     if (!text) return;
-    onSelect(text);
+    onSelect(text.slice(0, 40));
     onClose();
   };
 
@@ -127,6 +127,7 @@ export function LocationPickerModal({ visible, onSelect, onClose }: LocationPick
               style={[styles.searchInput, { color: theme.text }]}
               autoCorrect={false}
               returnKeyType="search"
+              maxLength={40}
             />
             {query.length > 0 && (
               <Pressable onPress={() => setQuery('')} hitSlop={8}>

@@ -98,6 +98,7 @@ export default function CambiarContrasenaScreen() {
           secureTextEntry
           value={nueva}
           onChangeText={setNueva}
+          maxLength={25}
           eyeButtonDisabled = {nueva.length === 0}
         />
 
@@ -107,6 +108,7 @@ export default function CambiarContrasenaScreen() {
           secureTextEntry
           value={confirmar}
           onChangeText={setConfirmar}
+          maxLength={25}
           eyeButtonDisabled = {confirmar.length === 0}
         />
 

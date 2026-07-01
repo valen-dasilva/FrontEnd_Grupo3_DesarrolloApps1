@@ -17,6 +17,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Header } from '@/components/common/Header/Header';
 import { FullScreenLoader } from '@/components/common/FullScreenLoader/FullScreenLoader';
 import { ConfirmAlert } from '@/components/common/ConfirmAlert/ConfirmAlert';
+import { StatusModal } from '@/components/common/StatusModal/StatusModal';
 import { UserAvatar } from '@/components/common/UserAvatar/UserAvatar';
 import { WeatherStrip } from '@/components/common/WeatherStrip/WeatherStrip';
 import {
@@ -559,6 +560,13 @@ export default function GroupItineraryScreen() {
             // el hook ya muestra el Alert de error
           }
         }}
+      />
+
+      <StatusModal
+        visible={isDeletingDay}
+        state="loading"
+        title="Eliminando día..."
+        message="Por favor, esperá un momento"
       />
     </View>
   );

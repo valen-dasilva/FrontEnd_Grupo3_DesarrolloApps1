@@ -96,6 +96,9 @@ export const RegisterScreen: React.FC = () => {
         placeholder="Nombre"
         value={name}
         onChangeText={setName}
+        maxLength={20}
+        hideMaxMessage
+        hideCounter
       />
 
       <CustomInput
@@ -103,6 +106,9 @@ export const RegisterScreen: React.FC = () => {
         placeholder="Apellido"
         value={lastName}
         onChangeText={setLastName}
+        maxLength={25}
+        hideMaxMessage
+        hideCounter
       />
 
       <CustomInput
@@ -112,6 +118,9 @@ export const RegisterScreen: React.FC = () => {
         autoCapitalize="none"
         value={email}
         onChangeText={setEmail}
+        maxLength={30}
+        hideMaxMessage
+        hideCounter
       />
 
       <CustomInput
@@ -119,6 +128,9 @@ export const RegisterScreen: React.FC = () => {
         placeholder="Contraseña"
         secureTextEntry
         value={password}
+        maxLength={25}
+        hideMaxMessage
+        hideCounter
         eyeButtonDisabled = {password.length === 0} 
         onChangeText={setPassword}
       />
@@ -128,6 +140,9 @@ export const RegisterScreen: React.FC = () => {
         placeholder="Confirmar contraseña"
         secureTextEntry       
         value={confirmPassword}
+        maxLength={25}
+        hideMaxMessage
+        hideCounter
         eyeButtonDisabled = {confirmPassword.length === 0} 
         onChangeText={setConfirmPassword}
       />

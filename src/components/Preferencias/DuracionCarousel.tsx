@@ -10,7 +10,6 @@ export interface DuracionOption {
 }
 
 const OPCIONES_DURACION: DuracionOption[] = [
-  { label: '🤷', value: undefined },
   { label: '1 Día', value: '1' },
   { label: '2-3 Días', value: '2-3' },
   { label: '4+ Días', value: '4+' },

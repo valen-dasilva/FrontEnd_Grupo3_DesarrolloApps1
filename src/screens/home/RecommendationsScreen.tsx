@@ -70,10 +70,10 @@ export default function RecomendacionesScreen() {
       fechaInicio={params.fechaInicio}
       fechaFin={params.fechaFin}
       etiquetas={etiquetas}
-      primeraResultadoDuracion={resultados[0]?.duracionDias}
+      duracion={params.duracion || undefined}
       onBack={() => router.back()}
     />
-  ), [provinciaLabel, params.fechaInicio, params.fechaFin, etiquetas, resultados, router]);
+  ), [provinciaLabel, params.fechaInicio, params.fechaFin, etiquetas, params.duracion, router]);
 
   const renderEmpty = useCallback(() => (
     <ResultadosEmptyState

@@ -12,6 +12,8 @@ interface CustomInputProps extends TextInputProps {
   eyeButtonDisabled?: boolean;
   /** Si es true, no muestra el mensaje "Máximo de caracteres alcanzado" ni pone rojo el contador. */
   hideMaxMessage?: boolean;
+  /** Si es true, no muestra el contador de caracteres en absoluto. */
+  hideCounter?: boolean;
 }
 
 export const CustomInput: React.FC<CustomInputProps> = ({
@@ -25,6 +27,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   onEyePress,
   eyeButtonDisabled = false,
   hideMaxMessage = false,
+  hideCounter = false,
   ...props
 }) => {
   const { theme } = useTheme();
@@ -72,6 +75,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           <Ionicons name={iconName} size={20} color={theme.textSecondary} style={[styles.icon, props.multiline && { marginTop: 12 }]} />
         )}
         <TextInput
+          {...props}
           style={[
             styles.input,
             iconName ? styles.inputWithIcon : undefined,
@@ -85,7 +89,9 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           onBlur={handleBlur}
           secureTextEntry={isSecure}
           underlineColorAndroid="transparent"
-          {...props}
+          autoComplete={secureTextEntry !== undefined ? "off" : props.autoComplete}
+          textContentType={secureTextEntry !== undefined ? "none" : props.textContentType}
+          importantForAutofill={secureTextEntry !== undefined ? "no" : props.importantForAutofill}
         />
         {secureTextEntry !== undefined && showEyeButton && (
           <Pressable onPress={toggleSecureEntry} style={styles.eyeButton} disabled = {eyeButtonDisabled} accessibilityRole="button" accessibilityLabel={isSecure ? "Mostrar contraseña" : "Ocultar contraseña"}>
@@ -98,7 +104,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           </Pressable>
         )}
       </View>
-      {maxLength !== undefined && (
+      {maxLength !== undefined && !hideCounter && (
         <View style={styles.footer}>
           <Text
             style={[
@@ -110,7 +116,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           </Text>
         </View>
       )}
-      {isMaxReached && !hideMaxMessage && (
+      {isMaxReached && !hideMaxMessage && !hideCounter && (
         <Text style={[styles.maxMessage, { color: theme.danger }]}>
           Máximo de caracteres alcanzado
         </Text>

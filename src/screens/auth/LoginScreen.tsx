@@ -59,6 +59,9 @@ export const LoginScreen: React.FC = () => {
         autoCapitalize="none"
         value={email}
         onChangeText={setEmail}
+        maxLength={30}
+        hideMaxMessage
+        hideCounter
       />
       
       <CustomInput
@@ -66,6 +69,9 @@ export const LoginScreen: React.FC = () => {
         placeholder="********"
         secureTextEntry
         value={password}
+        maxLength={25}
+        hideMaxMessage
+        hideCounter
         eyeButtonDisabled = {password.length === 0}
         onChangeText={setPassword}
       /> 

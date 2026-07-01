@@ -100,11 +100,11 @@ export default function ActiveItineraryCard({
 
   const handleAddToCalendar = async () => {
     try {
-      const count = await addToCalendar(itinerarioActivo);
+      await addToCalendar(itinerarioActivo);
       Toast.show({
         type: 'success',
         text1: 'Calendario actualizado',
-        text2: `Se agregaron ${count} actividades.`,
+        text2: 'Se agregó el itinerario con todas sus actividades.',
       });
     } catch (err: any) {
       Toast.show({

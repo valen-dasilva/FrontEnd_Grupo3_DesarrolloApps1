@@ -37,19 +37,31 @@ async function getCalendarId(): Promise<string> {
   return writables[0].id;
 }
 
-function buildEventDates(fechaInicio: string, dia: number, hora?: string) {
+function buildItineraryEventDates(fechaInicio: string, fechaFin: string) {
   const startDate = new Date(`${fechaInicio}T00:00:00`);
-  startDate.setDate(startDate.getDate() + (dia - 1));
+  const endDate = new Date(`${fechaFin}T23:59:59`);
+  return { startDate, endDate };
+}
 
-  if (hora) {
-    const [h, m] = hora.split(':').map(Number);
-    startDate.setHours(h, m, 0, 0);
-  } else {
-    startDate.setHours(9, 0, 0, 0); // Sin hora → 9am por defecto
+function buildActivitiesNotes(items: ItinerarioEnCursoDTO['items']): string {
+  if (!items || items.length === 0) {
+    return 'Sin actividades registradas.';
   }
 
-  const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1h de duración
-  return { startDate, endDate };
+  const lines = items
+    .slice()
+    .sort((a, b) => a.dia - b.dia || (a.hora ?? '').localeCompare(b.hora ?? ''))
+    .map((item) => {
+      const header = `• Día ${item.dia}${item.hora ? ` · ${item.hora.substring(0, 5)}` : ''} — ${item.nombreActividad}`;
+      const details = [
+        item.descripcion,
+        item.localidad && `📍 ${item.localidad}`,
+        item.direccion && `🗺️ ${item.direccion}`,
+      ].filter(Boolean);
+      return details.length > 0 ? [header, ...details.map((d) => `  ${d}`)].join('\n') : header;
+    });
+
+  return ['Actividades:', ...lines].join('\n');
 }
 
 export function useItineraryCalendar() {
@@ -64,36 +76,21 @@ export function useItineraryCalendar() {
       }
 
       const calendarId = await getCalendarId();
-      let added = 0;
+      const { startDate, endDate } = buildItineraryEventDates(
+        itinerario.fechaInicio,
+        itinerario.fechaFin,
+      );
 
-      for (const item of itinerario.items) {
-        const { startDate, endDate } = buildEventDates(
-          itinerario.fechaInicio,
-          item.dia,
-          item.hora,
-        );
+      await Calendar.createEventAsync(calendarId, {
+        title: itinerario.titulo,
+        startDate,
+        endDate,
+        notes: buildActivitiesNotes(itinerario.items),
+        location: itinerario.provincia,
+        alarms: [{ relativeOffset: -60 }], // Recordatorio 60 min antes (nativo del calendario)
+      });
 
-        const notes = [
-          item.descripcion,
-          item.localidad && `📍 ${item.localidad}`,
-          item.direccion && `🗺️ ${item.direccion}`,
-        ]
-          .filter(Boolean)
-          .join('\n');
-
-        await Calendar.createEventAsync(calendarId, {
-          title: item.nombreActividad,
-          startDate,
-          endDate,
-          notes: notes || undefined,
-          location: item.direccion ?? item.localidad,
-          alarms: [{ relativeOffset: -60 }], // Recordatorio 60 min antes (nativo del calendario)
-        });
-
-        added++;
-      }
-
-      return added;
+      return 1;
     } finally {
       setIsAdding(false);
     }

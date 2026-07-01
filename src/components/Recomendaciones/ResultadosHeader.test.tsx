@@ -53,15 +53,12 @@ describe('ResultadosHeader', () => {
     expect(getByText('Río Negro')).toBeTruthy();
   });
 
-  it('renders duration chip instead of date range if provided', () => {
+  it('renders duration chip when a duration filter is provided', () => {
     const { getByText } = render(
-      <ResultadosHeader {...defaultProps} primeraResultadoDuracion={5} />
+      <ResultadosHeader {...defaultProps} duracion="2-3" />
     );
 
-    expect(getByText('5 días')).toBeTruthy();
-    // It shouldn't render the specific formatted date range
-    // depending on what formatFechaCorta returns. Since formatFechaCorta(2026-06-15)
-    // is not "5 días", we make sure it says "5 días".
+    expect(getByText('2-3 días')).toBeTruthy();
   });
 
   it('renders "Argentina" if provinciaLabel is null', () => {

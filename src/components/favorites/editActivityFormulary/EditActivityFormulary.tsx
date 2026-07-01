@@ -263,6 +263,7 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
               placeholder="Ej. 09:00"
               keyboardType="number-pad"
               maxLength={5}
+              hideMaxMessage
               accessibilityLabel="Hora de la actividad"
             />
             {timeError ? (
@@ -312,6 +313,8 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
               value={location}
               onChangeText={setLocation}
               placeholder="Ej. Parque Nacional Los Glaciares"
+              maxLength={40}
+              hideMaxMessage
               accessibilityLabel="Ubicación de la actividad"
             />
           )}
