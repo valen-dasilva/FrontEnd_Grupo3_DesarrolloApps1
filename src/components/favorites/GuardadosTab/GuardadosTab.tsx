@@ -37,7 +37,7 @@ interface Props {
 }
 
 /** Tab "Guardados": bookmarks de templates del sistema + flujo de crear copia. */
-export function GuardadosTab({ header, onVerMisViajes }: Props) {
+export function GuardadosTab({ header, onVerMisViajes }: Readonly<Props>) {
   const router = useRouter();
   const { theme } = useTheme();
 
@@ -109,6 +109,8 @@ export function GuardadosTab({ header, onVerMisViajes }: Props) {
         ListEmptyComponent={renderEmpty}
         style={[local.scrollView, { backgroundColor: theme.background }]}
         contentContainerStyle={local.scrollContent}
+        maximumZoomScale={1}
+        bouncesZoom={false}
         {...LIST_PERF_PROPS}
       />
 

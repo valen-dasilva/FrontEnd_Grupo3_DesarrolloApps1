@@ -4,7 +4,6 @@ import {
     ItinerarioEnCursoDTO, 
     ItemItinerarioUsuarioDTO,
     PROVINCIA_LABEL,
-    Provincia,
 } from "@/types/itinerario";
 import { formatFechaCorta } from "@/utils/dateUtils";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,6 +16,8 @@ import { PROVINCIA_COORDS } from "@/utils/provinciaCoords";
 import { fonts } from "@/constants/fonts";
 import { useItineraryCalendar } from '@/hooks/useItineraryCalendar';
 import Toast from 'react-native-toast-message';
+
+const defaultImage = require('@/assets/images/minimun_logo.png');
 
 // Busca la próxima actividad para mostrar en la card:
 // - Si el viaje aún no empezó: primera actividad del día 1
@@ -60,24 +61,25 @@ function getProximaActividad(
     .sort((a, b) => (a.hora ?? "").localeCompare(b.hora ?? ""))[0];
 
   // Si todas las actividades del día ya pasaron, mostramos la última
-  return proxima ?? itemsHoy[itemsHoy.length - 1];
+  return proxima ?? itemsHoy.at(-1) ?? null;
 }
 
 export default function ActiveItineraryCard({
   itinerarioActivo,
-}: {
+}: Readonly<{
   itinerarioActivo: ItinerarioEnCursoDTO; 
-}) {
+}>) {
   const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === "dark";
 
-  const imagenPortada = { uri: itinerarioActivo.fotoPortada };
+  const hasImage = !!itinerarioActivo.fotoPortada;
+  const imagenPortada = hasImage ? { uri: itinerarioActivo.fotoPortada } : defaultImage;
   const proximaActividad = getProximaActividad(
     itinerarioActivo.fechaInicio,
     itinerarioActivo.items,
   );
 
-  const weatherCoords = PROVINCIA_COORDS[itinerarioActivo.provincia as Provincia] ?? null;
+  const weatherCoords = PROVINCIA_COORDS[itinerarioActivo.provincia] ?? null;
   const { data: weatherData } = useWeather({
     coords: weatherCoords ?? { lat: 0, lng: 0 },
     fechaInicio: itinerarioActivo.fechaInicio,
@@ -86,7 +88,10 @@ export default function ActiveItineraryCard({
 
   // Determina qué fecha mostrar: hoy si el viaje está en curso, inicio si aún no empezó
   const todayStr = new Date().toISOString().split('T')[0];
-  const targetDate = todayStr >= itinerarioActivo.fechaInicio ? todayStr : itinerarioActivo.fechaInicio;
+  let targetDate = todayStr;
+  if (todayStr < itinerarioActivo.fechaInicio) {
+    targetDate = itinerarioActivo.fechaInicio;
+  }
   const todayWeather = weatherCoords && weatherData?.available
     ? weatherData.days.find((d) => d.date === targetDate) ?? null
     : null;
@@ -144,11 +149,11 @@ export default function ActiveItineraryCard({
       activeOpacity={0.9}
       onPress={handleEnCursoPress}
     >
-      <View style={styles.imageContainer}>
+      <View style={[styles.imageContainer, !hasImage && { backgroundColor: theme.surfaceNeutral }]}>
         <Image
           source={imagenPortada}
-          style={styles.cardImage}
-          resizeMode="cover"
+          style={[styles.cardImage, !hasImage && { transform: [{ scale: 0.6 }] }]}
+          resizeMode={hasImage ? "cover" : "contain"}
         />
         <LinearGradient
           colors={["transparent", "rgba(0, 0, 0, 0.75)"]}

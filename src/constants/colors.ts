@@ -47,6 +47,12 @@ const themeColors = {
     button_gray: '#646770',
     avatarBg: '#D6E0F5',
     categorySelected: '#EFF4FF',
+    logroNorte: '#C97B4A',
+    logroLitoral: '#3FA34D',
+    logroCuyo: '#8E2C48',
+    logroCentro: '#D4A12E',
+    logroPatagonia: '#3B82C4',
+    logroArgentina: '#3F73E3',
   },
   dark: {
     primary: '#2563eb',
@@ -75,6 +81,12 @@ const themeColors = {
     button_gray: '#8C8F9E',
     avatarBg: '#2A303D',
     categorySelected: '#2A303D',
+    logroNorte: '#C97B4A',
+    logroLitoral: '#3FA34D',
+    logroCuyo: '#8E2C48',
+    logroCentro: '#D4A12E',
+    logroPatagonia: '#3B82C4',
+    logroArgentina: '#3F73E3',
   }
 };
 

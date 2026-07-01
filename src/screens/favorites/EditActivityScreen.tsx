@@ -26,7 +26,7 @@ export default function EditActivityFormularyScreen() {
     duracionDias?: string;
   }>();
 
-  const { editItem, newItem } = useItinerariosDetailsHook();
+  const { editItem, newItem, itineraryDetails } = useItinerariosDetailsHook();
 
   const initialValues = {
     title: params.title || '',
@@ -75,6 +75,14 @@ export default function EditActivityFormularyScreen() {
         <EditActivityFormulary
           initialValues={initialValues}
           duracionDias={Number(params.duracionDias || '1')}
+          existingActivities={
+            itineraryDetails?.items?.map(i => ({
+              id: i.id,
+              dia: i.dia,
+              hora: i.hora || '',
+            })) || []
+          }
+          currentActivityId={params.idItem ? Number(params.idItem) : undefined}
           onSave={handleSave}
           onCancel={() => router.back()}
         />

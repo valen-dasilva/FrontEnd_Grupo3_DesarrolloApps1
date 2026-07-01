@@ -7,6 +7,8 @@ import { paddings } from '@/constants/paddings';
 import { FavoriteButton } from '@/components/common/FavoriteButton/FavoriteButton';
 import { useTheme } from '@/hooks/useColorScheme';
 
+const defaultImage = require('@/assets/images/minimun_logo.png');
+
 interface Props {
   /** Título del template del sistema guardado */
   title: string;
@@ -64,9 +66,9 @@ export const BookmarkCard: React.FC<Props> = ({
       style={[styles.cardContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}
     >
       <ImageBackground
-        source={{ uri: imageUrl }}
-        style={styles.imageBackground}
-        imageStyle={styles.imageStyle}
+        source={imageUrl ? { uri: imageUrl } : defaultImage}
+        style={[styles.imageBackground, !imageUrl && { backgroundColor: theme.surfaceNeutral }]}
+        imageStyle={[styles.imageStyle, !imageUrl && { resizeMode: 'contain', transform: [{ scale: 0.6 }] }]}
       >
         <View style={styles.topActionsRow}>
           <View />

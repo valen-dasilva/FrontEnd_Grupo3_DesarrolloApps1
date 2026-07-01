@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useColorScheme';
 import { LOGROS } from '@/data/logros';
 import { LogroDetalleModal, type LogroDetalle } from './LogroDetalleModal';
@@ -67,7 +67,7 @@ export function LogrosViajero({ provinciasVisitadas }: Props) {
                 ]}
               >
                 {logro.desbloqueado ? (
-                  <Text style={styles.emoji}>{logro.emoji}</Text>
+                  <MaterialIcons name={logro.icono} size={26} color={theme.textInverse} />
                 ) : (
                   <Ionicons name="lock-closed" size={20} color={theme.gray} />
                 )}
@@ -158,9 +158,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
-  },
-  emoji: {
-    fontSize: 26,
   },
   nombre: {
     fontSize: 12,
