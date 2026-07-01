@@ -8,6 +8,11 @@ import {
     saveLocalTitleOverride,
     removeLocalTitleOverride,
 } from '@/services/titleOverrideStorage';
+import {
+    getLocalDurationOverride,
+    saveLocalDurationOverride,
+    removeLocalDurationOverride,
+} from '@/services/durationOverrideStorage';
 import { fetchActiveItinerary } from '@/hooks/useActiveItinerary';
 import {
     cancelItinerarioCaches,
@@ -52,10 +57,15 @@ const fetchItinerariosWithOfflineFallback = async () => {
     } catch {
         list = await getOfflineItinerariesList();
     }
-    // Merge local title overrides
+    // Merge local overrides
     return await Promise.all(list.map(async (it) => {
         const localTitle = await getLocalTitleOverride(it.id);
-        return localTitle ? { ...it, titulo: localTitle } : it;
+        const localDuration = await getLocalDurationOverride(it.id);
+        return { 
+            ...it, 
+            titulo: localTitle ?? it.titulo,
+            duracionDias: localDuration ?? it.duracionDias
+        };
     }));
 };
 
@@ -161,6 +171,7 @@ export const useItinerariosHook = () => {
             // Limpia el override de título local para no dejar claves huérfanas
             // en AsyncStorage que pisen títulos de itinerarios futuros.
             removeLocalTitleOverride(idItinerario).catch(console.error);
+            removeLocalDurationOverride(idItinerario).catch(console.error);
             queryClient.invalidateQueries({ queryKey: ['downloadedIds'] });
             queryClient.removeQueries({ queryKey: ['itineraryDetails', idItinerario], exact: true });
         },
@@ -332,9 +343,21 @@ export const useItinerariosDetailsHook = () => {
             }
             if (details) {
                 const localTitle = await getLocalTitleOverride(activeId);
-                if (localTitle) {
-                    return { ...details, titulo: localTitle };
+                const localDuration = await getLocalDurationOverride(activeId);
+                
+                const maxActivityDay = details.items.length > 0 ? Math.max(...details.items.map(i => i.dia)) : 0;
+                let finalDuration = localDuration ?? details.duracionDias;
+                
+                if (maxActivityDay > finalDuration) {
+                    finalDuration = maxActivityDay;
+                    await saveLocalDurationOverride(activeId, finalDuration);
                 }
+
+                return { 
+                    ...details, 
+                    titulo: localTitle ?? details.titulo,
+                    duracionDias: finalDuration
+                };
             }
             return details;
         },
@@ -426,6 +449,7 @@ export const useItinerariosDetailsHook = () => {
             if (prevDetails) {
                 const updatedItems = [...prevDetails.items, optimisticItem];
                 const newDuracion = Math.max(prevDetails.duracionDias, itemData.dia);
+                saveLocalDurationOverride(idItinerary, newDuracion).catch(console.error);
                 queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary], {
                     ...prevDetails,
                     items: updatedItems,
@@ -501,6 +525,7 @@ export const useItinerariosDetailsHook = () => {
                     item.id === idItem ? { ...item, ...itemData } : item
                 );
                 const newDuracion = Math.max(...updatedItems.map(item => item.dia), prevDetails.duracionDias, 1);
+                saveLocalDurationOverride(idItinerary, newDuracion).catch(console.error);
                 queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary], {
                     ...prevDetails,
                     items: updatedItems,
@@ -665,11 +690,37 @@ export const useItinerariosDetailsHook = () => {
         await completarMutation.mutateAsync(idItinerary);
     };
 
+    const reduceDurationMutation = useMutation({
+        mutationFn: async (idItinerary: number) => {
+            const currentDetails = queryClient.getQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary]);
+            if (!currentDetails) return;
+            const newDuracion = Math.max(currentDetails.duracionDias - 1, 1);
+            await saveLocalDurationOverride(idItinerary, newDuracion);
+            return newDuracion;
+        },
+        onSuccess: (newDuracion, idItinerary) => {
+            if (newDuracion === undefined) return;
+            queryClient.setQueryData<ItinerarioUsuario>(['itineraryDetails', idItinerary], (prev) => 
+                prev ? { ...prev, duracionDias: newDuracion } : prev
+            );
+            queryClient.setQueryData<ItinerarioResumen[]>(['misItinerarios'], (prev) => 
+                prev ? prev.map(it => it.id === idItinerary ? { ...it, duracionDias: newDuracion } : it) : prev
+            );
+            queryClient.setQueryData<ItinerarioEnCursoDTO | null>(['activeItinerary'], (prev) => 
+                prev?.idItinerarioUsuario === idItinerary ? { ...prev, duracionDias: newDuracion } : prev
+            );
+        }
+    });
+
+    const reduceItineraryDuration = async (idItinerary: number) => {
+        await reduceDurationMutation.mutateAsync(idItinerary);
+    };
+
     const errorString = toErrorString(error);
 
     return {
         error: errorString,
-        isMutating: fechaInicioMutation.isPending || putTitleMutation.isPending || newItemMutation.isPending || editItemMutation.isPending || quitItemMutation.isPending || addPhotoMutation.isPending || quitPhotoMutation.isPending || completarMutation.isPending,
+        isMutating: reduceDurationMutation.isPending || fechaInicioMutation.isPending || putTitleMutation.isPending || newItemMutation.isPending || editItemMutation.isPending || quitItemMutation.isPending || addPhotoMutation.isPending || quitPhotoMutation.isPending || completarMutation.isPending,
         isLoading,
         itineraryDetails,
         quitItem,
@@ -683,5 +734,6 @@ export const useItinerariosDetailsHook = () => {
         addPhoto,
         quitPhoto,
         isMutatingPhotos: addPhotoMutation.isPending || quitPhotoMutation.isPending,
+        reduceItineraryDuration,
     };
 };

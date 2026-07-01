@@ -37,7 +37,7 @@ interface Props {
 }
 
 /** Tab "Guardados": bookmarks de templates del sistema + flujo de crear copia. */
-export function GuardadosTab({ header, onVerMisViajes }: Props) {
+export function GuardadosTab({ header, onVerMisViajes }: Readonly<Props>) {
   const router = useRouter();
   const { theme } = useTheme();
 

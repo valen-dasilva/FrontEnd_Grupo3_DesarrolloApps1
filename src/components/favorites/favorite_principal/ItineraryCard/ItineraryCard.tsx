@@ -144,7 +144,7 @@ export const ItineraryCard: React.FC<ItineraryCardProps> = ({
           <View style={styles.rightActionsGroup}>
             <Pressable
               onPress={onDownloadPress}
-              onPressIn={() => handlePressIn(downloadScale, 0.90)}
+              onPressIn={() => handlePressIn(downloadScale, 0.9)}
               onPressOut={() => handlePressOut(downloadScale)}
               style={[
                 styles.downloadButton,
@@ -164,7 +164,7 @@ export const ItineraryCard: React.FC<ItineraryCardProps> = ({
 
             <Pressable
               onPress={onPinPress}
-              onPressIn={() => handlePressIn(pinScale, 0.90)}
+              onPressIn={() => handlePressIn(pinScale, 0.9)}
               onPressOut={() => handlePressOut(pinScale)}
               style={[styles.pinButton, { backgroundColor: theme.background }]}
               accessibilityRole="button"

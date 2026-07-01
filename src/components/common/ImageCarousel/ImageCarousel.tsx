@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Image,
+  ImageStyle,
   LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -18,11 +19,13 @@ import { styles } from './ImageCarousel.styles';
 type Props = Readonly<{
   images: readonly string[];
   fallbackColor: string;
+  defaultImage?: any;
+  defaultImageStyle?: StyleProp<ImageStyle>;
   style?: StyleProp<ViewStyle>;
   children?: ReactNode;
 }>;
 
-export function ImageCarousel({ images, fallbackColor, style, children }: Props) {
+export function ImageCarousel({ images, fallbackColor, defaultImage, defaultImageStyle, style, children }: Props) {
   const validImages = useMemo(() => images.filter(Boolean), [images]);
   const [containerWidth, setContainerWidth] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
@@ -49,37 +52,51 @@ export function ImageCarousel({ images, fallbackColor, style, children }: Props)
     setActiveIndex(nextIndex);
   }, [containerWidth, validImages.length]);
 
+  const renderContent = () => {
+    if (validImages.length === 0) {
+      return (
+        <View style={[styles.fallback, { backgroundColor: fallbackColor, alignItems: 'center', justifyContent: 'center' }]}>
+          {defaultImage && (
+            <Image source={defaultImage} style={[{ width: '100%', height: '100%' }, defaultImageStyle]} />
+          )}
+        </View>
+      );
+    }
+
+    if (containerWidth > 0 && containerHeight > 0) {
+      return (
+        <ScrollView
+          ref={scrollRef}
+          horizontal
+          snapToInterval={containerWidth}
+          decelerationRate="fast"
+          scrollEnabled={validImages.length > 1}
+          showsHorizontalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          style={styles.carousel}
+          contentContainerStyle={{ height: containerHeight }}
+        >
+          {validImages.map((url, index) => (
+            <Image
+              key={`${url}-${index}`}
+              source={{ uri: url }}
+              style={[styles.image, { width: containerWidth, height: containerHeight }]}
+              resizeMode="cover"
+            />
+          ))}
+        </ScrollView>
+      );
+    }
+
+    return (
+      <Image source={{ uri: validImages[0] }} style={styles.initialImage} resizeMode="cover" />
+    );
+  };
+
   return (
     <View testID="image-carousel" style={style} onLayout={handleLayout}>
-      {validImages.length > 0 ? (
-        containerWidth > 0 && containerHeight > 0 ? (
-          <ScrollView
-            ref={scrollRef}
-            horizontal
-            snapToInterval={containerWidth}
-            decelerationRate="fast"
-            scrollEnabled={validImages.length > 1}
-            showsHorizontalScrollIndicator={false}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-            style={styles.carousel}
-            contentContainerStyle={{ height: containerHeight }}
-          >
-            {validImages.map((url, index) => (
-              <Image
-                key={`${url}-${index}`}
-                source={{ uri: url }}
-                style={[styles.image, { width: containerWidth, height: containerHeight }]}
-                resizeMode="cover"
-              />
-            ))}
-          </ScrollView>
-        ) : (
-          <Image source={{ uri: validImages[0] }} style={styles.initialImage} resizeMode="cover" />
-        )
-      ) : (
-        <View style={[styles.fallback, { backgroundColor: fallbackColor }]} />
-      )}
+      {renderContent()}
 
       {children}
 

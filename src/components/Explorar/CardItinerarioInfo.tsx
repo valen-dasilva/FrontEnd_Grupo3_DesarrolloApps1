@@ -11,6 +11,8 @@ import { FavoriteButton } from '../common/FavoriteButton/FavoriteButton';
 import { CategoryBadge } from '../common/CategoryBadge/CategoryBadge';
 import { ImageCarousel } from '../common/ImageCarousel/ImageCarousel';
 
+const defaultImageSrc = require('@/assets/images/minimun_logo.png');
+
 type Props = {
   idItinerario?: number;
   title?: string;
@@ -76,7 +78,9 @@ export function ItineraryInfoCard({
       {/** Image container */}
       <ImageCarousel
         images={images?.length ? images : image ? [image] : []}
-        fallbackColor={theme.card}
+        fallbackColor={theme.surfaceNeutral}
+        defaultImage={defaultImageSrc}
+        defaultImageStyle={{ width: '100%', height: '100%', resizeMode: 'contain', transform: [{ scale: 0.4 }] }}
         style={styles.imageContainer}
       >
         {/** Dark transparent overlay */}

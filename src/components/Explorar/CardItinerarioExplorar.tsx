@@ -67,7 +67,7 @@ export function ExploreItineraryCard({
           startDate: startDate ?? '',
           endDate: endDate ?? '',
           isFavorite: String(isFav),
-          idFavorito: favId !== undefined ? String(favId) : '',
+          idFavorito: favId === undefined ? '' : String(favId),
         }
       })}
     >

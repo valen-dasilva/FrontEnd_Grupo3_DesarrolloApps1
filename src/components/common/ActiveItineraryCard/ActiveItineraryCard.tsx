@@ -4,7 +4,6 @@ import {
     ItinerarioEnCursoDTO, 
     ItemItinerarioUsuarioDTO,
     PROVINCIA_LABEL,
-    Provincia,
 } from "@/types/itinerario";
 import { formatFechaCorta } from "@/utils/dateUtils";
 import { Ionicons } from "@expo/vector-icons";
@@ -62,14 +61,14 @@ function getProximaActividad(
     .sort((a, b) => (a.hora ?? "").localeCompare(b.hora ?? ""))[0];
 
   // Si todas las actividades del día ya pasaron, mostramos la última
-  return proxima ?? itemsHoy[itemsHoy.length - 1];
+  return proxima ?? itemsHoy.at(-1) ?? null;
 }
 
 export default function ActiveItineraryCard({
   itinerarioActivo,
-}: {
+}: Readonly<{
   itinerarioActivo: ItinerarioEnCursoDTO; 
-}) {
+}>) {
   const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === "dark";
 
@@ -80,7 +79,7 @@ export default function ActiveItineraryCard({
     itinerarioActivo.items,
   );
 
-  const weatherCoords = PROVINCIA_COORDS[itinerarioActivo.provincia as Provincia] ?? null;
+  const weatherCoords = PROVINCIA_COORDS[itinerarioActivo.provincia] ?? null;
   const { data: weatherData } = useWeather({
     coords: weatherCoords ?? { lat: 0, lng: 0 },
     fechaInicio: itinerarioActivo.fechaInicio,
@@ -89,7 +88,10 @@ export default function ActiveItineraryCard({
 
   // Determina qué fecha mostrar: hoy si el viaje está en curso, inicio si aún no empezó
   const todayStr = new Date().toISOString().split('T')[0];
-  const targetDate = todayStr >= itinerarioActivo.fechaInicio ? todayStr : itinerarioActivo.fechaInicio;
+  let targetDate = todayStr;
+  if (todayStr < itinerarioActivo.fechaInicio) {
+    targetDate = itinerarioActivo.fechaInicio;
+  }
   const todayWeather = weatherCoords && weatherData?.available
     ? weatherData.days.find((d) => d.date === targetDate) ?? null
     : null;
