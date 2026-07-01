@@ -40,6 +40,43 @@ import { paddings } from '@/constants/paddings';
 
 type Tone = 'green' | 'red' | 'neutral';
 
+// A nivel de módulo (no dentro del componente) para no remontar los avatares
+// en cada render/poll, lo que causaría parpadeo.
+function AttendanceRow({
+  tone,
+  label,
+  people,
+  theme,
+}: {
+  tone: Tone;
+  label: string;
+  people: GroupItineraryAttendance[];
+  theme: ReturnType<typeof useTheme>['theme'];
+}) {
+  if (people.length === 0) return null;
+  const dotColor = tone === 'green' ? theme.lightgreen : tone === 'red' ? theme.danger : theme.textSecondary;
+  return (
+    <View style={styles.attRow}>
+      <View style={styles.attRowHeader}>
+        <View style={[styles.attDot, { backgroundColor: dotColor }]} />
+        <Text style={[styles.attLabel, { color: theme.text }]}>
+          {label} · {people.length}
+        </Text>
+      </View>
+      <View style={styles.attAvatars}>
+        {people.map((p) => (
+          <View key={p.usuarioId} style={styles.attChip}>
+            <UserAvatar uri={p.fotoPerfil ?? undefined} nombre={p.nombreUsuario} size={26} />
+            <Text style={[styles.attChipName, { color: theme.textSecondary }]} numberOfLines={1}>
+              {p.nombreUsuario.split(' ')[0]}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 export default function GroupItineraryScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -146,31 +183,6 @@ export default function GroupItineraryScreen() {
   const canDelete = (item: GroupItineraryItem) =>
     soyCreador || (item.estado === 'PROPUESTO' && item.propuestoPorId === myId);
 
-  const AttendanceRow = ({ tone, label, people }: { tone: Tone; label: string; people: GroupItineraryAttendance[] }) => {
-    if (people.length === 0) return null;
-    const dotColor = tone === 'green' ? theme.lightgreen : tone === 'red' ? theme.danger : theme.textSecondary;
-    return (
-      <View style={styles.attRow}>
-        <View style={styles.attRowHeader}>
-          <View style={[styles.attDot, { backgroundColor: dotColor }]} />
-          <Text style={[styles.attLabel, { color: theme.text }]}>
-            {label} · {people.length}
-          </Text>
-        </View>
-        <View style={styles.attAvatars}>
-          {people.map((p) => (
-            <View key={p.usuarioId} style={styles.attChip}>
-              <UserAvatar uri={p.fotoPerfil ?? undefined} nombre={p.nombreUsuario} size={26} />
-              <Text style={[styles.attChipName, { color: theme.textSecondary }]} numberOfLines={1}>
-                {p.nombreUsuario.split(' ')[0]}
-              </Text>
-            </View>
-          ))}
-        </View>
-      </View>
-    );
-  };
-
   const renderItem = (item: GroupItineraryItem, index: number) => {
     const van = item.asistencias.filter((a) => a.asiste === true);
     const noVan = item.asistencias.filter((a) => a.asiste === false);
@@ -267,9 +279,9 @@ export default function GroupItineraryScreen() {
             </View>
 
             <View style={[styles.attLists, { borderTopColor: theme.border }]}>
-              <AttendanceRow tone="green" label="Van" people={van} />
-              <AttendanceRow tone="red" label="No van" people={noVan} />
-              <AttendanceRow tone="neutral" label="Sin responder" people={sinResponder} />
+              <AttendanceRow tone="green" label="Van" people={van} theme={theme} />
+              <AttendanceRow tone="red" label="No van" people={noVan} theme={theme} />
+              <AttendanceRow tone="neutral" label="Sin responder" people={sinResponder} theme={theme} />
             </View>
           </View>
         )}
