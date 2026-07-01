@@ -54,6 +54,7 @@ export function ItinerarioListTab({ header, filter, keyPrefix, emptyState, confi
   } = useItinerariosHook();
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const items = useMemo(
     () => ordenarConPinPrimero(listItinerarioResumen.filter(filter)),
@@ -74,10 +75,14 @@ export function ItinerarioListTab({ header, filter, keyPrefix, emptyState, confi
     removeDownload,
   });
 
-  const confirmDelete = () => {
-    if (confirmDeleteId !== null) {
-      quitItinerary(confirmDeleteId);
+  const confirmDelete = async () => {
+    if (confirmDeleteId === null) return;
+    try {
+      setIsDeleting(true);
+      await quitItinerary(confirmDeleteId);
       setConfirmDeleteId(null);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -132,6 +137,7 @@ export function ItinerarioListTab({ header, filter, keyPrefix, emptyState, confi
         visible={confirmDeleteId !== null}
         title="Eliminar itinerario"
         message={confirmDeleteMessage}
+        loading={isDeleting}
         onCancel={() => setConfirmDeleteId(null)}
         onConfirm={confirmDelete}
         confirmText="Eliminar"

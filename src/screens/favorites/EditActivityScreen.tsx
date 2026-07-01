@@ -1,9 +1,11 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { ScrollView, StatusBar, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '@/components/common/Header/Header';
 import { EditActivityFormulary } from '@/components/favorites/editActivityFormulary/EditActivityFormulary';
+import { LoadingOverlay } from '@/components/common/LoadingOverlay/LoadingOverlay';
+import Toast from 'react-native-toast-message';
 
 import { styles } from './EditActivityScreen.styles';
 import { useTheme } from '@/hooks/useColorScheme';
@@ -14,6 +16,8 @@ export default function EditActivityFormularyScreen() {
   const insets = useSafeAreaInsets();
   const { colorScheme, theme, toggleColorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
+
+  const [isSaving, setIsSaving] = useState(false);
 
   const params = useLocalSearchParams<{
     idItinerario: string;
@@ -38,21 +42,31 @@ export default function EditActivityFormularyScreen() {
 
   const handleSave = async (updatedValues: typeof initialValues) => {
     const itemData = {
-        nombreActividad: updatedValues.title,
-        descripcion: updatedValues.description,
-        localidad: updatedValues.location,
-        direccion: updatedValues.location,
-        dia: updatedValues.day,
-        hora: updatedValues.time,
+      nombreActividad: updatedValues.title,
+      descripcion: updatedValues.description,
+      localidad: updatedValues.location,
+      direccion: updatedValues.location,
+      dia: updatedValues.day,
+      hora: updatedValues.time,
     };
 
-    if (params.idItem) {
+    try {
+      setIsSaving(true);
+      if (params.idItem) {
         await editItem(Number(params.idItinerario), Number(params.idItem), itemData);
-    } else {
+      } else {
         await newItem(Number(params.idItinerario), itemData);
+      }
+      router.back();
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: err?.message || 'No se pudo guardar la actividad.',
+      });
+    } finally {
+      setIsSaving(false);
     }
-
-    router.back();
   };
 
   return (
@@ -79,6 +93,11 @@ export default function EditActivityFormularyScreen() {
           onCancel={() => router.back()}
         />
       </ScrollView>
+
+      <LoadingOverlay
+        visible={isSaving}
+        message={params.idItem ? 'Guardando cambios...' : 'Creando actividad...'}
+      />
     </View>
   );
 }

@@ -28,6 +28,7 @@ import {
 } from '@/services/itineraryPhotoService';
 import { formatFecha } from '@/utils/dateUtils';
 import Toast from 'react-native-toast-message';
+import { LoadingOverlay } from '@/components/common/LoadingOverlay/LoadingOverlay';
 
 type DaySectionProps = Readonly<{
   dayNum: number;
@@ -106,6 +107,7 @@ export default function EdicionItinerarioScreen() {
     visible: false,
     state: 'loading',
   });
+  const [isDeletingActivity, setIsDeletingActivity] = useState(false);
 
   React.useEffect(() => {
       if (itineraryDetails) {
@@ -380,11 +382,16 @@ export default function EdicionItinerarioScreen() {
         title="Eliminar Actividad"
         message={`¿Estás seguro de que deseas eliminar la actividad "${deleteTarget?.title}"?`}
         confirmText="Eliminar"
+        loading={isDeletingActivity}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={async () => {
-          if (deleteTarget) {
+          if (!deleteTarget) return;
+          try {
+            setIsDeletingActivity(true);
             await quitItem(Number(id), deleteTarget.id);
             setDeleteTarget(null);
+          } finally {
+            setIsDeletingActivity(false);
           }
         }}
       />
@@ -417,6 +424,11 @@ export default function EdicionItinerarioScreen() {
           : 'El viaje quedó reprogramado correctamente.'}
         actionLabel="Listo"
         onAction={() => setFechaModal({ visible: false, state: 'loading' })}
+      />
+
+      <LoadingOverlay
+        visible={isUploadingPhotos}
+        message="Subiendo fotos..."
       />
     </View>
   );
