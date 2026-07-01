@@ -109,6 +109,8 @@ export function GuardadosTab({ header, onVerMisViajes }: Props) {
         ListEmptyComponent={renderEmpty}
         style={[local.scrollView, { backgroundColor: theme.background }]}
         contentContainerStyle={local.scrollContent}
+        maximumZoomScale={1}
+        bouncesZoom={false}
         {...LIST_PERF_PROPS}
       />
 

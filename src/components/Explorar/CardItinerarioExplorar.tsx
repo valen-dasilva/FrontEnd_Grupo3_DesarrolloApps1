@@ -11,6 +11,8 @@ import { FavoriteButton } from '../common/FavoriteButton/FavoriteButton';
 import { CategoryBadge } from '../common/CategoryBadge/CategoryBadge';
 import { CATEGORIA_LABEL, CategoriaItinerario } from '@/types/itinerario';
 
+const defaultImage = require('@/assets/images/minimun_logo.png');
+
 type Props = Readonly<{
   idItinerario: number;
   title: string;
@@ -71,11 +73,11 @@ export function ExploreItineraryCard({
     >
 
       {/* Image */}
-      <View style={styles.imageContainer}>
+      <View style={[styles.imageContainer, !image && { backgroundColor: theme.surfaceNeutral }]}>
         <Image
-          source={{ uri: image }}
-          style={styles.image}
-          resizeMode="cover" />
+          source={image ? { uri: image } : defaultImage}
+          style={[styles.image, !image && { transform: [{ scale: 0.6 }] }]}
+          resizeMode={image ? "cover" : "contain"} />
 
         {/* Heart Button */}
         <FavoriteButton

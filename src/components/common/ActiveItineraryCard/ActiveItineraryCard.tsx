@@ -18,6 +18,8 @@ import { fonts } from "@/constants/fonts";
 import { useItineraryCalendar } from '@/hooks/useItineraryCalendar';
 import Toast from 'react-native-toast-message';
 
+const defaultImage = require('@/assets/images/minimun_logo.png');
+
 // Busca la próxima actividad para mostrar en la card:
 // - Si el viaje aún no empezó: primera actividad del día 1
 // - Si está en curso: siguiente actividad del día actual (o la última si ya pasaron todas)
@@ -71,7 +73,8 @@ export default function ActiveItineraryCard({
   const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === "dark";
 
-  const imagenPortada = { uri: itinerarioActivo.fotoPortada };
+  const hasImage = !!itinerarioActivo.fotoPortada;
+  const imagenPortada = hasImage ? { uri: itinerarioActivo.fotoPortada } : defaultImage;
   const proximaActividad = getProximaActividad(
     itinerarioActivo.fechaInicio,
     itinerarioActivo.items,
@@ -144,11 +147,11 @@ export default function ActiveItineraryCard({
       activeOpacity={0.9}
       onPress={handleEnCursoPress}
     >
-      <View style={styles.imageContainer}>
+      <View style={[styles.imageContainer, !hasImage && { backgroundColor: theme.surfaceNeutral }]}>
         <Image
           source={imagenPortada}
-          style={styles.cardImage}
-          resizeMode="cover"
+          style={[styles.cardImage, !hasImage && { transform: [{ scale: 0.6 }] }]}
+          resizeMode={hasImage ? "cover" : "contain"}
         />
         <LinearGradient
           colors={["transparent", "rgba(0, 0, 0, 0.75)"]}

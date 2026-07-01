@@ -1,9 +1,11 @@
 import { Provincia } from '@/types/itinerario';
+import { icons } from '@/constants/icons';
+import { colors } from '@/constants/colors';
 
 export interface Logro {
   id: string;
   nombre: string;
-  emoji: string;
+  icono: any;
   color: string;
   descripcion: string;
   provincias: Provincia[];
@@ -13,8 +15,8 @@ export const LOGROS: Logro[] = [
   {
     id: 'noa',
     nombre: 'Norteño/a',
-    emoji: '⛰️',
-    color: '#C97B4A',
+    icono: icons.LogroNorte,
+    color: colors.logroNorte,
     descripcion: 'El alma del norte argentino: quebradas de colores, cerros y vino de altura.',
     provincias: [
       Provincia.JUJUY,
@@ -28,8 +30,8 @@ export const LOGROS: Logro[] = [
   {
     id: 'litoral',
     nombre: 'Litoraleño/a',
-    emoji: '🌴',
-    color: '#3FA34D',
+    icono: icons.LogroLitoral,
+    color: colors.logroLitoral,
     descripcion: 'Tierra de ríos, selva subtropical y las Cataratas del Iguazú.',
     provincias: [
       Provincia.FORMOSA,
@@ -42,16 +44,16 @@ export const LOGROS: Logro[] = [
   {
     id: 'cuyo',
     nombre: 'Cuyano/a',
-    emoji: '🍷',
-    color: '#8E2C48',
+    icono: icons.LogroCuyo,
+    color: colors.logroCuyo,
     descripcion: 'La cuna del vino argentino, al pie de la cordillera de los Andes.',
     provincias: [Provincia.MENDOZA, Provincia.SAN_JUAN, Provincia.SAN_LUIS],
   },
   {
     id: 'centro',
     nombre: 'Pampeano/a',
-    emoji: '🌾',
-    color: '#D4A12E',
+    icono: icons.LogroCentro,
+    color: colors.logroCentro,
     descripcion: 'El corazón del país: pampas infinitas, sierras y grandes ciudades.',
     provincias: [
       Provincia.CORDOBA,
@@ -64,8 +66,8 @@ export const LOGROS: Logro[] = [
   {
     id: 'patagonia',
     nombre: 'Patagónico/a',
-    emoji: '🏔️',
-    color: '#3B82C4',
+    icono: icons.LogroPatagonia,
+    color: colors.logroPatagonia,
     descripcion: 'Glaciares, lagos, montañas y el fin del mundo en Ushuaia.',
     provincias: [
       Provincia.NEUQUEN,
@@ -78,8 +80,8 @@ export const LOGROS: Logro[] = [
   {
     id: 'argentina',
     nombre: 'Toda la Argentina',
-    emoji: '🇦🇷',
-    color: '#3F73E3',
+    icono: icons.LogroArgentina,
+    color: colors.logroArgentina,
     descripcion: 'De La Quiaca a Ushuaia: recorriste el país de punta a punta.',
     provincias: Object.values(Provincia),
   },

@@ -125,6 +125,8 @@ export function ItinerarioListTab({ header, filter, keyPrefix, emptyState, confi
         ListEmptyComponent={renderEmpty}
         style={[local.scrollView, { backgroundColor: theme.background }]}
         contentContainerStyle={local.scrollContent}
+        maximumZoomScale={1}
+        bouncesZoom={false}
         {...LIST_PERF_PROPS}
       />
 
