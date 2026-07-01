@@ -37,6 +37,10 @@ export const leaveGroup = async (id: number): Promise<void> => {
   await apiClient.delete<void>(`${GROUPS_PATH}/${id}/salir`);
 };
 
+export const removeMember = async (idGrupo: number, idMiembro: number): Promise<void> => {
+  await apiClient.delete<void>(`${GROUPS_PATH}/${idGrupo}/miembros/${idMiembro}`);
+};
+
 export const updateGroup = async (id: number, values: GroupFormValues): Promise<Group> => {
   const response = await apiClient.put<Group>(`${GROUPS_PATH}/${id}`, values);
   return response.data;

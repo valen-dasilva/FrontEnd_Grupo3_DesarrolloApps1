@@ -5,6 +5,7 @@ import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/CustomButton';
 import { AuthLayout } from '@/components/AuthLayout';
 import { AuthFooterLink } from '@/components/AuthFooterLink';
+import { StatusModal } from '@/components/common/StatusModal/StatusModal';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/services/api';
 
@@ -81,6 +82,13 @@ export const LoginScreen: React.FC = () => {
         text="¿No tenés cuenta? "
         linkText="Crear cuenta"
         onPress={() => router.push('/register')}
+      />
+
+      <StatusModal
+        visible={submitting}
+        state="loading"
+        title="Iniciando sesión..."
+        message="Esto puede tardar unos segundos"
       />
     </AuthLayout>
   );

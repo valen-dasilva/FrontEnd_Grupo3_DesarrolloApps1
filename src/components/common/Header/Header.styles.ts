@@ -31,6 +31,7 @@ export const styles = StyleSheet.create({
     fontWeight: fonts.weight.bold,
     lineHeight: 28,
     color: colors.primary, // Extracted from visual context (#2563eb)
+    flex: 1,
   },
   actionsContainer: {
     flexDirection: 'row',

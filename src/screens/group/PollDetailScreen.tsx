@@ -333,6 +333,22 @@ export default function PollDetailScreen() {
                 </>
               )}
             </Pressable>
+
+            <Pressable
+              onPress={() =>
+                router.push(`/(tabs)/(group)/itinerarioGrupo?idGrupo=${groupId}` as Href)
+              }
+              style={({ pressed }) => [
+                styles.primaryButton,
+                { backgroundColor: theme.surfaceHighlight },
+                pressed && { opacity: 0.8 },
+              ]}
+            >
+              <MaterialIcons name={icons.FullCalendar} size={20} color={theme.primary} />
+              <Text style={[styles.primaryButtonText, { color: theme.primary }]}>
+                Ver itinerario del grupo
+              </Text>
+            </Pressable>
           </>
         )}
 

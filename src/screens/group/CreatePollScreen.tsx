@@ -110,7 +110,7 @@ export default function CreatePollScreen() {
             {option.titulo}
           </Text>
           <Text style={[styles.optionMeta, { color: theme.textSecondary }]}>
-            {option.type === 'system' ? 'Favorito' : 'Mi viaje'}
+            Mi viaje
             {option.provincia ? ` · ${option.provincia}` : ''}
             {option.duracionDias ? ` · ${option.duracionDias} días` : ''}
           </Text>
