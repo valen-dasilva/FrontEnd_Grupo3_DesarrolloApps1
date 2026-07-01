@@ -34,7 +34,7 @@ export function DuracionCarousel({
   return (
     <View style={styles.seccion}>
       <Text style={[styles.pregunta, { color: theme.text }]}>{titulo}</Text>
-      {subtitulo && (
+      {!!subtitulo && (
         <Text style={[styles.subtitulo, { color: theme.textSecondary }]}>
           {subtitulo}
         </Text>
