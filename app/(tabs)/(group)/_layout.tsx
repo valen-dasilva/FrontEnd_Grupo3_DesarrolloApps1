@@ -11,6 +11,7 @@ export default function GroupLayout() {
       <Stack.Screen name="detalleEncuesta" />
       <Stack.Screen name="crearEncuesta" />
       <Stack.Screen name="detalleOpcion" />
+      <Stack.Screen name="itinerarioGrupo" />
     </Stack>
   );
 }

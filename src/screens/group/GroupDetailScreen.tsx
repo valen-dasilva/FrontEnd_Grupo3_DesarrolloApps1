@@ -105,6 +105,10 @@ export default function GroupDetailScreen() {
     router.push(`/(tabs)/(group)/encuestas?idGrupo=${groupId}` as Href);
   };
 
+  const handleViewItinerary = () => {
+    router.push(`/(tabs)/(group)/itinerarioGrupo?idGrupo=${groupId}` as Href);
+  };
+
   const renderMember = ({ item }: { item: GroupMember }) => (
     <View style={[styles.memberCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
       {item.fotoPerfil ? (
@@ -284,6 +288,18 @@ export default function GroupDetailScreen() {
             <Text style={[styles.actionButtonText, { color: theme.textInverse }]}>Crear encuesta</Text>
           </Pressable>
         </View>
+
+        <Pressable
+          onPress={handleViewItinerary}
+          style={({ pressed }) => [
+            styles.itineraryButton,
+            { backgroundColor: theme.surfaceHighlight },
+            pressed && { opacity: 0.8 },
+          ]}
+        >
+          <MaterialIcons name={icons.FullCalendar} size={20} color={theme.primary} />
+          <Text style={[styles.itineraryButtonText, { color: theme.primary }]}>Itinerario del grupo</Text>
+        </Pressable>
 
         <Pressable
           onPress={confirmLeave}
@@ -467,6 +483,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionButtonText: {
+    fontFamily: fonts.family.headingMedium,
+    fontSize: fonts.size.md,
+    textAlignVertical: 'center',
+    includeFontPadding: false,
+  },
+  itineraryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 48,
+    borderRadius: paddings.radius.md,
+    gap: 8,
+    marginBottom: paddings.spacing.lg,
+  },
+  itineraryButtonText: {
     fontFamily: fonts.family.headingMedium,
     fontSize: fonts.size.md,
     textAlignVertical: 'center',

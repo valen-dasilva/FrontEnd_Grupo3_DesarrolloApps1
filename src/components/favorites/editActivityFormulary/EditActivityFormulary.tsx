@@ -22,6 +22,10 @@ export interface EditActivityFormularyProps {
   duracionDias: number;
   onSave: (values: ActivityFormValues) => Promise<void>;
   onCancel: () => void;
+  /** Chip opcional de estado arriba del form (ej. "Propuesta" en itinerario de grupo). */
+  statusBadge?: { label: string; tone: 'proposed' | 'confirmed' } | null;
+  /** Contenido opcional arriba del botón Guardar (ej. controles propios del modo grupo). */
+  extraFooter?: React.ReactNode;
 }
 
 export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
@@ -29,6 +33,8 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
   duracionDias,
   onSave,
   onCancel,
+  statusBadge = null,
+  extraFooter = null,
 }) => {
   const [title, setTitle] = useState(initialValues.title);
   const [description, setDescription] = useState(initialValues.description);
@@ -133,6 +139,24 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
     >
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={[styles.formContainer, { backgroundColor: theme.surface }]}>
+
+          {statusBadge && (
+            <View
+              style={[
+                badgeStyles.badge,
+                { backgroundColor: statusBadge.tone === 'proposed' ? theme.surfaceHighlight : theme.inputBg },
+              ]}
+            >
+              <Text
+                style={[
+                  badgeStyles.badgeText,
+                  { color: statusBadge.tone === 'proposed' ? theme.primary : theme.textSecondary },
+                ]}
+              >
+                {statusBadge.label}
+              </Text>
+            </View>
+          )}
 
           {/* Day Selector */}
           <View style={styles.fieldContainer}>
@@ -272,6 +296,8 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
             />
           )}
 
+          {extraFooter}
+
           <Pressable
             onPress={handleSave}
             disabled={isSaving}
@@ -305,6 +331,20 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
     </KeyboardAvoidingView>
   );
 };
+
+const badgeStyles = StyleSheet.create({
+  badge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: paddings.radius.sm,
+    marginBottom: paddings.spacing.sm,
+  },
+  badgeText: {
+    fontSize: fonts.size.xs,
+    fontFamily: fonts.family.bodySemiBold,
+  },
+});
 
 const locationStyles = StyleSheet.create({
   wrapper: {
