@@ -31,6 +31,7 @@ import {
   uploadItineraryPhoto,
 } from '@/services/itineraryPhotoService';
 import { CategoriaItinerario, Provincia, PROVINCIA_LABEL } from '@/types/itinerario';
+import { CustomInput } from '@/components/CustomInput';
 
 export default function CreateItineraryScreen() {
   const router = useRouter();
@@ -145,20 +146,20 @@ export default function CreateItineraryScreen() {
         {/* Título */}
         <View style={styles.seccion}>
           <Text style={[styles.pregunta, { color: theme.text }]}>¿Cómo se llama tu viaje?</Text>
-          <TextInput
+          <CustomInput
             value={titulo}
             onChangeText={setTitulo}
             placeholder="Ej: Finde en Mendoza"
             placeholderTextColor={theme.gray}
             style={[styles.input, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
-            maxLength={200}
+            maxLength={35}
           />
         </View>
 
         {/* Descripción */}
         <View style={styles.seccion}>
           <Text style={[styles.labelSeccion, { color: theme.textSecondary }]}>DESCRIPCIÓN (OPCIONAL)</Text>
-          <TextInput
+          <CustomInput
             value={descripcion}
             onChangeText={setDescripcion}
             placeholder="Una breve descripción de tu viaje..."
@@ -166,7 +167,7 @@ export default function CreateItineraryScreen() {
             style={[styles.input, styles.inputMultiline, { backgroundColor: theme.card, borderColor: theme.border, color: theme.text }]}
             multiline
             numberOfLines={3}
-            maxLength={2000}
+            maxLength={300}
           />
         </View>
 

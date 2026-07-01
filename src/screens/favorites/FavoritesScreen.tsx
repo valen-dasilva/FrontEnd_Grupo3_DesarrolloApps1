@@ -5,8 +5,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '@/components/common/Header/Header';
 import { GuardadosTab } from '@/components/favorites/GuardadosTab/GuardadosTab';
 import { MisViajesTab } from '@/components/favorites/MisViajesTab/MisViajesTab';
+import { CompletadosTab } from '@/components/favorites/CompletadosTab/CompletadosTab';
 import { FavoritosHeader, type Vista } from '@/components/favorites/FavoritosHeader/FavoritosHeader';
 import { useTheme } from '@/hooks/useColorScheme';
+
+const isVista = (vista?: string): vista is Vista =>
+  vista === 'guardados' || vista === 'misViajes' || vista === 'completados';
 
 export default function FavoritosScreen() {
   const insets = useSafeAreaInsets();
@@ -15,11 +19,11 @@ export default function FavoritosScreen() {
   const { colorScheme, theme, toggleColorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
 
-  const [vista, setVista] = useState<Vista>(requestedVista === 'misViajes' ? 'misViajes' : 'guardados');
+  const [vista, setVista] = useState<Vista>(isVista(requestedVista) ? requestedVista : 'guardados');
 
   // Permite abrir la pantalla en una tab concreta vía parámetro de navegación
   useEffect(() => {
-    if (requestedVista === 'guardados' || requestedVista === 'misViajes') {
+    if (isVista(requestedVista)) {
       setVista(requestedVista);
     }
   }, [requestedVista]);
@@ -42,10 +46,14 @@ export default function FavoritosScreen() {
       <View style={[styles.container, { backgroundColor: theme.background }]}>
         <Header title="Favoritos" onThemeTogglePress={toggleColorScheme} />
 
-        {vista === 'guardados' ? (
+        {vista === 'guardados' && (
           <GuardadosTab header={header} onVerMisViajes={() => setVista('misViajes')} />
-        ) : (
+        )}
+        {vista === 'misViajes' && (
           <MisViajesTab header={header} onVerGuardados={() => setVista('guardados')} />
+        )}
+        {vista === 'completados' && (
+          <CompletadosTab header={header} onVerMisViajes={() => setVista('misViajes')} />
         )}
       </View>
     </View>

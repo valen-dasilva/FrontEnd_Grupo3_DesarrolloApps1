@@ -20,7 +20,7 @@ export default function PerfilScreen() {
   const { theme } = useTheme();
   const { logout } = useAuth();
 
-  const { data: estadisticas } = useEstadisticas();
+  const { data: estadisticas, isLoading: cargandoEstadisticas } = useEstadisticas();
   const { listItinerarioResumen } = useItinerariosHook();
 
   return (
@@ -32,7 +32,7 @@ export default function PerfilScreen() {
 
         <Text style={[styles.sectionLabel, { color: theme.gray }]}>SEGURIDAD Y CUENTA</Text>
 
-        <OpcionRow
+        <OpcionRow 
           icono={icons.Person}
           label="Editar Usuario"
           onPress={() => router.push('/(tabs)/perfilApp/editarUsuario')}
@@ -48,6 +48,7 @@ export default function PerfilScreen() {
         <SeccionRecorrido
           estadisticas={estadisticas}
           itinerarios={listItinerarioResumen}
+          isLoading={cargandoEstadisticas}
         />
 
         <TouchableOpacity

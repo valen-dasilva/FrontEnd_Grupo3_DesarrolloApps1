@@ -1,9 +1,10 @@
 
 import { useTheme } from "@/hooks/useColorScheme";
 import {
-    ItinerarioEnCursoDTO,
+    ItinerarioEnCursoDTO, 
     ItemItinerarioUsuarioDTO,
     PROVINCIA_LABEL,
+    Provincia,
 } from "@/types/itinerario";
 import { formatFechaCorta } from "@/utils/dateUtils";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,6 +12,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useWeather } from "@/hooks/useWeather";
+import { PROVINCIA_COORDS } from "@/utils/provinciaCoords";
+import { fonts } from "@/constants/fonts";
+import { useItineraryCalendar } from '@/hooks/useItineraryCalendar';
+import Toast from 'react-native-toast-message';
 
 // Busca la próxima actividad para mostrar en la card:
 // - Si el viaje aún no empezó: primera actividad del día 1
@@ -60,7 +66,7 @@ function getProximaActividad(
 export default function ActiveItineraryCard({
   itinerarioActivo,
 }: {
-  itinerarioActivo: ItinerarioEnCursoDTO;
+  itinerarioActivo: ItinerarioEnCursoDTO; 
 }) {
   const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === "dark";
@@ -70,6 +76,39 @@ export default function ActiveItineraryCard({
     itinerarioActivo.fechaInicio,
     itinerarioActivo.items,
   );
+
+  const weatherCoords = PROVINCIA_COORDS[itinerarioActivo.provincia as Provincia] ?? null;
+  const { data: weatherData } = useWeather({
+    coords: weatherCoords ?? { lat: 0, lng: 0 },
+    fechaInicio: itinerarioActivo.fechaInicio,
+    fechaFin: itinerarioActivo.fechaFin,
+  });
+
+  // Determina qué fecha mostrar: hoy si el viaje está en curso, inicio si aún no empezó
+  const todayStr = new Date().toISOString().split('T')[0];
+  const targetDate = todayStr >= itinerarioActivo.fechaInicio ? todayStr : itinerarioActivo.fechaInicio;
+  const todayWeather = weatherCoords && weatherData?.available
+    ? weatherData.days.find((d) => d.date === targetDate) ?? null
+    : null;
+
+  const { addToCalendar, isAdding } = useItineraryCalendar();
+
+  const handleAddToCalendar = async () => {
+    try {
+      const count = await addToCalendar(itinerarioActivo);
+      Toast.show({
+        type: 'success',
+        text1: 'Calendario actualizado',
+        text2: `Se agregaron ${count} actividades.`,
+      });
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'No se pudo agregar',
+        text2: err.message ?? 'Verificá los permisos del calendario.',
+      });
+    }
+  };
 
   // El "activo" es un itinerario propio del usuario (una copia), no un
   // template del sistema. Por eso navegamos a su pantalla de detalle
@@ -149,26 +188,19 @@ export default function ActiveItineraryCard({
           <Ionicons
             name="calendar-outline"
             size={16}
-            color={isDark ? theme.textSecondary : "#6B7280"}
+            color={theme.textSecondary}
           />
           <Text style={[styles.metaText, { color: theme.textSecondary }]}>
             {formatFechaCorta(itinerarioActivo.fechaInicio)} -{" "}
             {formatFechaCorta(itinerarioActivo.fechaFin)}
           </Text>
         </View>
-        <Text
-          style={[
-            styles.dotSeparator,
-            { color: isDark ? "#4B5563" : "#D1D5DB" },
-          ]}
-        >
-          •
-        </Text>
+        <Text style={[styles.dotSeparator, { color: theme.border }]}>•</Text>
         <View style={styles.metaItem}>
           <Ionicons
             name="location-outline"
             size={16}
-            color={isDark ? theme.textSecondary : "#6B7280"}
+            color={theme.textSecondary}
           />
           <Text style={[styles.metaText, { color: theme.textSecondary }]}>
             {PROVINCIA_LABEL[itinerarioActivo.provincia] ??
@@ -178,18 +210,28 @@ export default function ActiveItineraryCard({
         </View>
       </View>
 
+      {/* Clima del día */}
+      {todayWeather && (
+        <View style={[styles.weatherRow, { borderTopColor: theme.border }]}>
+          <Text style={styles.weatherEmoji}>{todayWeather.emoji}</Text>
+          <Text style={[styles.weatherLabel, { color: theme.textSecondary }]}>
+            {todayStr >= itinerarioActivo.fechaInicio ? 'Hoy' : 'Día 1'} · {todayWeather.maxTemp}° / {todayWeather.minTemp}° · {todayWeather.label}
+          </Text>
+        </View>
+      )}
+
       {/* Sub-tarjeta de Próxima Actividad — calculada desde items o en estado de carga optimista */}
       {(proximaActividad || itinerarioActivo.isOptimistic) && (
         <View
           style={[
             styles.actividadCard,
             {
-              backgroundColor: isDark ? "#191D26" : "#F5F7FF",
-              borderColor: isDark ? "#2A303C" : "#EEF2FF",
+              backgroundColor: theme.surfaceNeutral,
+              borderColor: theme.border,
             },
           ]}
         >
-          <Text style={styles.actividadHeader}>Próxima actividad</Text>
+          <Text style={[styles.actividadHeader, { color: theme.primary }]}>Próxima actividad</Text>
           <View style={styles.actividadDetailsRow}>
             <Text
               style={[styles.actividadTitle, { color: theme.text }]}
@@ -198,10 +240,10 @@ export default function ActiveItineraryCard({
               {itinerarioActivo.isOptimistic ? "..." : proximaActividad?.nombreActividad}
             </Text>
             {itinerarioActivo.isOptimistic ? (
-              <Text style={styles.actividadTime}>...</Text>
+              <Text style={[styles.actividadTime, { color: theme.primary }]}>...</Text>
             ) : (
               proximaActividad?.hora && (
-                <Text style={styles.actividadTime}>
+                <Text style={[styles.actividadTime, { color: theme.primary }]}>
                   {proximaActividad.hora.substring(0, 5)}
                 </Text>
               )
@@ -209,6 +251,17 @@ export default function ActiveItineraryCard({
           </View>
         </View>
       )}
+      <TouchableOpacity
+        style={[styles.calendarButton, { borderTopColor: theme.border }]}
+        onPress={handleAddToCalendar}
+        activeOpacity={0.7}
+        disabled={isAdding}
+      >
+        <Ionicons name="calendar-outline" size={16} color={theme.primary} />
+        <Text style={[styles.calendarButtonText, { color: theme.primary }]}>
+          {isAdding ? 'Agregando...' : 'Agregar al calendario del dispositivo'}
+        </Text>
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 }
@@ -252,8 +305,7 @@ const styles = StyleSheet.create({
   badgeText: {
     color: "#FFFFFF",
     fontSize: 12,
-    fontWeight: "bold",
-    fontFamily: "Inter-Bold",
+    fontFamily: fonts.family.headingBold,
   },
   titleOverlayRow: {
     position: "absolute",
@@ -267,8 +319,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     color: "#FFFFFF",
     fontSize: 22,
-    fontFamily: "Inter-Bold",
-    fontWeight: "bold",
+    fontFamily: fonts.family.headingBold,
     flex: 1,
     marginRight: 10,
     textShadowColor: "rgba(0, 0, 0, 0.4)",
@@ -299,10 +350,25 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 14,
-    fontWeight: "500",
+    fontFamily: fonts.family.bodySemiBold,
   },
   dotSeparator: {
     fontSize: 14,
+  },
+  weatherRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    gap: 8,
+    borderTopWidth: 1,
+  },
+  weatherEmoji: {
+    fontSize: 16,
+  },
+  weatherLabel: {
+    fontSize: 13,
+    fontFamily: fonts.family.bodySemiBold,
   },
   actividadCard: {
     borderRadius: 16,
@@ -314,9 +380,7 @@ const styles = StyleSheet.create({
   actividadHeader: {
     fontSize: 11,
     textTransform: "uppercase",
-    color: "#6366F1",
-    fontWeight: "bold",
-    fontFamily: "Inter-Bold",
+    fontFamily: fonts.family.headingBold,
     letterSpacing: 0.5,
   },
   actividadDetailsRow: {
@@ -327,15 +391,24 @@ const styles = StyleSheet.create({
   },
   actividadTitle: {
     fontSize: 15,
-    fontFamily: "Inter-Bold",
-    fontWeight: "bold",
+    fontFamily: fonts.family.headingBold,
     flex: 1,
     marginRight: 8,
   },
   actividadTime: {
     fontSize: 14,
-    fontWeight: "bold",
-    fontFamily: "Inter-Bold",
-    color: "#2563EB",
+    fontFamily: fonts.family.headingBold,
+  },
+  calendarButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
+  paddingVertical: 14,
+  borderTopWidth: 1,
+  },
+  calendarButtonText: {
+    fontSize: 14,
+    fontFamily: fonts.family.bodySemiBold,
   },
 });

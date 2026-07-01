@@ -1,14 +1,15 @@
-import { ItinerarioEnCursoDTO } from "@/types/itinerario";
 import ActiveItineraryCard from "@/components/common/ActiveItineraryCard/ActiveItineraryCard";
 import { Header } from "@/components/common/Header/Header";
+import { useItineraryNotifications } from '@/hooks/useItineraryNotifications';
+
 
 import { useTheme } from "@/hooks/useColorScheme";
 import { useAuth } from "@/context/AuthContext";
-import { getItinerarioEnCurso, buscarPorPreferencias } from "@/services/itinerarioService";
+import { buscarPorPreferencias } from "@/services/itinerarioService";
+import { useActiveItinerary } from "@/hooks/useActiveItinerary";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/services/queryClient";
 import {
   ActivityIndicator,
@@ -26,12 +27,9 @@ export default function HomeScreen() {
   const { colorScheme, theme } = useTheme();
   const isDark = colorScheme === "dark";
   const { user } = useAuth();
+  
 
-  const { data: itinerarioActivo = null, isLoading: loadingItinerario, isError, refetch: refetchActiveItinerary } = useQuery({
-    queryKey: ['activeItinerary'],
-    queryFn: async () => {
-      return getItinerarioEnCurso();
-    },
+  const { data: itinerarioActivo = null, isLoading: loadingItinerario, isError, refetch: refetchActiveItinerary } = useActiveItinerary({
     enabled: !!user,
   });
 
@@ -54,6 +52,9 @@ export default function HomeScreen() {
   const handlePreferenciasPress = () => {
     router.push("/(tabs)/inicioApp/preferencias");
   };
+
+  useItineraryNotifications(itinerarioActivo);
+
 
   const renderActiveItineraryContent = () => {
     if (loadingItinerario) {
@@ -106,7 +107,7 @@ export default function HomeScreen() {
     if (itinerarioActivo) {
       return <ActiveItineraryCard itinerarioActivo={itinerarioActivo} />;
     }
-
+ 
     return (
       <View
         style={[

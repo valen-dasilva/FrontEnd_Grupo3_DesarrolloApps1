@@ -61,6 +61,7 @@ export const EditModal: React.FC<EditModalProps> = ({
               placeholderTextColor={theme.textSecondary}
               autoFocus
               selectTextOnFocus
+              maxLength={35}
             />
           </View>
 

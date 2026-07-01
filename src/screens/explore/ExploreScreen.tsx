@@ -8,26 +8,14 @@ import { buscarPorPreferencias } from '@/services/itinerarioService';
 import { CATEGORIA_LABEL, CategoriaItinerario, ItinerarioSistemaResumenDTO, Provincia } from '@/types/itinerario';
 import React, { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ActivityIndicator, FlatList, Text, View, Platform } from 'react-native';
+import { ActivityIndicator, FlatList, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './ExploreScreen.styles';
 import { useFavoritosHook } from '@/hooks/useFavoritos';
 import { useFocusEffect } from 'expo-router';
-
-function calculateDurationDays(startStr: string, endStr: string): number {
-  try {
-    const start = new Date(startStr);
-    const end = new Date(endStr);
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return 0;
-    }
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays === 0 ? 1 : diffDays;
-  } catch {
-    return 0;
-  }
-}
+import { AnimatedListItem } from '@/components/common/AnimatedListItem/AnimatedListItem';
+import { calculateDurationDays, formatDuracion } from '@/utils/dateUtils';
+import { LIST_PERF_PROPS } from '@/constants/listConfig';
 
 export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
@@ -96,32 +84,33 @@ export default function ExploreScreen() {
     );
   };
 
-  const renderItem = useCallback(({ item }: { item: ItinerarioSistemaResumenDTO }) => {
-    const days = calculateDurationDays(item.fechaInicio, item.fechaFin);
-    const durationText = `${days} ${days === 1 ? 'día' : 'días'}`;
+  const renderItem = useCallback(({ item, index }: { item: ItinerarioSistemaResumenDTO; index: number }) => {
+    const durationText = formatDuracion(calculateDurationDays(item.fechaInicio, item.fechaFin));
 
     const isFavorite = favoritos.some(fav => fav.idItinerario === item.idItinerario);
     const idFavorito = undefined; // los bookmarks se operan por idItinerario del sistema
 
     return (
-      <ExploreItineraryCard
-        idItinerario={item.idItinerario}
-        title={item.titulo}
-        description={item.descripcion}
-        category={
-          item.etiquetas && item.etiquetas.length > 0
-            ? CATEGORIA_LABEL[item.etiquetas[0]]
-            : 'General'
-        }
-        categories={item.etiquetas}
-        image={item.fotoPortada}
-        rating={item.likes.toString()}
-        duration={durationText}
-        startDate={item.fechaInicio}
-        endDate={item.fechaFin}
-        isFavorite={isFavorite}
-        idFavorito={idFavorito}
-      />
+      <AnimatedListItem index={index}>
+        <ExploreItineraryCard
+          idItinerario={item.idItinerario}
+          title={item.titulo}
+          description={item.descripcion}
+          category={
+            item.etiquetas && item.etiquetas.length > 0
+              ? CATEGORIA_LABEL[item.etiquetas[0]]
+              : 'General'
+          }
+          categories={item.etiquetas}
+          image={item.fotoPortada}
+          rating={item.likes.toString()}
+          duration={durationText}
+          startDate={item.fechaInicio}
+          endDate={item.fechaFin}
+          isFavorite={isFavorite}
+          idFavorito={idFavorito}
+        />
+      </AnimatedListItem>
     );
   }, [favoritos]);
 
@@ -136,11 +125,8 @@ export default function ExploreScreen() {
         ListEmptyComponent={renderEmptyComponent} //Se muestra cuando data está vacía
         style={[styles.container, { backgroundColor: theme.background }]}
         contentContainerStyle={{ paddingBottom: 40 }}
-        showsVerticalScrollIndicator={false}
-        initialNumToRender={4} // Carga sólo 4 inicialmente
-        maxToRenderPerBatch={5} // Carga en lotes de 5
-        windowSize={3} // Mantiene poca memoria activa en la ventana virtual
-        removeClippedSubviews={Platform.OS === 'android'} // Remueve vistas invisibles en Android para liberar recursos
+        {...LIST_PERF_PROPS}
+        initialNumToRender={4} // Explorar arranca con 4 (override del default compartido)
       />
     </View>
   );

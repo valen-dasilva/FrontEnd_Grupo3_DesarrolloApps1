@@ -6,7 +6,7 @@ import { fonts } from '@/constants/fonts';
 import { paddings } from '@/constants/paddings';
 import { colors } from '@/constants/colors';
 
-export type Vista = 'guardados' | 'misViajes';
+export type Vista = 'guardados' | 'misViajes' | 'completados';
 
 interface Props {
   vista: Vista;
@@ -24,10 +24,14 @@ const TEXTOS: Record<Vista, { titulo: string; subtitulo: string }> = {
     titulo: 'Mis viajes',
     subtitulo: 'Tus itinerarios propios, listos para editar y completar.',
   },
+  completados: {
+    titulo: 'Viajes completados',
+    subtitulo: 'Historial de itinerarios que ya sumaste a tu recorrido.',
+  },
 };
 
 /**
- * Header compartido por las dos tabs de Favoritos. Se pasa como
+ * Header compartido por las tabs de Favoritos. Se pasa como
  * ListHeaderComponent de cada FlatList para que scrollee con la lista.
  */
 export function FavoritosHeader({ vista, onChangeVista, onCrearDesdeCero }: Props) {
@@ -39,7 +43,7 @@ export function FavoritosHeader({ vista, onChangeVista, onCrearDesdeCero }: Prop
       <Text style={[styles.pageTitle, { color: theme.text }]}>{titulo}</Text>
       <Text style={[styles.pageSubtitle, { color: theme.textSecondary }]}>{subtitulo}</Text>
 
-      {/* Toggle de tabs: la activa se pinta con el color primario */}
+      {/* Toggle de secciones: la activa se pinta con el color primario */}
       <View style={[styles.toggleRow, { backgroundColor: theme.surfaceNeutral }]}>
         <Pressable
           onPress={() => onChangeVista('guardados')}
@@ -55,6 +59,14 @@ export function FavoritosHeader({ vista, onChangeVista, onCrearDesdeCero }: Prop
         >
           <Text style={[styles.toggleText, { color: vista === 'misViajes' ? theme.textInverse : theme.textSecondary }]}>
             Mis viajes
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => onChangeVista('completados')}
+          style={[styles.toggleBtn, vista === 'completados' && { backgroundColor: theme.primary }]}
+        >
+          <Text style={[styles.toggleText, { color: vista === 'completados' ? theme.textInverse : theme.textSecondary }]}>
+            Completados
           </Text>
         </Pressable>
       </View>

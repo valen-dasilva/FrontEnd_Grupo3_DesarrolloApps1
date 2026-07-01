@@ -44,9 +44,9 @@ function DaySection({ dayNum, activities, onEdit, onDelete, theme }: DaySectionP
       <Text style={[styles.dayTitle, { color: theme.textSecondary }]}>{`Día ${dayNum}`}</Text>
       <View style={styles.activityList}>
         {dayActivities.length > 0 ? (
-          dayActivities.map((activity) => (
+          dayActivities.map((activity, actIdx) => (
             <EditableActivityCard
-              key={activity.id}
+              key={activity.id != null ? `${dayNum}-${activity.id}` : `${dayNum}-fallback-${actIdx}`}
               time={activity.hora}
               title={activity.nombreActividad}
               description={activity.descripcion}

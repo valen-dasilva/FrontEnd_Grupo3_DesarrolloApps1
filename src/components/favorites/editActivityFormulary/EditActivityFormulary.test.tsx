@@ -79,7 +79,7 @@ describe('EditActivityFormulary', () => {
     expect(getByTestId('input-Título de la actividad').props.value).toBe('Actividad de Prueba');
     expect(getByTestId('input-Descripción').props.value).toBe('Descripción de prueba');
     expect(getByTestId('input-Hora (HH:mm)').props.value).toBe('10:30');
-    expect(getByTestId('input-Ubicación').props.value).toBe('Ubicación de prueba');
+    expect(getByText('Ubicación de prueba')).toBeTruthy();
 
     // Day buttons should render (Día 1, Día 2, Día 3)
     expect(getByText('Día 1')).toBeTruthy();

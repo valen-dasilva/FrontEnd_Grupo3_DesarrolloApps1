@@ -198,6 +198,7 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
             onChangeText={setTitle}
             placeholder="Ej. Trekking Glaciar"
             accessibilityLabel="Título de la actividad"
+            maxLength={35}
           />
 
           <CustomInput
@@ -209,6 +210,7 @@ export const EditActivityFormulary: React.FC<EditActivityFormularyProps> = ({
             numberOfLines={4}
             style={styles.textArea}
             accessibilityLabel="Descripción de la actividad"
+            maxLength={300}
           />
 
           <View style={styles.fieldContainer}>

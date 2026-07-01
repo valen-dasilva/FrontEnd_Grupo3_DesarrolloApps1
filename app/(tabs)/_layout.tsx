@@ -12,7 +12,7 @@ function KeyboardAwareBottomNav({
 }: {
   activeTab: TabName;
   onTabPress: (tabName: TabName) => void;
-}) {
+}) { 
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   useEffect(() => {

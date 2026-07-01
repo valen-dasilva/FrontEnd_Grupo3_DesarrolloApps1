@@ -13,6 +13,7 @@ import { Header } from '@/components/common/Header/Header';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './ChangePasswordScreen.styles';
+import { configure } from '@testing-library/react-native';
 
 export default function CambiarContrasenaScreen() {
   const router = useRouter();
@@ -79,8 +80,8 @@ export default function CambiarContrasenaScreen() {
 
         <Text style={[styles.bigTitle, { color: theme.text }]}>Protege tu cuenta</Text>
         <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-          Ingresa tu contraseña actual y elige una nueva para proteger tu
-          cuenta. Asegúrate de que sea única y difícil de adivinar.
+          Ingrese su contraseña actual y elija una nueva para proteger su
+          cuenta. Asegúrese de que sea única y difícil de desifrar.
         </Text>
 
         <CustomInput
@@ -89,6 +90,7 @@ export default function CambiarContrasenaScreen() {
           secureTextEntry
           value={actual}
           onChangeText={setActual}
+          eyeButtonDisabled = {actual.length === 0}
         />
 
         <CustomInput
@@ -97,6 +99,7 @@ export default function CambiarContrasenaScreen() {
           secureTextEntry
           value={nueva}
           onChangeText={setNueva}
+          eyeButtonDisabled = {nueva.length === 0}
         />
 
         <CustomInput
@@ -105,6 +108,7 @@ export default function CambiarContrasenaScreen() {
           secureTextEntry
           value={confirmar}
           onChangeText={setConfirmar}
+          eyeButtonDisabled = {confirmar.length === 0}
         />
 
         <FormActionButtons 

@@ -117,19 +117,18 @@ export const RegisterScreen: React.FC = () => {
       <CustomInput
         iconName="key-outline"
         placeholder="Contraseña"
-        secureTextEntry={hidePassword}
-        onEyePress={() => setHidePassword(!hidePassword)}
+        secureTextEntry
         value={password}
+        eyeButtonDisabled = {password.length === 0} 
         onChangeText={setPassword}
       />
 
-      <CustomInput
+      <CustomInput 
         iconName="key-outline"
         placeholder="Confirmar contraseña"
-        secureTextEntry={hidePassword}
-        showEyeButton={false}
-        onEyePress={() => setHidePassword(!hidePassword)}
+        secureTextEntry       
         value={confirmPassword}
+        eyeButtonDisabled = {confirmPassword.length === 0} 
         onChangeText={setConfirmPassword}
       />
 
