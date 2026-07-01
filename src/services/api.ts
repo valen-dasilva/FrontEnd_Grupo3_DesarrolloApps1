@@ -12,7 +12,7 @@ const getHost = (): string => {
   return Platform.OS === "android" ? "10.0.2.2" : "localhost";
 };
 
-const BASE_URL = `http://${getHost()}:8080`; // Cambia esto por la URL real de tu backend
+const BASE_URL = `https://turistear-back.onrender.com`; // Cambia esto por la URL real de tu backend
 
 // Guardamos el token y el handler de "no autorizado" como variables de módulo
 // (no como estado de React) porque el interceptor de abajo no es un componente:
