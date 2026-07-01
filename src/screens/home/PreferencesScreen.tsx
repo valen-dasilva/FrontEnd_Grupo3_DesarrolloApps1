@@ -71,7 +71,7 @@ export default function PreferenciasScreen() {
       });
 
       if (duracion !== undefined) {
-        let filtrados = [];
+        let filtrados: typeof resultados = [];
         if (duracion === '1') {
           filtrados = resultados.filter((itinerary) => itinerary.duracionDias === 1);
         } else if (duracion === '2-3') {

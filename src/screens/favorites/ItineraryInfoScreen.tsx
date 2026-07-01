@@ -94,7 +94,7 @@ export default function FavoriteItineraryInfoScreen() {
             return etiquetas.split(',').map((e) => CATEGORIA_LABEL[e as CategoriaItinerario] || e);
         }
         if (itineraryDetails?.etiquetas) {
-            return itineraryDetails.etiquetas.map((e) => CATEGORIA_LABEL[e] || e);
+            return itineraryDetails.etiquetas.map((e) => CATEGORIA_LABEL[e as CategoriaItinerario] || e);
         }
         return [];
     }, [etiquetas, itineraryDetails?.etiquetas]);
